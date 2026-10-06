@@ -44,5 +44,6 @@ include __DIR__ . '/includes/layout_top.php';
   <p><a href="paginas.php">Pagina's</a> — losse informatieve pagina's naast de hoofdpagina, bv. voor leden.</p>
   <p><a href="backups.php">Back-ups</a> — maak handmatig een back-up of bekijk de wekelijkse automatische back-ups.</p>
   <p><a href="updates.php">Updates</a> — controleer op een nieuwe versie en werk de website met één klik bij.</p>
+  <p><a href="controle.php">Systeemcontrole</a> — controleer of de server, back-ups, updates en beveiliging goed zijn ingesteld.</p>
 </div>
 <?php include __DIR__ . '/includes/layout_bottom.php'; ?>

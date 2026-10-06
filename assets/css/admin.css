@@ -87,5 +87,23 @@ table.admin-table tr:hover{background:#fafafa;}
   padding:8px 14px; border-radius:20px; background:#e9ece9; color:#333; font-size:0.85rem; font-weight:600; text-decoration:none;
 }
 .tabs a.active{background:#00A551; color:#fff;}
+.check-summary{display:flex; flex-wrap:wrap; align-items:center; gap:10px;}
+.check-status{display:inline-block; min-width:62px; padding:3px 9px; border-radius:12px; font-size:0.75rem; font-weight:700; text-align:center; white-space:nowrap; color:#fff;}
+.check-ok{background:#00A551;}
+.check-warn{background:#e08e00;}
+.check-error{background:#c0392b;}
+.check-info{background:#4a6f99;}
+.check-pending{background:#999;}
+/* Hele rij inkleuren: gekleurde rand links + lichte achtergrond. */
+table.check-table tr.check-row-ok td{background:#f1fbf5;}
+table.check-table tr.check-row-warn td{background:#fff8e6;}
+table.check-table tr.check-row-error td{background:#fdeeee;}
+table.check-table tr.check-row-ok td:first-child{box-shadow:inset 4px 0 0 #00A551;}
+table.check-table tr.check-row-warn td:first-child{box-shadow:inset 4px 0 0 #e08e00;}
+table.check-table tr.check-row-error td:first-child{box-shadow:inset 4px 0 0 #c0392b;}
+table.check-table tr.check-row-info td:first-child{box-shadow:inset 4px 0 0 #4a6f99;}
+table.check-table tr.check-row-pending td:first-child{box-shadow:inset 4px 0 0 #ccc;}
+table.check-table td:first-child{width:90px; padding-left:16px;}
+table.check-table td:nth-child(2){width:30%; font-weight:600;}
 .login-wrap{max-width:360px; margin:80px auto; background:#fff; padding:32px; border-radius:10px; box-shadow:0 4px 20px rgba(0,0,0,0.08);}
 .login-wrap h1{text-align:center;}

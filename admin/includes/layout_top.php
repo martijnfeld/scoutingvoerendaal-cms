@@ -33,6 +33,7 @@ $flash = flash_get();
       <a href="uploads.php" class="<?= basename($_SERVER['PHP_SELF']) === 'uploads.php' ? 'active' : '' ?>">Geüploade bestanden</a>
       <a href="backups.php" class="<?= in_array(basename($_SERVER['PHP_SELF']), ['backups.php','backup_download.php']) ? 'active' : '' ?>">Back-ups</a>
       <a href="updates.php" class="<?= basename($_SERVER['PHP_SELF']) === 'updates.php' ? 'active' : '' ?>">Updates</a>
+      <a href="controle.php" class="<?= basename($_SERVER['PHP_SELF']) === 'controle.php' ? 'active' : '' ?>">Systeemcontrole</a>
       <a href="accounts.php" class="<?= in_array(basename($_SERVER['PHP_SELF']), ['accounts.php','account_form.php']) ? 'active' : '' ?>">Accounts</a>
       <a href="change_password.php" class="<?= basename($_SERVER['PHP_SELF']) === 'change_password.php' ? 'active' : '' ?>">Mijn wachtwoord</a>
     </nav>

@@ -3,7 +3,92 @@
     initRichTextEditors();
     initFilePickers();
     initConfirmForms();
+    initServerProbes();
   });
+
+  /**
+   * Webservertests op Beheerpaneel → Systeemcontrole (admin/controle.php):
+   * vraagt elke <tr data-probe-url> zelf op, zonder cookies (zoals een
+   * bezoeker), en beoordeelt het antwoord volgens data-probe-expect
+   * (zie checks_browser_probes() in includes/checks.php).
+   */
+  var PROBE_LABELS = { ok: 'OK', warn: 'Let op', error: 'Fout' };
+  var PROBE_HEADERS = ['X-Content-Type-Options', 'X-Frame-Options', 'Referrer-Policy'];
+
+  function initServerProbes() {
+    document.querySelectorAll('tr[data-probe-url]').forEach(function (row) {
+      var expect = row.getAttribute('data-probe-expect');
+      fetch(row.getAttribute('data-probe-url'), {
+        cache: 'no-store',
+        credentials: 'omit',
+        // Bij 'blocked'/'redirect' zelf zien dát er doorverwezen wordt, in plaats van te volgen.
+        redirect: expect === 'blocked' || expect === 'redirect' ? 'manual' : 'follow'
+      })
+        .then(function (response) {
+          var result = evaluateProbe(expect, response);
+          setProbeResult(row, result[0], result[1]);
+        })
+        .catch(function () {
+          setProbeResult(row, 'warn', 'Het verzoek kon niet worden uitgevoerd (netwerkfout).');
+        });
+    });
+  }
+
+  function evaluateProbe(expect, response) {
+    var status = response.status;
+    var redirected = response.type === 'opaqueredirect';
+
+    if (expect === 'blocked') {
+      if (redirected) return ['ok', 'Wordt doorgestuurd in plaats van getoond.'];
+      if (status === 401 || status === 403 || status === 404) return ['ok', 'Afgeschermd (HTTP ' + status + ').'];
+      if (status >= 200 && status < 300) {
+        return ['error', 'Bereikbaar voor iedereen (HTTP ' + status + ')! De .htaccess-regels worden niet toegepast. Draait de site op nginx, of staat AllowOverride uit? Zie INSTALL.md.'];
+      }
+      return ['warn', 'Onverwacht antwoord (HTTP ' + status + ').'];
+    }
+
+    if (expect === 'xml') {
+      var type = response.headers.get('Content-Type') || '';
+      if (status === 200 && type.indexOf('xml') !== -1) return ['ok', 'mod_rewrite werkt.'];
+      if (status === 404) {
+        return ['error', 'Niet gevonden: mod_rewrite ontbreekt of .htaccess wordt genegeerd (AllowOverride). De sitemap en nette pagina-adressen werken dan niet.'];
+      }
+      return ['warn', 'Onverwacht antwoord (HTTP ' + status + (type ? ', ' + type : '') + ').'];
+    }
+
+    if (expect === 'page') {
+      if (status === 200) return ['ok', 'Pagina wordt getoond.'];
+      return ['error', 'HTTP ' + status + ': nette pagina-adressen werken niet (mod_rewrite).'];
+    }
+
+    if (expect === 'redirect') {
+      if (redirected) return ['ok', 'Wordt permanent doorgestuurd naar het nieuwe adres.'];
+      if (status === 200) return ['warn', 'Wordt niet doorgestuurd; oude links werken nog wel, maar zoekmachines zien twee adressen voor dezelfde pagina.'];
+      return ['warn', 'Onverwacht antwoord (HTTP ' + status + ').'];
+    }
+
+    if (expect === 'headers') {
+      var missing = PROBE_HEADERS.filter(function (name) { return !response.headers.get(name); });
+      if (!response.headers.get('Content-Security-Policy')) missing.push('Content-Security-Policy');
+      if (!missing.length) return ['ok', 'Alle security-headers zijn aanwezig.'];
+      return ['warn', 'Ontbreekt: ' + missing.join(', ') + '. Waarschijnlijk is mod_headers niet beschikbaar of wordt .htaccess genegeerd.'];
+    }
+
+    return ['warn', 'Onbekende test.'];
+  }
+
+  function setProbeResult(row, status, detail) {
+    row.className = 'check-row-' + status;
+    var badge = row.querySelector('.check-status');
+    badge.className = 'check-status check-' + status;
+    badge.textContent = PROBE_LABELS[status];
+    row.querySelector('.check-detail').textContent = detail;
+
+    var counter = document.querySelector('[data-check-count="' + status + '"]');
+    if (counter) {
+      counter.textContent = String(parseInt(counter.textContent, 10) + 1);
+    }
+  }
 
   /**
    * Vraagt bevestiging voor formulieren met een data-confirm-attribuut

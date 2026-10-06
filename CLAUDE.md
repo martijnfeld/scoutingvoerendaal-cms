@@ -92,7 +92,7 @@ clobbers site-specific secrets:
   automatically by the shared top layout.
 - `admin/*.php` — one PHP file per admin screen (`speltakken.php` list + `speltak_form.php` create/edit,
   same pattern for `info_cards`/`info_card_form`, `documents`, `accounts`, `settings`, `uploads`,
-  `backups`, `updates`, `paginas`/`pagina_form`). Every admin page requires `admin/includes/auth.php` and
+  `backups`, `updates`, `controle`, `paginas`/`pagina_form`). Every admin page requires `admin/includes/auth.php` and
   calls `require_login()` first.
 
 **Shared includes** (`includes/`, loaded via `require_once`, not web-accessible — blocked by `.htaccess`):
@@ -294,3 +294,13 @@ needs the migrations applied.
 `config.local.php` if it fails) → one-click "install schema" button that runs `sql/install.sql` via PDO
 and marks all migrations that already exist at that point as applied (`mark_all_migrations_applied()`,
 since a fresh install already has the up-to-date schema) → the existing first-admin-account form.
+
+**Systeemcontrole** (`includes/checks.php`, `admin/controle.php`): a read-only health page. Server-side
+checks (`run_system_checks()`: PHP version/extensions/limits, DB tables + pending migrations, config
+placeholders, `install.php`, HTTPS, `site_url`, geoblock data, back-up dir/age/cron heuristic, update
+status from cache, write permissions, `.htaccess` presence, opkomsten cache) run on every load; outgoing
+connections (GitHub, each Scoutdash feed — `checks_external()`) only on a POST button. Web-server behaviour
+(rewrites, blocked directories/files, security headers) is tested **from the admin's browser** via
+`<tr data-probe-url data-probe-expect>` rows handled in `assets/js/admin.js` — not by PHP loopback requests,
+which are unreliable on shared hosts. When adding a new sensitive file/directory or a new hard requirement,
+add it to `CHECK_BLOCKED_FILES`/`CHECK_HTACCESS_FILES` or a check function there.
