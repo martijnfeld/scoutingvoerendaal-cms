@@ -53,14 +53,14 @@ include __DIR__ . '/includes/layout_top.php';
           <input type="hidden" name="action" value="move">
           <input type="hidden" name="id" value="<?= $card['id'] ?>">
           <input type="hidden" name="dir" value="up">
-          <button type="submit" class="btn btn-secondary btn-small" title="Omhoog"><i class="fa-solid fa-arrow-up"></i></button>
+          <button type="submit" class="btn btn-secondary btn-small" title="Omhoog" aria-label="Omhoog"><?= tabler_icon('arrow-up') ?></button>
         </form>
         <form method="post" style="display:inline;">
           <?= csrf_field() ?>
           <input type="hidden" name="action" value="move">
           <input type="hidden" name="id" value="<?= $card['id'] ?>">
           <input type="hidden" name="dir" value="down">
-          <button type="submit" class="btn btn-secondary btn-small" title="Omlaag"><i class="fa-solid fa-arrow-down"></i></button>
+          <button type="submit" class="btn btn-secondary btn-small" title="Omlaag" aria-label="Omlaag"><?= tabler_icon('arrow-down') ?></button>
         </form>
       </td>
       <td><?= e($card['sectie']) ?></td>

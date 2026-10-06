@@ -51,7 +51,7 @@ include __DIR__ . '/includes/layout_top.php';
   <form method="post" data-confirm="Opkomsten-cache legen? Bij het eerstvolgende bezoek wordt alles opnieuw bij Scoutdash opgehaald." style="display:inline;">
     <?= csrf_field() ?>
     <input type="hidden" name="action" value="clear_cache">
-    <button type="submit" class="btn btn-secondary"><i class="fa-solid fa-rotate"></i> Opkomsten-cache legen</button>
+    <button type="submit" class="btn btn-secondary"><?= tabler_icon('rotate') ?> Opkomsten-cache legen</button>
   </form>
 </div>
 
@@ -66,26 +66,26 @@ include __DIR__ . '/includes/layout_top.php';
           <input type="hidden" name="action" value="move">
           <input type="hidden" name="id" value="<?= $sp['id'] ?>">
           <input type="hidden" name="dir" value="up">
-          <button type="submit" class="btn btn-secondary btn-small" title="Omhoog"><i class="fa-solid fa-arrow-up"></i></button>
+          <button type="submit" class="btn btn-secondary btn-small" title="Omhoog" aria-label="Omhoog"><?= tabler_icon('arrow-up') ?></button>
         </form>
         <form method="post" style="display:inline;">
           <?= csrf_field() ?>
           <input type="hidden" name="action" value="move">
           <input type="hidden" name="id" value="<?= $sp['id'] ?>">
           <input type="hidden" name="dir" value="down">
-          <button type="submit" class="btn btn-secondary btn-small" title="Omlaag"><i class="fa-solid fa-arrow-down"></i></button>
+          <button type="submit" class="btn btn-secondary btn-small" title="Omlaag" aria-label="Omlaag"><?= tabler_icon('arrow-down') ?></button>
         </form>
       </td>
       <td><span class="color-swatch" style="background:<?= e($sp['kleur']) ?>"></span><strong><?= e($sp['naam']) ?></strong></td>
       <td><?= e($sp['leeftijd'] ?: '-') ?></td>
       <td><?= e(trim(implode(' · ', array_filter([$sp['dag_tijd'], $sp['leiding']])))) ?: '<span class="muted">-</span>' ?></td>
-      <td><?= $sp['feed_url'] ? '<span title="' . e($sp['feed_url']) . '"><i class="fa-solid fa-check"></i> ingesteld</span>' : '<span class="muted">geen</span>' ?></td>
+      <td><?= $sp['feed_url'] ? '<span title="' . e($sp['feed_url']) . '">' . tabler_icon('check') . ' ingesteld</span>' : '<span class="muted">geen</span>' ?></td>
       <td>
         <form method="post" style="display:inline;">
           <?= csrf_field() ?>
           <input type="hidden" name="action" value="toggle">
           <input type="hidden" name="id" value="<?= $sp['id'] ?>">
-          <button type="submit" class="btn btn-small <?= $sp['actief'] ? '' : 'btn-secondary' ?>" title="Klik om te wisselen"><?= $sp['actief'] ? 'Actief <i class="fa-solid fa-check"></i>' : 'Inactief' ?></button>
+          <button type="submit" class="btn btn-small <?= $sp['actief'] ? '' : 'btn-secondary' ?>" title="Klik om te wisselen"><?= $sp['actief'] ? 'Actief ' . tabler_icon('check') : 'Inactief' ?></button>
         </form>
       </td>
       <td class="actions">
@@ -133,9 +133,9 @@ include __DIR__ . '/includes/layout_top.php';
         <?php elseif (!$entry): ?>
           <span class="muted">geen data</span>
         <?php elseif ($entry['ok']): ?>
-          <i class="fa-solid fa-check"></i> up-to-date
+          <?= tabler_icon('check') ?> up-to-date
         <?php else: ?>
-          <i class="fa-solid fa-triangle-exclamation"></i> Scoutdash niet bereikbaar, toont laatst bekende programma
+          <?= tabler_icon('alert-triangle') ?> Scoutdash niet bereikbaar, toont laatst bekende programma
         <?php endif; ?>
       </td>
     </tr>

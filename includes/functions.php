@@ -8,6 +8,31 @@ function e(?string $value): string
     return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
 }
 
+/**
+ * Rendert een lokaal Tabler outline-icoon voor decoratief gebruik in de UI.
+ * Alleen een vaste bestandsnaam zonder pad is toegestaan; iconen komen altijd
+ * uit de lokaal meegeleverde set en worden nooit vanaf een externe URL geladen.
+ */
+function tabler_icon(string $name, string $class = ''): string
+{
+    if (!preg_match('/^[a-z0-9-]+$/', $name)) {
+        return '';
+    }
+
+    $path = __DIR__ . '/../assets/svg/tabler-icons/icons/outline/' . $name . '.svg';
+    if (!is_file($path)) {
+        return '';
+    }
+
+    $svg = file_get_contents($path);
+    if ($svg === false) {
+        return '';
+    }
+
+    return '<span class="tabler-icon' . ($class !== '' ? ' ' . e($class) : '')
+        . '" aria-hidden="true">' . $svg . '</span>';
+}
+
 /* ------------------------------------------------------------------ *
  * Instellingen (settings key/value tabel)
  * ------------------------------------------------------------------ */

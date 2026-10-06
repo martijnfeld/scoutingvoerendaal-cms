@@ -9,28 +9,48 @@ a{color:#0066B2;}
 h1{font-size:1.5rem; margin:0 0 18px;}
 h2{font-size:1.15rem;}
 
-.admin-shell{display:flex; min-height:100vh;}
+.admin-shell{min-height:100vh;}
 .admin-sidebar{
-  width:230px; flex-shrink:0; background:#1c2b22; color:#fff;
-  display:flex; flex-direction:column; padding:20px 0;
+  position:fixed; inset:0 auto 0 0; z-index:10; width:248px; background:#1c2b22; color:#fff;
+  display:flex; flex-direction:column; height:100vh; height:100dvh; overflow:hidden; padding:20px 0 16px;
 }
-.admin-brand{padding:0 20px 20px; font-weight:700; border-bottom:1px solid rgba(255,255,255,0.15); margin-bottom:10px;}
+.admin-brand{padding:0 20px 18px; font-weight:700; border-bottom:1px solid rgba(255,255,255,0.15);}
 .admin-brand small{font-weight:400; opacity:0.75;}
-.admin-sidebar nav{display:flex; flex-direction:column; flex:1;}
-.admin-sidebar nav a{
-  color:#dfe8e2; text-decoration:none; padding:11px 20px; font-size:0.92rem; font-weight:600;
+.admin-nav-toggle{display:none;}
+.admin-navigation.collapse{display:flex !important; flex:1; flex-direction:column; min-height:0; overflow-y:auto; overscroll-behavior:contain; padding:12px 10px; height:auto !important; visibility:visible !important; scrollbar-width:thin;}
+.admin-nav-overview{margin-bottom:14px;}
+.admin-nav-group + .admin-nav-group{margin-top:18px;}
+.admin-nav-label{padding:0 10px 6px; color:#91a99a; font-size:0.70rem; font-weight:700; letter-spacing:0.07em; text-transform:uppercase;}
+.admin-nav-link, .admin-user-link, .logout-link{
+  display:flex; align-items:center; gap:10px; min-height:38px; color:#dfe8e2; text-decoration:none;
+  font-size:0.9rem; font-weight:600;
 }
-.admin-sidebar nav a:hover{background:rgba(255,255,255,0.08);}
-.admin-sidebar nav a.active{background:#00A551; color:#fff;}
-.admin-sidebar-footer{padding:14px 20px 0; border-top:1px solid rgba(255,255,255,0.15); display:flex; flex-direction:column; gap:8px;}
-.admin-sidebar-footer a{color:#dfe8e2; font-size:0.85rem; text-decoration:none;}
-.admin-sidebar-footer a:hover{text-decoration:underline;}
-/* Uitloggen is een POST-formulier, maar ziet eruit als de links erboven. */
-.admin-sidebar-footer .logout-form{margin:0;}
-.admin-sidebar-footer .logout-link{background:none; border:0; padding:0; margin:0; font:inherit; color:#dfe8e2; font-size:0.85rem; text-align:left; cursor:pointer;}
-.admin-sidebar-footer .logout-link:hover, .admin-sidebar-footer .logout-link:focus-visible{text-decoration:underline;}
+.admin-nav-link{padding:9px 10px; border-radius:7px;}
+.tabler-icon{display:inline-flex; flex:0 0 18px; width:18px; height:18px; color:currentColor;}
+.tabler-icon svg{display:block; width:100%; height:100%; stroke:currentColor;}
+.admin-nav-link:hover{background:rgba(255,255,255,0.07); color:#fff; text-decoration:none;}
+.admin-nav-link.active{background:rgba(0,165,81,0.16); box-shadow:inset 3px 0 0 #00A551; color:#fff; font-weight:700;}
+.admin-nav-link.active:hover{background:rgba(0,165,81,0.22); color:#fff;}
+.admin-nav-link:focus-visible, .admin-user-link:focus-visible, .logout-link:focus-visible, .admin-nav-toggle:focus-visible, .admin-user-trigger:focus-visible{
+  outline:3px solid #FCDD17; outline-offset:-3px;
+}
+.admin-user-menu{margin-top:auto; padding:14px 12px 0; border-top:1px solid rgba(255,255,255,0.15);}
+.admin-user-trigger{display:flex; align-items:center; gap:10px; width:100%; min-width:0; border:0; border-radius:7px; padding:8px; background:transparent; color:#fff; font:inherit; text-align:left; cursor:pointer;}
+.admin-user-trigger:hover, .admin-user-trigger[aria-expanded="true"]{background:rgba(255,255,255,0.07);}
+.admin-user-trigger::after{margin-left:auto;}
+.admin-user-avatar{display:inline-flex; align-items:center; justify-content:center; flex:0 0 30px; width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,0.10); color:#fff;}
+.admin-user-avatar .tabler-icon{width:18px; height:18px; flex-basis:18px;}
+.admin-user-name{overflow:hidden; color:#fff; font-size:0.88rem; font-weight:700; text-overflow:ellipsis; white-space:nowrap;}
+.admin-user-dropdown{width:224px; margin:0 0 8px; padding:4px; border:1px solid #d7dcd8; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.16);}
+.admin-user-link{padding:8px; color:#243028; font-size:0.85rem;}
+.admin-user-link:hover{background:#edf3ee; color:#173320;}
+.admin-user-link.active{background:#e3f7ea; color:#0a6b34;}
+/* Uitloggen blijft een POST-formulier met CSRF-token. */
+.logout-form{margin:4px 0 0; padding-top:4px; border-top:1px solid #e2e5e2;}
+.logout-link{width:100%; border:0; padding:8px; margin:0; background:none; color:#b42318; text-align:left; cursor:pointer; font-family:inherit;}
+.logout-link:hover{background:#fdecea; color:#8e1c14;}
 
-.admin-main{flex:1; padding:32px 36px; max-width:980px;}
+.admin-main{min-height:100vh; margin-left:248px; padding:32px 36px; max-width:980px;}
 
 .admin-flash{padding:12px 16px; border-radius:8px; margin-bottom:20px; font-size:0.92rem;}
 .admin-flash-success{background:#e3f7ea; color:#0a6b34; border:1px solid #b8e6c9;}
@@ -118,3 +138,23 @@ table.check-table td:first-child{width:90px; padding-left:16px;}
 table.check-table td:nth-child(2){width:30%; font-weight:600;}
 .login-wrap{max-width:360px; margin:80px auto; background:#fff; padding:32px; border-radius:10px; box-shadow:0 4px 20px rgba(0,0,0,0.08);}
 .login-wrap h1{text-align:center;}
+
+@media (max-width: 900px){
+  .admin-shell{display:block;}
+  .admin-sidebar{position:static; width:100%; height:auto; min-height:0; overflow:visible; padding:0;}
+  .admin-brand{padding:14px 18px; border-bottom:0;}
+  .admin-nav-toggle{
+    display:flex; align-items:center; gap:9px; width:100%; min-height:44px; padding:10px 18px;
+    border:0; border-top:1px solid rgba(255,255,255,0.15); background:transparent; color:#fff;
+    font:inherit; font-size:0.9rem; font-weight:600; text-align:left; cursor:pointer;
+  }
+  .admin-nav-toggle .tabler-icon{width:20px; height:20px; flex-basis:20px;}
+  .admin-nav-toggle .admin-nav-chevron{margin-left:auto; width:18px; height:18px; flex-basis:18px; transition:transform 150ms ease;}
+  .admin-nav-toggle[aria-expanded="true"] .admin-nav-chevron{transform:rotate(180deg);}
+  .admin-navigation.collapse{overflow:visible; padding:8px 0 12px;}
+  .admin-navigation.collapse:not(.show){display:none !important;}
+  .admin-navigation.collapsing{display:flex !important; flex-direction:column;}
+  .admin-user-menu{margin-top:0; padding:12px 10px;}
+  .admin-user-dropdown{width:calc(100vw - 36px); max-width:300px;}
+  .admin-main{max-width:none; margin-left:0; padding:24px 18px;}
+}

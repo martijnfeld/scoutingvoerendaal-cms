@@ -104,6 +104,8 @@ use Bootstrap. Tabler Icons 3.49.0 is the default icon source; its complete loca
 `assets/svg/tabler-icons/icons/`. Check that set before creating a project SVG. Do not add Font
 Awesome or another icon library for new work, use emoji as ordinary UI icons, or load external SVGs.
 Existing Font Awesome CDN use remains solely for legacy markup until a separately scoped migration.
+Use `tabler_icon()` from `includes/functions.php` for local, decorative Tabler outline icons in PHP
+templates; it accepts only simple local icon names and never constructs a user-controlled path.
 
 **Shared includes** (`includes/`, loaded via `require_once`, not web-accessible — blocked by `.htaccess`):
 - `includes/db.php` — `db(): PDO` returns a lazily-created, memoized PDO singleton (prepared statements,

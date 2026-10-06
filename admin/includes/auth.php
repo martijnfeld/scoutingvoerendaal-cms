@@ -11,8 +11,8 @@ if (!headers_sent()) {
     header('Content-Security-Policy: ' . implode('; ', [
         "default-src 'self'",
         "script-src 'self' https://cdn.ckeditor.com",
-        "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
-        "font-src 'self' https://cdnjs.cloudflare.com data:",
+        "style-src 'self' 'unsafe-inline'",
+        "font-src 'self' data:",
         "img-src 'self' https: data: blob:",
         "media-src 'self' https:",
         "frame-src https:",
