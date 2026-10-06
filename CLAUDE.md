@@ -205,8 +205,9 @@ ranges current (`docker run --rm -v "$PWD":/app -w /app php:8.2-cli php tools/bu
 Deliberately fails open for private/reserved IPs (local Docker) and when the data files are missing
 (half-uploaded update), so the owner can't lock themselves out; `ADMIN_GEO_BLOCK=false` in
 `config.local.php` is the escape hatch for admins abroad. CSRF tokens (`csrf_field()`/`csrf_verify()`) guard all admin POST forms.
-`install.php` must be deleted after first use (it self-disables once an admin exists, but stays running
-until removed).
+`install.php` must be gone after first use: once an admin exists it self-disables and tries to
+`unlink()` itself (`install_self_delete()`; skipped in Docker, where it would delete the file from the
+bind-mounted git checkout). If that fails (file permissions) it tells the owner to delete it by hand.
 
 **Content-Security-Policy**: public pages send a CSP from `includes/site_layout_top.php`, the admin panel
 from `admin/includes/auth.php` (as a PHP `header()`, so it doesn't depend on `mod_headers`). Both allow

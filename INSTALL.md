@@ -47,8 +47,9 @@ je databasegegevens en geheime sleutels nooit overschrijft.
    installeren"** — die maakt in één klik alle tabellen aan en vult ze met
    de standaard startgegevens (voorheen een handmatige phpMyAdmin-import).
 3. Kies daarna een gebruikersnaam en wachtwoord voor het CMS.
-4. **Verwijder daarna `install.php` van de server** — dit voorkomt dat
-   iemand anders een tweede installatie kan starten.
+4. Daarna verwijdert `install.php` zichzelf van de server. Meldt de pagina
+   dat dat niet lukte (bestandsrechten), **verwijder `install.php` dan zelf**
+   — dit voorkomt dat iemand anders een tweede installatie kan starten.
 
 Lukt de automatische database-installatie niet (zeldzaam, bv. een host die
 multi-statement queries blokkeert)? Importeer dan zelf
@@ -207,7 +208,8 @@ van deze repository gebruikt.
 ## Beveiliging
 
 - `install.php` weigert een tweede keer te draaien zodra er al een
-  beheerder bestaat — verwijder het bestand toch na gebruik.
+  beheerder bestaat en probeert zichzelf dan te verwijderen; lukt dat niet,
+  verwijder het bestand dan zelf.
 - De mappen `includes/`, `admin/includes/`, `sql/`, `tools/`, `backups/` en
   `docker/`, verborgen mappen/bestanden (`.git/`, `.htaccess`, ...) en
   ontwikkel-/configuratiebestanden (`*.md`, `*.sql`, `*.yml`, `*.zip`,
