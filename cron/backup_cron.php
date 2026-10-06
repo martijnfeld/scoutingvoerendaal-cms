@@ -21,6 +21,10 @@ require_once __DIR__ . '/../includes/backup.php';
 
 header('Content-Type: text/plain; charset=utf-8');
 
+// Externe diensten zoals cron-job.org verbreken na ~30 s de verbinding; de
+// back-up moet dan gewoon doorlopen in plaats van halverwege af te breken.
+ignore_user_abort(true);
+
 if (PHP_SAPI !== 'cli') {
     $key = (string) ($_GET['key'] ?? '');
     if ($key === '' || BACKUP_CRON_KEY === 'wijzig_deze_geheime_sleutel' || !hash_equals(BACKUP_CRON_KEY, $key)) {

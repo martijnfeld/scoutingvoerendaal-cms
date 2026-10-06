@@ -92,6 +92,7 @@ table.admin-table tr:hover{background:#fafafa;}
 .thumb{width:60px; height:44px; object-fit:cover; border-radius:4px; background:#eee;}
 .muted{color:#888;}
 .top-actions{margin-bottom:18px;}
+.cron-code{background:#f4f5f4; border:1px solid #e1e4e1; border-radius:6px; padding:10px 12px; margin:6px 0 12px; font-size:0.85rem; white-space:pre-wrap; word-break:break-all; user-select:all;}
 .tabs{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:22px;}
 .tabs a{
   padding:8px 14px; border-radius:20px; background:#e9ece9; color:#333; font-size:0.85rem; font-weight:600; text-decoration:none;

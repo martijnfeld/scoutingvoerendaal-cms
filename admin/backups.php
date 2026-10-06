@@ -44,6 +44,26 @@ try {
 $backups = list_backups();
 $hasLegacy = (bool) array_filter($backups, fn($b) => $b['legacy']);
 
+// Gegevens voor de cronjob-uitleg hieronder. Basisadres: site_url, of anders
+// afgeleid van het adres waarop het beheerpaneel nu draait.
+$cronKeySet = BACKUP_CRON_KEY !== 'wijzig_deze_geheime_sleutel';
+$cronBase = rtrim(trim(get_setting('site_url')), '/');
+if ($cronBase === '') {
+    $cronBase = (request_is_https() ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'jouw-domein.nl')
+        . rtrim(str_replace('\\', '/', dirname(dirname($_SERVER['SCRIPT_NAME'] ?? '/admin/backups.php'))), '/');
+}
+$cronUrl = $cronBase . '/cron/backup_cron.php?key=' . ($cronKeySet ? rawurlencode(BACKUP_CRON_KEY) : 'JOUW_BACKUP_CRON_KEY');
+$cronScriptPath = realpath(__DIR__ . '/../cron/backup_cron.php') ?: dirname(__DIR__) . '/cron/backup_cron.php';
+// Wekelijks op zondag om 03:15. In een crontab-regel betekent % een nieuwe
+// regel, dus die moet daar als \% geschreven worden.
+$cronSchedule = '15 3 * * 0';
+$cronUrlTab = str_replace('%', '\\%', $cronUrl);
+$cronLines = [
+    'cli'  => $cronSchedule . ' /usr/local/bin/php ' . $cronScriptPath . ' >/dev/null 2>&1',
+    'wget' => $cronSchedule . ' wget -q -O /dev/null "' . $cronUrlTab . '"',
+    'curl' => $cronSchedule . ' curl -fsS -o /dev/null "' . $cronUrlTab . '"',
+];
+
 include __DIR__ . '/includes/layout_top.php';
 ?>
 <p>
@@ -53,8 +73,8 @@ include __DIR__ . '/includes/layout_top.php';
 </p>
 <p class="muted">
   Naast handmatig back-uppen hieronder kan er wekelijks automatisch een back-up worden gemaakt via een
-  cronjob in je hosting-controlepaneel. Zie <code>cron/backup_cron.php</code> en het hoofdstuk "Back-ups"
-  in <code>INSTALL.md</code> voor hoe je dat instelt.
+  cronjob in je hosting-controlepaneel of via een externe dienst zoals cron-job.org — zie
+  "Automatische wekelijkse back-up" onderaan deze pagina.
 </p>
 
 <div class="admin-card">
@@ -125,6 +145,78 @@ include __DIR__ . '/includes/layout_top.php';
     <tr><td colspan="4" class="muted">Nog geen back-ups. Klik op "Nu back-uppen" om de eerste te maken.</td></tr>
     <?php endif; ?>
   </table>
+</div>
+
+<div class="admin-card">
+  <h2>Automatische wekelijkse back-up</h2>
+  <?php if (!$cronKeySet): ?>
+    <p class="admin-flash admin-flash-error">
+      <strong>Let op:</strong> <code>BACKUP_CRON_KEY</code> staat nog op de standaardwaarde, dus het cronscript weigert via
+      een URL te draaien. Zet in <code>config.local.php</code> een lange, willekeurige waarde, bv.
+      <code>define('BACKUP_CRON_KEY', '<?= e(bin2hex(random_bytes(24))) ?>');</code> en laad deze pagina opnieuw — dan
+      staat de juiste URL hieronder ingevuld. (Voor optie 1, PHP-CLI, is geen sleutel nodig.)
+    </p>
+  <?php endif; ?>
+  <p>
+    Kies één van de onderstaande manieren. Elke run maakt een nieuwe back-up en ruimt back-ups ouder dan
+    <?= (int) BACKUP_RETENTION_MONTHS ?> maanden op. Het voorbeeldschema <code><?= e($cronSchedule) ?></code> betekent
+    <em>elke zondag om 03:15</em> (servertijd).
+  </p>
+
+  <h3>1. Cronjob in je hostingpaneel met PHP-CLI (voorkeur)</h3>
+  <p>
+    In DirectAdmin/cPanel/Plesk onder "Cron Jobs". Gebruikt geen sleutel en heeft geen last van time-outs van de
+    webserver. Vul in je paneel de velden zo in:
+  </p>
+  <table class="admin-table">
+    <tr><th>Minuut</th><th>Uur</th><th>Dag v/d maand</th><th>Maand</th><th>Dag v/d week</th></tr>
+    <tr><td><code>15</code></td><td><code>3</code></td><td><code>*</code></td><td><code>*</code></td><td><code>0</code> (zondag)</td></tr>
+  </table>
+  <p>Opdracht:</p>
+  <pre class="cron-code"><?= e('/usr/local/bin/php ' . $cronScriptPath) ?></pre>
+  <p>Of als volledige crontab-regel:</p>
+  <pre class="cron-code"><?= e($cronLines['cli']) ?></pre>
+  <p class="muted">
+    Het pad naar PHP verschilt per host: vaak <code>/usr/local/bin/php</code>, soms gewoon <code>php</code> of een
+    versiespecifiek pad (bv. <code>/opt/alt/php82/usr/bin/php</code>) — je hostingpaneel of helpdesk vermeldt het juiste pad.
+  </p>
+
+  <h3>2. Cronjob in je hostingpaneel die de URL ophaalt</h3>
+  <p>Als je host geen PHP-CLI in cronjobs aanbiedt, laat de cronjob dan de back-up-URL ophalen met wget of curl:</p>
+  <pre class="cron-code"><?= e($cronLines['wget']) ?></pre>
+  <pre class="cron-code"><?= e($cronLines['curl']) ?></pre>
+  <p class="muted">
+    Vul je in je paneel alleen het opdrachtveld in (schema in losse velden), laat dan het schema vooraan weg.
+    <code>%</code>-tekens in een crontab-regel moeten als <code>\%</code> geschreven worden; dat is hierboven al gedaan.
+  </p>
+
+  <h3>3. Externe dienst: cron-job.org</h3>
+  <p>
+    Heeft je hostingpakket helemaal geen cronjobs, gebruik dan de gratis dienst
+    <a href="https://cron-job.org" target="_blank" rel="noopener noreferrer">cron-job.org</a>:
+  </p>
+  <ol>
+    <li>Maak een (gratis) account aan op cron-job.org en klik op <strong>Create cronjob</strong>.</li>
+    <li>Titel: bv. "Back-up <?= e(parse_url($cronBase, PHP_URL_HOST) ?: 'website') ?>".</li>
+    <li>URL:
+      <pre class="cron-code"><?= e($cronUrl) ?></pre>
+    </li>
+    <li>Schema (Execution schedule): <strong>Every week</strong>, op zondag om 03:15 — of via
+      <em>Custom</em> de crontab-notatie <code><?= e($cronSchedule) ?></code>.</li>
+    <li>Zet onder <em>Notifications</em> "Notify me when the execution fails" aan, dan krijg je een mail als de
+      back-up mislukt.</li>
+    <li>Sla op en gebruik <strong>Test run</strong> om te controleren dat er een back-up verschijnt in de lijst hierboven.</li>
+  </ol>
+  <p class="muted">
+    cron-job.org wacht maximaal 30 seconden op antwoord. Duurt de back-up langer, dan meldt cron-job.org een time-out,
+    maar de back-up loopt op de server gewoon door — controleer in de lijst hierboven of hij is aangemaakt. Zet in dat
+    geval de foutmelding-notificatie eventueel uit om valse alarmen te voorkomen.
+  </p>
+
+  <p class="muted">
+    <strong>Houd de URL geheim:</strong> iedereen met deze URL kan back-ups laten maken (niet downloaden). Lekt hij
+    uit, verander dan <code>BACKUP_CRON_KEY</code> in <code>config.local.php</code> en pas je cronjob aan.
+  </p>
 </div>
 
 <div class="admin-card">
