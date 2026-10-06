@@ -171,6 +171,12 @@ opgeruimd.
 3. Heeft je host wel PHP-CLI beschikbaar als cron-opdracht, dan kan de
    cronjob `cron/backup_cron.php` ook direct aanroepen zonder sleutel, bv.
    `php /home/jouwaccount/domains/jouw-domein.nl/public_html/cron/backup_cron.php`.
+4. Heeft je hostingpakket helemaal geen cronjobs, gebruik dan de gratis
+   dienst [cron-job.org](https://cron-job.org) om de URL uit stap 2 wekelijks
+   op te halen.
+
+**Beheerpaneel → Back-ups** toont voor alle drie de varianten de kant-en-klare
+instellingen voor jouw site (pad, crontab-regel en URL met sleutel).
 
 Elke keer dat `cron/backup_cron.php` draait, wordt er een nieuwe back-up
 gemaakt én worden back-ups ouder dan 12 maanden meteen opgeruimd — een losse
