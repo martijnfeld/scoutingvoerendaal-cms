@@ -8,7 +8,8 @@
  *    databasegegevens in (zie INSTALL.md).
  * 3. Open dit bestand in je browser: het installeert zelf het
  *    databaseschema en laat je daarna je eerste beheerdersaccount aanmaken.
- * 4. Verwijder dit bestand daarna van de server (belangrijk!).
+ * 4. Na het aanmaken van de beheerder verwijdert dit bestand zichzelf.
+ *    Lukt dat niet (bestandsrechten), verwijder het dan zelf (belangrijk!).
  */
 
 require_once __DIR__ . '/includes/functions.php';
@@ -35,6 +36,29 @@ function install_page(string $title, string $bodyHtml): void
     </div>
     </body></html>
     <?php
+}
+
+/**
+ * Probeert dit installatiebestand van de server te verwijderen zodra er een
+ * beheerder bestaat. Niet in Docker: daar is de projectmap ge-bind-mount en
+ * zou dit install.php uit je git-werkmap wissen.
+ */
+function install_self_delete(): bool
+{
+    if (getenv('DB_HOST')) {
+        return false;
+    }
+    return @unlink(__FILE__);
+}
+
+/** Melding over het (al dan niet gelukte) automatisch verwijderen van install.php. */
+function install_delete_notice(bool $deleted): string
+{
+    if ($deleted) {
+        return '<p>Dit installatiebestand (install.php) is automatisch van de server verwijderd.</p>';
+    }
+    return '<p><strong>Verwijder dit bestand (install.php) nu van de server</strong> — het kon niet automatisch worden verwijderd, '
+        . 'en het vormt een risico als het blijft staan.</p>';
 }
 
 // -- Stap 1: databaseverbinding testen -----------------------------------
@@ -117,7 +141,7 @@ if ($schemaMissing) {
 if ($adminCount > 0) {
     install_page('Al geïnstalleerd', '
       <p>Er bestaat al een beheerdersaccount. Ga naar <a href="admin/login.php">/admin/login.php</a> om in te loggen.</p>
-      <p><strong>Verwijder dit bestand (install.php) nu van de server</strong> om misbruik te voorkomen.</p>
+      ' . install_delete_notice(install_self_delete()) . '
     ');
     exit;
 }
@@ -154,7 +178,7 @@ if ($success) {
       <div class="admin-flash admin-flash-success">
         Beheerdersaccount aangemaakt! Je kunt nu inloggen op <a href="admin/login.php">/admin/login.php</a>.
       </div>
-      <p><strong>Verwijder dit bestand (install.php) nu van de server</strong> — het is niet meer nodig en vormt een risico als het blijft staan.</p>
+      ' . install_delete_notice(install_self_delete()) . '
     ';
 } else {
     $body .= ($error !== '' ? '<div class="admin-flash admin-flash-error">' . e($error) . '</div>' : '');
