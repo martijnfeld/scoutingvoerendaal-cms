@@ -66,7 +66,7 @@ if (!defined('BACKUP_CRON_KEY')) define('BACKUP_CRON_KEY', getenv('BACKUP_CRON_K
 // GitHub-repository (owner/repo) waar Beheerpaneel → Updates op controleert
 // en updates vandaan haalt. Gebruik je een eigen fork, zet dan je eigen
 // owner/repo in config.local.php.
-if (!defined('GITHUB_REPO')) define('GITHUB_REPO', getenv('GITHUB_REPO') ?: 'jouw-gebruikersnaam/jouw-repo-naam');
+if (!defined('GITHUB_REPO')) define('GITHUB_REPO', getenv('GITHUB_REPO') ?: 'martijnfeld/scoutingvoerendaal-cms');
 
 // -- Beveiliging beheerpaneel ----------------------------------------
 // Sta inloggen op /admin alleen toe vanaf IP-adressen in Europa (zie

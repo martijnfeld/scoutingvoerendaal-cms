@@ -8,6 +8,10 @@
  * Voor de Docker-ontwikkelomgeving heb je dit bestand niet nodig; die
  * krijgt zijn databasegegevens via environment-variabelen in
  * docker-compose.yml.
+ *
+ * Hieronder staan ALLE instellingen die je kunt overschrijven. Regels met
+ * `// define(...)` zijn optioneel: haal het commentaar alleen weg als je
+ * van de standaardwaarde (uit config.php, hier ook genoemd) wilt afwijken.
  */
 
 // -- Database instellingen --------------------------------------------
@@ -16,6 +20,22 @@ define('DB_PORT', '3306');
 define('DB_NAME', 'vul_hier_je_database_naam_in');
 define('DB_USER', 'vul_hier_je_database_gebruiker_in');
 define('DB_PASS', 'vul_hier_je_database_wachtwoord_in');
+
+// Tekenset van de databaseverbinding. Standaard 'utf8mb4'; alleen wijzigen
+// als je host dat echt niet ondersteunt.
+// define('DB_CHARSET', 'utf8mb4');
+
+// -- Overige instellingen ----------------------------------------------
+// PHP-foutmeldingen tonen in de browser. Standaard false; zet nooit
+// blijvend op true op een live site.
+// define('APP_DEBUG', true);
+
+// Map (absoluut pad) en bijbehorende URL (relatief t.o.v. de websitemap)
+// voor geüploade bestanden. Standaard <websitemap>/assets/uploads en
+// 'assets/uploads'. Wijzig je dit, verplaats dan ook bestaande uploads en
+// zorg dat de map dezelfde .htaccess-beveiliging heeft.
+// define('UPLOAD_DIR', '/home/jouwaccount/domains/jouw-domein.nl/public_html/assets/uploads');
+// define('UPLOAD_URL', 'assets/uploads');
 
 // -- Back-ups ------------------------------------------------------------
 // Verzin een lange, unieke waarde voordat je de wekelijkse back-up-cronjob
@@ -29,9 +49,14 @@ define('BACKUP_CRON_KEY', 'wijzig_deze_geheime_sleutel');
 // databasegegevens en wachtwoord-hashes). Zie INSTALL.md, hoofdstuk "Back-ups".
 // define('BACKUP_DIR', '/home/jouwaccount/scouting-backups');
 
+// Hoeveel maanden een back-up bewaard blijft voordat hij automatisch wordt
+// verwijderd. Standaard 12.
+// define('BACKUP_RETENTION_MONTHS', 12);
+
 // -- Updates ---------------------------------------------------------
-// Alleen nodig als je een eigen fork van de repository gebruikt; anders
-// geldt de standaardwaarde uit config.php.
+// GitHub-repository (owner/repo) waar updates vandaan komen. Standaard
+// 'martijnfeld/scoutingvoerendaal-cms'; alleen nodig als je een eigen fork
+// gebruikt.
 // define('GITHUB_REPO', 'jouw-gebruikersnaam/jouw-repo-naam');
 
 // -- Beveiliging beheerpaneel ----------------------------------------

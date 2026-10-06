@@ -456,7 +456,8 @@ function ensure_config_local_migrated(): void
     if (defined('BACKUP_CRON_KEY') && BACKUP_CRON_KEY !== 'wijzig_deze_geheime_sleutel') {
         $lines[] = "define('BACKUP_CRON_KEY', " . var_export(BACKUP_CRON_KEY, true) . ');';
     }
-    if (defined('GITHUB_REPO') && GITHUB_REPO !== 'jouw-gebruikersnaam/jouw-repo-naam') {
+    if (defined('GITHUB_REPO')
+        && !in_array(GITHUB_REPO, ['jouw-gebruikersnaam/jouw-repo-naam', 'martijnfeld/scoutingvoerendaal-cms'], true)) {
         $lines[] = "define('GITHUB_REPO', " . var_export(GITHUB_REPO, true) . ');';
     }
     @file_put_contents($path, implode("\n", $lines) . "\n", LOCK_EX);
