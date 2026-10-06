@@ -44,7 +44,29 @@ $userNavigation = [
 <body>
 <div class="admin-shell">
   <aside class="admin-sidebar">
-    <div class="admin-brand"><?= e(get_setting('org_naam', 'Scouting')) ?><br><small>Beheer</small></div>
+    <div class="admin-sidebar-header">
+      <a class="admin-brand" href="index.php">
+        <img class="admin-scouting-logo" src="../assets/img/scouting-nederland-logo.svg" alt="Scouting Nederland">
+        <span class="admin-brand-copy"><?= e(get_setting('org_naam', 'Scouting')) ?><small>Beheer</small></span>
+      </a>
+      <div class="dropdown admin-user-menu">
+        <button class="admin-user-trigger dropdown-toggle" type="button" id="adminUserMenu" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
+          <span class="admin-user-avatar"><?= tabler_icon('user') ?></span>
+          <span class="admin-user-name" title="<?= e(current_admin_username()) ?>"><?= e(current_admin_username()) ?></span>
+        </button>
+        <div class="dropdown-menu admin-user-dropdown" aria-labelledby="adminUserMenu">
+          <?php foreach ($userNavigation as $item): $isActive = in_array($adminPage, $item['pages'], true); ?>
+          <a href="<?= e($item['href']) ?>" class="admin-user-link<?= $isActive ? ' active' : '' ?>"<?= $isActive ? ' aria-current="page"' : '' ?>>
+            <?= tabler_icon($item['icon']) ?><span><?= e($item['label']) ?></span>
+          </a>
+          <?php endforeach; ?>
+          <form method="post" action="logout.php" class="logout-form">
+            <?= csrf_field() ?>
+            <button type="submit" class="logout-link"><?= tabler_icon('logout') ?><span>Uitloggen</span></button>
+          </form>
+        </div>
+      </div>
+    </div>
     <button class="admin-nav-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavigation" aria-controls="adminNavigation" aria-expanded="false">
       <?= tabler_icon('menu-2') ?><span>Menu</span><?= tabler_icon('chevron-down', 'admin-nav-chevron') ?>
     </button>
@@ -64,23 +86,6 @@ $userNavigation = [
       </div>
       <?php endforeach; ?>
     </nav>
-    <div class="dropup admin-user-menu">
-      <button class="admin-user-trigger dropdown-toggle" type="button" id="adminUserMenu" data-bs-toggle="dropdown" aria-expanded="false">
-        <span class="admin-user-avatar"><?= tabler_icon('user') ?></span>
-        <span class="admin-user-name" title="<?= e(current_admin_username()) ?>"><?= e(current_admin_username()) ?></span>
-      </button>
-      <div class="dropdown-menu admin-user-dropdown" aria-labelledby="adminUserMenu">
-        <?php foreach ($userNavigation as $item): $isActive = in_array($adminPage, $item['pages'], true); ?>
-        <a href="<?= e($item['href']) ?>" class="admin-user-link<?= $isActive ? ' active' : '' ?>"<?= $isActive ? ' aria-current="page"' : '' ?>>
-          <?= tabler_icon($item['icon']) ?><span><?= e($item['label']) ?></span>
-        </a>
-        <?php endforeach; ?>
-        <form method="post" action="logout.php" class="logout-form">
-          <?= csrf_field() ?>
-          <button type="submit" class="logout-link"><?= tabler_icon('logout') ?><span>Uitloggen</span></button>
-        </form>
-      </div>
-    </div>
   </aside>
   <main class="admin-main">
     <h1><?= e($pageTitle) ?></h1>
