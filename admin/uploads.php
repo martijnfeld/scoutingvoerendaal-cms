@@ -139,7 +139,7 @@ include __DIR__ . '/includes/layout_top.php';
         <?php if ($file['is_image']): ?>
         <img src="../<?= e($url) ?>" class="thumb" alt="">
         <?php else: ?>
-        <span class="muted"><?= tabler_icon('file-type-pdf') ?> PDF</span>
+        <span class="muted"><i class="fa-solid fa-file-pdf"></i> PDF</span>
         <?php endif; ?>
       </td>
       <td><a href="../<?= e($url) ?>" target="_blank"><?= e($file['name']) ?></a><br><span class="muted"><?= e(date('d-m-Y H:i', $file['modified'])) ?></span></td>

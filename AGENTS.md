@@ -21,8 +21,7 @@ update both `sql/install.sql` and a new ordered migration in
 - Custom CSS is voor projectspecifieke vormgeving en uitzonderingen; refactor bestaande legacy-styling
   niet uitsluitend om Bootstrap te gebruiken, tenzij de taak dat expliciet vraagt.
 - Voeg geen nieuw CSS-framework toe zonder expliciete opdracht.
-- Gebruik geen Bootstrap-CDN: uitsluitend de lokale versie in `assets/css/bootstrap/` en
-  `assets/js/bootstrap/`.
+- Gebruik de lokale Bootstrap-versie in `assets/css/bootstrap/` en `assets/js/bootstrap/`.
 
 ### Iconen
 
@@ -30,14 +29,11 @@ update both `sql/install.sql` and a new ordered migration in
   `assets/svg/tabler-icons/icons/`.
 - Controleer Tabler Icons voordat je een eigen SVG maakt. Alleen wanneer aantoonbaar geen geschikt
   Tabler-icoon bestaat, is een projectspecifiek custom SVG toegestaan.
-- Voeg zonder expliciete opdracht geen Font Awesome, Material Icons, Lucide, Heroicons of andere
-  iconlibrary toe en gebruik geen externe icon-CDN's of SVG-URL's.
+- Gebruik Tabler Icons als eerste keuze voor nieuwe iconen.
 - Gebruik geen emoji als vervanging voor normale UI-iconen.
-- Bestaand Font Awesome-gebruik is technische schuld en valt buiten een gewone featurewijziging:
-  voeg geen nieuw gebruik toe en migreer het alleen wanneer de taak dat vraagt.
 
 ### Dependencies
 
 Dit project moet eenvoudig lokaal en op shared hosting werken. Voeg voor frontend-assets niet zonder
-expliciete opdracht npm, yarn, pnpm, Composer-pakketten, CDN-afhankelijkheden of een verplichte
-buildpipeline toe. Lokale frontendlibraries moeten direct vanuit de repository bruikbaar zijn.
+expliciete opdracht npm, yarn, pnpm, Composer-pakketten of een verplichte buildpipeline toe. Lokale
+frontendlibraries moeten direct vanuit de repository bruikbaar zijn.

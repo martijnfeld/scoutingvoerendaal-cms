@@ -97,13 +97,11 @@ clobbers site-specific secrets:
 
 **Frontendbasis**: Bootstrap 5.3.8 is included locally and unmodified in `assets/css/bootstrap/` and
 `assets/js/bootstrap/`, and is loaded centrally by both shared public and authenticated-admin layouts.
-Use its local CSS, bundled JavaScript
-(including Popper), components and utilities as the basis for new UI work; do not add a Bootstrap CDN,
-package manager or build step. Existing custom styling is intentionally not being refactored merely to
-use Bootstrap. Tabler Icons 3.49.0 is the default icon source; its complete local SVG set is in
-`assets/svg/tabler-icons/icons/`. Check that set before creating a project SVG. Do not add Font
-Awesome or another icon library for new work, use emoji as ordinary UI icons, or load external SVGs.
-Existing Font Awesome CDN use remains solely for legacy markup until a separately scoped migration.
+Use its local CSS, bundled JavaScript (including Popper), components and utilities as the basis for new
+UI work. Existing custom styling is intentionally not being refactored merely to use Bootstrap. Tabler
+Icons 3.49.0 is the default icon source; its complete local SVG set is in
+`assets/svg/tabler-icons/icons/`. Check that set before creating a project SVG. Do not use emoji as
+ordinary UI icons or load external SVGs.
 Use `tabler_icon()` from `includes/functions.php` for local, decorative Tabler outline icons in PHP
 templates; it accepts only simple local icon names and never constructs a user-controlled path.
 
