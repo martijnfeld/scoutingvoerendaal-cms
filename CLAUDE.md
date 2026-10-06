@@ -95,6 +95,16 @@ clobbers site-specific secrets:
   `backups`, `updates`, `controle`, `paginas`/`pagina_form`). Every admin page requires `admin/includes/auth.php` and
   calls `require_login()` first.
 
+**Frontendbasis**: Bootstrap 5.3.8 is included locally and unmodified in `assets/css/bootstrap/` and
+`assets/js/bootstrap/`, and is loaded centrally by both shared public and authenticated-admin layouts.
+Use its local CSS, bundled JavaScript
+(including Popper), components and utilities as the basis for new UI work; do not add a Bootstrap CDN,
+package manager or build step. Existing custom styling is intentionally not being refactored merely to
+use Bootstrap. Tabler Icons 3.49.0 is the default icon source; its complete local SVG set is in
+`assets/svg/tabler-icons/icons/`. Check that set before creating a project SVG. Do not add Font
+Awesome or another icon library for new work, use emoji as ordinary UI icons, or load external SVGs.
+Existing Font Awesome CDN use remains solely for legacy markup until a separately scoped migration.
+
 **Shared includes** (`includes/`, loaded via `require_once`, not web-accessible — blocked by `.htaccess`):
 - `includes/db.php` — `db(): PDO` returns a lazily-created, memoized PDO singleton (prepared statements,
   exceptions on error, no emulated prepares).

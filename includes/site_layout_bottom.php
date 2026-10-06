@@ -17,6 +17,7 @@
   </div>
 </footer>
 
+<script src="assets/js/bootstrap/bootstrap.bundle.min.js"></script>
 <script src="assets/js/main.js"></script>
 <?php if (get_setting('ga_measurement_id')): ?>
 <!-- Google tag (gtag.js) -->

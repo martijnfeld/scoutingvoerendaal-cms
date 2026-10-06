@@ -91,12 +91,40 @@ sql/install.sql         volledig databaseschema voor een nieuwe installatie
 sql/migrations/         genummerde migraties voor bestaande installaties
 cron/backup_cron.php    startpunt voor de automatische back-up
 tools/                  ontwikkelscripts (bv. het bijwerken van de geo-IP-data)
+assets/css/bootstrap/   lokale Bootstrap-CSS en licentie
+assets/js/bootstrap/    lokale Bootstrap-JavaScript-bundle
+assets/svg/tabler-icons/ lokale Tabler Icons-SVG's en licentie
 ```
+
+### Frontendbasis: Bootstrap en iconen
+
+**Bootstrap 5.3.8** is de stylingbasis voor nieuwe schermen en UI-componenten. De officiële,
+gecompileerde distributiebestanden staan lokaal in `assets/css/bootstrap/` en `assets/js/bootstrap/`;
+zowel de publieke layout als de beheerlayout laden `bootstrap.min.css` en `bootstrap.bundle.min.js`
+centraal. De bundle
+bevat Popper. Gebruik dus geen Bootstrap-CDN. Gebruik bij nieuwe werkzaamheden eerst Bootstrap voor
+layout, grid/flex- en spacing-utilities, formulieren, knoppen en beschikbare componenten zoals alerts,
+badges, cards, modals, navigatie en dropdowns. Voeg alleen custom CSS toe wanneer Bootstrap niet
+voldoende is of de vormgeving specifiek voor dit project is. Bestaande styling hoeft niet alleen
+hiervoor te worden omgebouwd.
+
+**Tabler Icons 3.49.0** is de standaard iconlibrary. De complete officiële SVG-set staat lokaal in
+`assets/svg/tabler-icons/icons/` (met `outline/` en `filled/`) en heeft geen JavaScript-runtime of
+icon-font nodig. Controleer eerst deze lokale set voordat je een custom SVG maakt. Gebruik geen emoji
+voor gewone UI-iconen, geen externe SVG-URL's en geen nieuwe iconlibrary zonder expliciete reden.
+Font Awesome wordt nog op bestaande pagina's via een CDN gebruikt; voeg daarvoor geen nieuw gebruik toe
+en migreer bestaand gebruik afzonderlijk naar Tabler wanneer dat wordt ingepland.
+
+Beide libraries zijn MIT-gelicentieerd. De originele licenties staan in
+`assets/css/bootstrap/LICENSE` en `assets/svg/tabler-icons/LICENSE`. Deze distributiebestanden worden
+niet handmatig aangepast; een update vervangt ze vanuit de officiële release.
 
 ### Goed om te weten
 
 - **Gewone shared hosting is het uitgangspunt**: geen shell, geen Composer/npm, geen workers. Alles
   moet werken als losse PHP-bestanden plus MySQL.
+- **Frontend-afhankelijkheden zijn lokaal**: voeg geen npm, Composer-pakket, CDN of verplichte buildstap
+  toe voor Bootstrap, Tabler Icons of nieuwe frontend-assets zonder expliciete opdracht.
 - **Databasewijziging?** Pas `sql/install.sql` aan *én* voeg een nieuwe migratie toe in
   `sql/migrations/`. Allebei moeten op hetzelfde eindresultaat uitkomen.
 - **Geen inline `<script>` of `onclick=`**: de Content-Security-Policy blokkeert die. JavaScript hoort
