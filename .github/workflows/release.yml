@@ -1,0 +1,82 @@
+# Zet APP_VERSION in includes/version.php automatisch gelijk aan een nieuwe
+# git-tag (bv. tag "v1.2.0" -> APP_VERSION '1.2.0').
+#
+# De release-zip die sites via Beheerpaneel → Updates downloaden wordt gebouwd
+# vanaf de commit waar de tag naar wijst, dus die commit moet de juiste versie
+# bevatten. Daarom: versie-commit bovenop de getagde commit maken, de tag daar
+# naartoe verplaatsen, main fast-forwarden en (als die nog niet bestaat) de
+# GitHub-release aanmaken.
+
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Versie uit tag halen
+        id: version
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          version="${tag#[vV]}"
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Tag '$tag' is geen geldige versie (verwacht vX.Y.Z)"
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: version.php bijwerken en tag verplaatsen
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          sed -i -E "s/(APP_VERSION\s*=\s*')[^']*(')/\1${VERSION}\2/" includes/version.php
+          grep -q "APP_VERSION = '${VERSION}'" includes/version.php || {
+            echo "::error file=includes/version.php::APP_VERSION niet gevonden/bijgewerkt"
+            exit 1
+          }
+
+          if git diff --quiet -- includes/version.php; then
+            echo "APP_VERSION staat al op ${VERSION}, tag blijft staan."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+            git commit -am "Versie ${VERSION}"
+            git tag -f "$TAG"
+            # Tags gepusht met GITHUB_TOKEN starten geen nieuwe workflow-run, dus geen lus.
+            git push -f origin "refs/tags/${TAG}"
+          fi
+
+          # main bijwerken, maar alleen als dat een fast-forward is (tag op de
+          # laatste commit van main). Anders main niet aanraken.
+          if git merge-base --is-ancestor origin/main HEAD; then
+            git push origin HEAD:main
+          else
+            echo "::warning::Tag ${TAG} staat niet op de laatste commit van main; main is niet bijgewerkt. Pas APP_VERSION daar zelf aan."
+          fi
+
+      - name: GitHub-release aanmaken (als die nog niet bestaat)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release ${TAG} bestaat al."
+          else
+            gh release create "$TAG" --verify-tag --title "$TAG" --generate-notes
+          fi

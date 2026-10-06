@@ -1,0 +1,73 @@
+# Lokale ontwikkel-/testomgeving. NIET gebruiken op shared hosting — zie
+# INSTALL.md voor de echte installatie-instructies daarvoor.
+#
+# Starten:
+#   docker compose up -d --build
+#   open http://localhost:8080/install.php   (eerste keer: beheerder aanmaken)
+#   open http://localhost:8080/              (website)
+#   open http://localhost:8080/admin/        (beheerpaneel)
+#   open http://localhost:8081/              (phpMyAdmin, server: db)
+#
+# Stoppen:
+#   docker compose down          (database blijft bewaard)
+#   docker compose down -v       (ook database-inhoud wissen, opnieuw beginnen)
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_NAME: scouting
+      DB_USER: scouting
+      DB_PASS: scouting
+      APP_DEBUG: "1"
+    extra_hosts:
+      # Op Linux-Docker-hosts bestaat host.docker.internal niet standaard;
+      # op Docker Desktop (Windows/Mac) is dit een no-op omdat het al bestaat.
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: scouting
+      MYSQL_USER: scouting
+      MYSQL_PASSWORD: scouting
+    volumes:
+      - db_data:/var/lib/mysql
+      # Wordt automatisch geïmporteerd zodra het datavolume voor het eerst
+      # wordt aangemaakt (schema + de huidige teksten/gegevens van de site).
+      - ./sql/install.sql:/docker-entrypoint-initdb.d/01-install.sql:ro
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  phpmyadmin:
+    image: phpmyadmin:5
+    restart: unless-stopped
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: root
+    ports:
+      - "8081:80"
+    depends_on:
+      - db
+
+volumes:
+  db_data:

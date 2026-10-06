@@ -1,0 +1,68 @@
+# ==================================================================
+# Geüploade bestanden mogen NOOIT als script worden uitgevoerd, onder
+# welke PHP-koppeling dan ook (mod_php, PHP-FPM/FastCGI, CGI, suPHP,
+# LSAPI). Daarom meerdere lagen, elk zonder kans op een 500-fout:
+#   1. allowlist: alles weigeren, behalve de bestandstypen die het CMS
+#      zelf toestaat (jpg/jpeg/png/gif/webp/pdf);
+#   2. PHP-engine uit voor mod_php (5, 7 en 8);
+#   3. handler- en type-koppelingen voor scriptextensies verwijderen
+#      (voor FPM/CGI/suPHP via AddHandler/AddType);
+#   4. headers zodat een bestand dat toch doorglipt geen script kan
+#      draaien in de browser.
+# "Options -ExecCGI" staat er bewust niet in: op hosts die maar een
+# beperkte lijst Options toestaan geeft dat een 500-fout, en CGI-
+# extensies worden door de allowlist toch al geweigerd.
+# ==================================================================
+
+# 1. Standaard alles weigeren...
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>
+
+# ...behalve toegestane typen met precies één extensie. Bestanden die via
+# het CMS zijn geüpload hebben altijd een naam als "a1b2c3d4e5f6a7b8.jpg";
+# dubbele extensies (zoals "x.php.jpg", die sommige PHP-koppelingen alsnog
+# als PHP uitvoeren) worden zo ook geweigerd. Zet je zelf via FTP een
+# bestand neer, gebruik dan geen extra punten in de naam.
+<FilesMatch "^[^.]+\.(?i:jpe?g|png|gif|webp|pdf)$">
+    <IfModule mod_authz_core.c>
+        Require all granted
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Allow from all
+    </IfModule>
+</FilesMatch>
+
+# 2. PHP-engine uit (alleen van toepassing onder mod_php; php_flag buiten
+#    deze blokken zou onder PHP-FPM/CGI juist een 500-fout geven).
+<IfModule mod_php5.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+
+# 3. Scriptkoppelingen verwijderen (PHP-FPM, CGI, suPHP, LSAPI, ...).
+<IfModule mod_mime.c>
+    RemoveHandler .php .php3 .php4 .php5 .php6 .php7 .php8 .phtml .pht .phar .phps .pl .py .cgi .sh .shtml .asp .aspx .jsp
+    RemoveType .php .php3 .php4 .php5 .php6 .php7 .php8 .phtml .pht .phar .phps .pl .py .cgi .sh .shtml .asp .aspx .jsp
+</IfModule>
+
+# 4. Browser: nooit raden naar het type, en een rechtstreeks geopend
+#    bestand mag geen scripts draaien (CSP-sandbox). Niet voor PDF's:
+#    de ingebouwde PDF-viewer van Chrome weigert in een sandbox te openen.
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Content-Security-Policy "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; sandbox"
+    <FilesMatch "(?i)\.pdf$">
+        Header always unset Content-Security-Policy
+    </FilesMatch>
+</IfModule>

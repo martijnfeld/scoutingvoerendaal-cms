@@ -1,0 +1,159 @@
+# ==================================================================
+# Apache-configuratie voor de hele site (Apache 2.2 én 2.4, LiteSpeed).
+#
+# Uitgangspunt: dit bestand mag op een beperkte shared host NOOIT een
+# 500-fout veroorzaken. Daarom:
+# - alles wat van een module afhangt staat in een <IfModule>-blok;
+# - toegangsregels staan er steeds dubbel in: "Require" (Apache 2.4,
+#   mod_authz_core) en "Order/Deny" (Apache 2.2), zodat ze werken met én
+#   zonder mod_access_compat;
+# - toegangsregels vereisen "AllowOverride Limit" (2.2) of "AuthConfig"
+#   (2.4); die staat elk hostingpaneel toe (nodig voor wachtwoord-
+#   beveiligde mappen).
+# Niet in <IfModule> kunnen "Options -Indexes" en "ServerSignature Off"
+# (core); zie de toelichting daarbij.
+#
+# Let op: draait de site op nginx zonder Apache, dan wordt dit bestand
+# volledig genegeerd. Zie INSTALL.md voor de nginx-equivalent.
+# ==================================================================
+
+# ------------------------------------------------------------------
+# Index
+# ------------------------------------------------------------------
+<IfModule mod_dir.c>
+    DirectoryIndex index.php index.html
+</IfModule>
+
+# Geen mappenoverzicht tonen (bv. van assets/uploads/). Vereist
+# "AllowOverride Options" (of Options=Indexes); dat staat vrijwel elke
+# host toe. Krijg je na het uploaden toch meteen een 500-fout op de hele
+# site, zet dan een # voor deze regel — de mappen die echt afgeschermd
+# moeten zijn hebben elk hun eigen .htaccess met een weigerregel.
+Options -Indexes
+
+# Geen Apache-versie onder foutpagina's. Mag bij elke AllowOverride-
+# instelling (ook een beperkte lijst). De "Server:"-header zelf kan
+# alleen de host aanpassen (ServerTokens).
+ServerSignature Off
+
+# ------------------------------------------------------------------
+# Rewrites
+# ------------------------------------------------------------------
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Sitemap: /sitemap.xml wordt dynamisch gegenereerd door sitemap.php
+    RewriteRule ^sitemap\.xml$ sitemap.php [L]
+
+    # Extra vangnet voor servers die wel rewrite-regels maar geen
+    # Require/Deny uit .htaccess ondersteunen (bv. OpenLiteSpeed):
+    # verborgen mappen (.git, .idea, ...) en interne mappen weigeren.
+    # .well-known blijft bereikbaar (nodig voor Let's Encrypt/AutoSSL).
+    RewriteRule (^|/)\.(?!well-known(/|$)) - [F]
+    RewriteRule ^(includes|admin/includes|sql|backups|tools|docker)(/|$) - [F]
+
+    # Losse pagina's: /<slug> wordt intern afgehandeld door pagina.php.
+    # Slugs bestaan alleen uit a-z, 0-9 en '-' (zie slugify()), dus bestanden
+    # met een extensie (index.php, robots.txt) matchen nooit. Bestaande
+    # mappen (admin, assets, ...) gaan altijd voor; zulke namen worden bij
+    # het opslaan van een pagina ook geweigerd (PAGE_RESERVED_SLUGS).
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^([a-z0-9-]+)$ pagina.php?slug=$1 [L,QSA]
+
+    # Oude links (pagina.php?slug=...) permanent doorsturen naar /<slug>.
+    # Kijkt naar THE_REQUEST (wat de browser echt opvroeg), zodat de interne
+    # rewrite hierboven geen lus veroorzaakt; %1 is het pad naar de
+    # websitemap, zodat dit ook in een submap werkt.
+    RewriteCond %{THE_REQUEST} ^[A-Z]+\s(/(?:[^?\s]*/)?)pagina\.php\?slug=([a-z0-9-]+)(?:\s|&)
+    RewriteRule ^pagina\.php$ %1%2? [R=301,L]
+
+    # HTTPS afdwingen staat bewust UIT: achter een proxy of CDN (nginx
+    # vóór Apache, Cloudflare) ziet Apache zelf vaak alleen http, en dan
+    # geeft deze regel een oneindige redirect-lus. Zet hem alleen aan als
+    # je zeker weet dat Apache zelf het HTTPS-verkeer afhandelt, of laat
+    # het hostingpaneel ("HTTPS forceren") de redirect doen.
+    # RewriteCond %{HTTPS} !=on
+    # RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+</IfModule>
+
+# Verborgen mappen (.git, .idea, .claude, .vscode, ...) afschermen, ook
+# als mod_rewrite ontbreekt (dan 404 i.p.v. 403). <Files> hieronder ziet
+# alleen de bestandsnaam ("config"), niet de map (".git").
+<IfModule mod_alias.c>
+    RedirectMatch 404 /\.(?!well-known(/|$))
+</IfModule>
+
+# ------------------------------------------------------------------
+# Caching
+# ------------------------------------------------------------------
+<IfModule mod_headers.c>
+    <FilesMatch "\.(txt|xml)$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+    </FilesMatch>
+
+    <FilesMatch "\.(pdf|jpg|jpeg|png|gif|svg|webp|ico)$">
+        Header set Cache-Control "public, max-age=86400"
+    </FilesMatch>
+</IfModule>
+
+# ------------------------------------------------------------------
+# Security-headers
+# ------------------------------------------------------------------
+# "always" zodat ze ook op foutpagina's (403/404) staan. De
+# Content-Security-Policy stuurt de PHP-code zelf mee (twee CSP's
+# zouden elkaar beperken), daarom staat die hier niet.
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    # Browserfuncties die de site niet gebruikt uitzetten. Fullscreen en
+    # autoplay blijven toegestaan voor ingesloten YouTube-video's.
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+
+    # HSTS: alleen meesturen als Apache zelf de HTTPS-verbinding afhandelt
+    # (de variabele HTTPS wordt door mod_ssl gezet). Achter een proxy wordt
+    # hij dus niet verstuurd — dat is veilig, alleen minder streng. Korte
+    # looptijd en geen includeSubDomains/preload: verloopt het certificaat
+    # een keer, dan zitten bezoekers hooguit een week vast.
+    Header always set Strict-Transport-Security "max-age=604800" env=HTTPS
+</IfModule>
+
+# ------------------------------------------------------------------
+# Gevoelige bestanden afschermen
+# ------------------------------------------------------------------
+# Verborgen bestanden (.htaccess, .gitignore, .env, .user.ini, ...),
+# behalve de map .well-known.
+<FilesMatch "^\.(?!well-known$)">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Back-ups, dumps, logs, documentatie, configuratie- en ontwikkelbestanden.
+# Let op: .txt en .xml staan hier bewust niet tussen (robots.txt, sitemap).
+<FilesMatch "(?i)(\.(bak|old|orig|save|swp|swo|tmp|dist|example|sample|sql|sqlite|db|log|md|markdown|ini|conf|cnf|yml|yaml|toml|env|sh|bash|bat|cmd|ps1|inc|phps|lock|bin|zip|tar|tgz|gz|bz2|7z|rar)|~)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Losse bestandsnamen zonder (herkenbare) extensie, o.a. het PHP-foutlog
+# dat cPanel/DirectAdmin in de webmap zelf aanmaakt.
+<FilesMatch "^(?i:Dockerfile|docker-compose\.ya?ml|composer\.(json|lock)|package(-lock)?\.json|Makefile|error_log|php_errors?\.log)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>

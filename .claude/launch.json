@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "docker-web",
+      "runtimeExecutable": "docker",
+      "runtimeArgs": ["compose", "up", "-d", "--build", "web", "db"],
+      "port": 8080
+    }
+  ]
+}

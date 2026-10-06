@@ -1,0 +1,44 @@
+<?php
+/**
+ * Kopieer dit bestand naar `config.local.php` (zelfde map) en vul je eigen
+ * gegevens in. `config.local.php` staat NIET in git en wordt door
+ * Beheerpaneel → Updates nooit overschreven — dit is dus de juiste plek
+ * voor je echte databasegegevens en geheime sleutels op shared hosting.
+ *
+ * Voor de Docker-ontwikkelomgeving heb je dit bestand niet nodig; die
+ * krijgt zijn databasegegevens via environment-variabelen in
+ * docker-compose.yml.
+ */
+
+// -- Database instellingen --------------------------------------------
+define('DB_HOST', 'localhost');
+define('DB_PORT', '3306');
+define('DB_NAME', 'vul_hier_je_database_naam_in');
+define('DB_USER', 'vul_hier_je_database_gebruiker_in');
+define('DB_PASS', 'vul_hier_je_database_wachtwoord_in');
+
+// -- Back-ups ------------------------------------------------------------
+// Verzin een lange, unieke waarde voordat je de wekelijkse back-up-cronjob
+// instelt — zie INSTALL.md, hoofdstuk "Back-ups".
+define('BACKUP_CRON_KEY', 'wijzig_deze_geheime_sleutel');
+
+// Map waar back-ups worden opgeslagen. Standaard is dat een map náást de
+// websitemap (bv. ".../public_html-backups"), dus buiten de webroot. Alleen
+// nodig als je een andere plek wilt; gebruik een absoluut pad en kies bij
+// voorkeur een map BUITEN de websitemap (een back-up bevat je
+// databasegegevens en wachtwoord-hashes). Zie INSTALL.md, hoofdstuk "Back-ups".
+// define('BACKUP_DIR', '/home/jouwaccount/scouting-backups');
+
+// -- Updates ---------------------------------------------------------
+// Alleen nodig als je een eigen fork van de repository gebruikt; anders
+// geldt de standaardwaarde uit config.php.
+// define('GITHUB_REPO', 'jouw-gebruikersnaam/jouw-repo-naam');
+
+// -- Beveiliging beheerpaneel ----------------------------------------
+// Inloggen op /admin kan standaard alleen vanuit Europa. Ben je (tijdelijk)
+// buiten Europa en moet je toch inloggen, haal dan het commentaar weg:
+// define('ADMIN_GEO_BLOCK', false);
+//
+// Alleen inloggen toestaan vanuit specifieke landen (ISO-landcodes, moeten
+// Europees zijn — zie GEO_EUROPE_COUNTRIES in includes/geoip.php):
+// define('ADMIN_LOGIN_COUNTRIES', 'NL,BE,DE');

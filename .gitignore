@@ -1,0 +1,31 @@
+# Omgevingsspecifieke instellingen (databasegegevens, geheime sleutels) —
+# zie config.local.php.example. Wordt nooit gecommit en bij een update
+# nooit overschreven.
+/config.local.php
+
+# install.sql met de echte gegevens van Scouting Voerendaal (Scoutdash-sleutels,
+# namen leiding, contactgegevens). sql/install.sql zelf bevat alleen
+# voorbeeldwaarden.
+/sql/install_voerendaal.sql
+
+# Back-ups en tijdelijke updatebestanden (al afgeschermd via backups/.htaccess).
+/backups/*.zip
+/backups/.update-tmp/
+
+# Runtime-cache (opkomsten-feed, updatecheck) — wordt automatisch aangemaakt.
+/includes/cache/*
+
+# Geüploade bestanden via het CMS (foto's, PDF's) — geen repo-inhoud, dit is
+# door de sitebeheerder aangeleverde content. Uitzondering: de standaardfoto's
+# en het logo die sql/install.sql als default-waarden gebruikt, zodat een
+# verse install er nog netjes uitziet.
+/assets/uploads/*
+!/assets/uploads/.htaccess
+# !/assets/uploads/logo.png
+# !/assets/uploads/foto-bevers.jpg
+# !/assets/uploads/foto-gebouw.jpg
+# !/assets/uploads/foto-kom-kijken.jpg
+# !/assets/uploads/foto-wat-is-scouting.jpg
+
+*.bak
+.idea/claudeCodeEditorTabs.xml
