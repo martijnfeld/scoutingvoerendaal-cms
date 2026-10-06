@@ -6,4 +6,4 @@
  * nieuwste release op GitHub (zie includes/updater.php).
  */
 
-const APP_VERSION = '0.0.1';
+const APP_VERSION = '0.0.3';
