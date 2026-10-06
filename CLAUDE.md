@@ -142,9 +142,16 @@ renamed to a random hex name (prevents overwrite/collision and hides original fi
 execute scripts, so an uploaded file can't become a code-execution vector even if the extension check is
 somehow bypassed.
 
-**Rich-text editing** (`assets/js/admin.js`, CKEditor 5 classic build loaded from CDN in
-`admin/includes/layout_bottom.php`): every `<textarea class="rich-text">` in the admin panel becomes a
-CKEditor instance. Pasted/uploaded images go through a custom `FileRepository` upload adapter
+**Rich-text editing** (`assets/js/admin.js`, CKEditor 5 **super-build** + Dutch translation loaded from
+CDN in `admin/includes/layout_bottom.php`, exposed as `CKEDITOR.ClassicEditor`): every
+`<textarea class="rich-text">` in the admin panel becomes a CKEditor instance with every open-source
+feature enabled (fonts/colours, alignment, highlight, tables with properties, image resize/styles/captions,
+code blocks, to-do lists, find & replace, source editing, HTML embed, word count, …). The super-build also
+contains premium plugins that error without a licence — they must stay in `EDITOR_REMOVE_PLUGINS`.
+General HTML Support allows all markup except `<script>` and `on*` attributes. Output that relies on CSS
+classes (CKEditor's `image-style-*`, `marker-*`, `figure.table`, `todo-list`, and our own `cms-*` styles
+from `style.definitions`) is styled globally in `assets/css/style.css`; the `cms-*` styles are mirrored as
+`.ck-content` rules in `assets/css/admin.css` — keep those three places in sync when adding a style. Pasted/uploaded images go through a custom `FileRepository` upload adapter
 (`CkeditorUploadAdapter`) that posts to `admin/upload_image.php` (session-auth + CSRF header check, then
 `handle_upload()` with the same image-extension allowlist as elsewhere) and gets back an **absolute**
 URL built from `site_url` — a relative path would resolve differently when previewed live under `/admin/`

@@ -105,35 +105,194 @@
     });
   }
 
+  /**
+   * Kleuren in de kleurkiezers (tekst- en achtergrondkleur): de huisstijl-
+   * kleuren uit assets/css/style.css plus een paar neutrale tinten.
+   */
+  var EDITOR_COLORS = [
+    { color: '#00A551', label: 'Groen' },
+    { color: '#00893f', label: 'Donkergroen' },
+    { color: '#0066B2', label: 'Blauw' },
+    { color: '#F2940A', label: 'Oranje' },
+    { color: '#E1071A', label: 'Rood' },
+    { color: '#9e365b', label: 'Brique' },
+    { color: '#FCDD17', label: 'Geel' },
+    { color: '#222222', label: 'Zwart' },
+    { color: '#333333', label: 'Tekstkleur' },
+    { color: '#6c757d', label: 'Grijs' },
+    { color: '#dddddd', label: 'Lichtgrijs' },
+    { color: '#ffffff', label: 'Wit', hasBorder: true }
+  ];
+
+  /**
+   * Betaalde plugins (en plugins die een externe dienst nodig hebben) uit de
+   * CKEditor-"super-build". Zonder licentie/account geven ze een foutmelding
+   * en laadt de editor niet, dus ze moeten er altijd uit.
+   */
+  var EDITOR_REMOVE_PLUGINS = [
+    'AIAssistant', 'CKBox', 'CKBoxImageEdit', 'CKFinder', 'CKFinderUploadAdapter', 'EasyImage',
+    'Base64UploadAdapter', 'ExportPdf', 'ExportWord', 'MultiLevelList',
+    'RealTimeCollaborativeComments', 'RealTimeCollaborativeTrackChanges',
+    'RealTimeCollaborativeRevisionHistory', 'PresenceList', 'Comments', 'TrackChanges',
+    'TrackChangesData', 'RevisionHistory', 'Pagination', 'WProofreader', 'MathType',
+    'SlashCommand', 'Template', 'DocumentOutline', 'FormatPainter', 'TableOfContents',
+    'PasteFromOfficeEnhanced', 'CaseChange'
+  ];
+
+  function richTextEditorConfig() {
+    return {
+      language: {
+        ui: 'nl',
+        content: 'nl',
+        textPartLanguage: [
+          { title: 'Nederlands', languageCode: 'nl' },
+          { title: 'Engels', languageCode: 'en' },
+          { title: 'Duits', languageCode: 'de' },
+          { title: 'Frans', languageCode: 'fr' }
+        ]
+      },
+      removePlugins: EDITOR_REMOVE_PLUGINS,
+      toolbar: {
+        items: [
+          'undo', 'redo', '|',
+          'findAndReplace', 'selectAll', '|',
+          'heading', 'style', '|',
+          'fontSize', 'fontFamily', 'fontColor', 'fontBackgroundColor', 'highlight', '|',
+          'bold', 'italic', 'underline', 'strikethrough', 'subscript', 'superscript', 'code', 'removeFormat', '|',
+          'alignment', 'bulletedList', 'numberedList', 'todoList', 'outdent', 'indent', '|',
+          'link', 'insertImage', 'mediaEmbed', 'insertTable', 'blockQuote', 'codeBlock',
+          'horizontalLine', 'specialCharacters', 'htmlEmbed', '|',
+          'textPartLanguage', '|',
+          'showBlocks', 'sourceEditing', 'accessibilityHelp'
+        ],
+        // Alle knoppen zichtbaar over meerdere regels, in plaats van een "⋮"-menu.
+        shouldNotGroupWhenFull: true
+      },
+      heading: {
+        options: [
+          { model: 'paragraph', title: 'Alinea', class: 'ck-heading_paragraph' },
+          { model: 'heading2', view: 'h2', title: 'Kop 2', class: 'ck-heading_heading2' },
+          { model: 'heading3', view: 'h3', title: 'Kop 3', class: 'ck-heading_heading3' },
+          { model: 'heading4', view: 'h4', title: 'Kop 4', class: 'ck-heading_heading4' },
+          { model: 'heading5', view: 'h5', title: 'Kop 5', class: 'ck-heading_heading5' }
+        ]
+      },
+      // Opmaakstijlen; de bijbehorende CSS staat in assets/css/style.css
+      // (publieke site) en assets/css/admin.css (in de editor zelf).
+      style: {
+        definitions: [
+          { name: 'Introtekst', element: 'p', classes: ['cms-lead'] },
+          { name: 'Infoblok', element: 'p', classes: ['cms-info'] },
+          { name: 'Waarschuwing', element: 'p', classes: ['cms-warning'] },
+          { name: 'Kleine tekst', element: 'p', classes: ['cms-small'] },
+          { name: 'Knop', element: 'a', classes: ['cms-button'] },
+          { name: 'Gemarkeerd', element: 'span', classes: ['cms-marked'] }
+        ]
+      },
+      // Lettergrootte/-type als inline style, zodat de publieke site er
+      // geen extra CSS-klassen voor nodig heeft.
+      fontSize: {
+        options: [12, 14, 'default', 18, 20, 24, 28, 32, 40],
+        supportAllValues: true
+      },
+      fontFamily: {
+        options: [
+          'default',
+          'Arial, Helvetica, sans-serif',
+          'Georgia, serif',
+          'Courier New, Courier, monospace',
+          'Tahoma, Geneva, sans-serif',
+          'Times New Roman, Times, serif',
+          'Trebuchet MS, Helvetica, sans-serif',
+          'Verdana, Geneva, sans-serif'
+        ],
+        supportAllValues: true
+      },
+      fontColor: { colors: EDITOR_COLORS, columns: 6, documentColors: 12, colorPicker: { format: 'hex' } },
+      fontBackgroundColor: { colors: EDITOR_COLORS, columns: 6, documentColors: 12, colorPicker: { format: 'hex' } },
+      alignment: {
+        options: ['left', 'center', 'right', 'justify']
+      },
+      list: {
+        properties: { styles: true, startIndex: true, reversed: true }
+      },
+      link: {
+        defaultProtocol: 'https://',
+        decorators: {
+          openInNewTab: {
+            mode: 'manual',
+            label: 'Openen in nieuw tabblad',
+            attributes: { target: '_blank', rel: 'noopener noreferrer' }
+          },
+          download: {
+            mode: 'manual',
+            label: 'Downloadbaar bestand',
+            attributes: { download: 'download' }
+          }
+        }
+      },
+      image: {
+        toolbar: [
+          'imageStyle:inline', 'imageStyle:wrapText', 'imageStyle:breakText', '|',
+          'resizeImage', '|',
+          'toggleImageCaption', 'imageTextAlternative', 'linkImage'
+        ],
+        resizeUnit: '%',
+        resizeOptions: [
+          { name: 'resizeImage:original', value: null, label: 'Oorspronkelijk' },
+          { name: 'resizeImage:25', value: '25', label: '25%' },
+          { name: 'resizeImage:50', value: '50', label: '50%' },
+          { name: 'resizeImage:75', value: '75', label: '75%' }
+        ],
+        insert: { integrations: ['upload', 'url'] }
+      },
+      table: {
+        contentToolbar: [
+          'tableColumn', 'tableRow', 'mergeTableCells', '|',
+          'tableProperties', 'tableCellProperties', 'toggleTableCaption'
+        ],
+        tableProperties: { borderColors: EDITOR_COLORS, backgroundColors: EDITOR_COLORS },
+        tableCellProperties: { borderColors: EDITOR_COLORS, backgroundColors: EDITOR_COLORS }
+      },
+      mediaEmbed: {
+        // Slaat de kant-en-klare embed (bv. de YouTube-iframe) zelf op in de
+        // inhoud, zodat de publieke pagina dit kan tonen zonder CKEditor.
+        previewsInData: true,
+        // Deze diensten leveren geen embed-code, alleen een lege placeholder
+        // die op de publieke site niets toont.
+        removeProviders: ['instagram', 'twitter', 'googleMaps', 'flickr', 'facebook']
+      },
+      // Beheerders zijn vertrouwd (zie "Content trust model" in CLAUDE.md):
+      // alle HTML mag blijven staan, zodat "Bron" en het plakken van
+      // embed-codes werken. Scripts en event-handlers worden wel gestript;
+      // die zou de CSP op de publieke site toch blokkeren.
+      htmlSupport: {
+        allow: [{ name: /.*/, attributes: true, classes: true, styles: true }],
+        disallow: [
+          { name: /^script$/i },
+          { name: /.*/, attributes: [{ key: /^on/i, value: true }] }
+        ]
+      },
+      htmlEmbed: { showPreviews: false }
+    };
+  }
+
   function initRichTextEditors() {
-    if (typeof ClassicEditor === 'undefined') return;
+    if (typeof CKEDITOR === 'undefined' || !CKEDITOR.ClassicEditor) return;
 
     var editors = [];
     var textareas = document.querySelectorAll('textarea.rich-text');
 
     textareas.forEach(function (el) {
-      ClassicEditor
-        .create(el, {
-          toolbar: [
-            'heading', '|',
-            'bold', 'italic', 'link', '|',
-            'bulletedList', 'numberedList', 'blockQuote', '|',
-            'imageUpload', 'mediaEmbed', '|',
-            'undo', 'redo'
-          ],
-          image: {
-            toolbar: ['imageTextAlternative', '|', 'imageStyle:alignLeft', 'imageStyle:full', 'imageStyle:alignRight']
-          },
-          mediaEmbed: {
-            // Slaat de kant-en-klare embed (bv. de YouTube-iframe) zelf op in de
-            // inhoud, zodat de publieke pagina dit kan tonen zonder CKEditor.
-            previewsInData: true
-          }
-        })
+      CKEDITOR.ClassicEditor
+        .create(el, richTextEditorConfig())
         .then(function (editor) {
           editor.plugins.get('FileRepository').createUploadAdapter = function (loader) {
             return new CkeditorUploadAdapter(loader, el);
           };
+          // Woorden-/tekenteller onder de editor.
+          var wordCount = editor.plugins.get('WordCount');
+          editor.ui.element.parentNode.insertBefore(wordCount.wordCountContainer, editor.ui.element.nextSibling);
           editors.push(editor);
         })
         .catch(function (err) {

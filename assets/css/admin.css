@@ -56,6 +56,16 @@ legend{font-weight:700; padding:0 8px; color:#00893f;}
 }
 .field textarea{resize:vertical; min-height:80px;}
 .field .ck-editor__editable_inline{min-height:140px;}
+.field .ck-word-count{display:flex; gap:14px; justify-content:flex-end; font-size:0.75rem; color:#777; margin-top:4px;}
+/* Opmaakstijlen uit de editor (zie style.definitions in admin.js en de
+   cms-*-regels in style.css), zodat ze ook tijdens het bewerken zichtbaar zijn. */
+.ck-content .cms-lead{font-size:1.15rem; color:#555;}
+.ck-content .cms-info, .ck-content .cms-warning{padding:12px 16px; border-radius:8px; border-left:4px solid;}
+.ck-content .cms-info{background:#eafff2; border-color:#00A551;}
+.ck-content .cms-warning{background:#fff4e0; border-color:#F2940A;}
+.ck-content .cms-small{font-size:0.85rem; color:#666;}
+.ck-content .cms-marked{background:#FCDD17; padding:0 3px;}
+.ck-content a.cms-button{display:inline-block; background:#00A551; color:#fff; padding:9px 18px; border-radius:20px; font-weight:600; text-decoration:none;}
 .field input[type=color]{width:64px; height:38px; padding:2px; border:1px solid #ccc; border-radius:6px;}
 .field input[type=checkbox]{width:auto; margin-right:8px;}
 .field-row{display:flex; gap:16px; flex-wrap:wrap;}

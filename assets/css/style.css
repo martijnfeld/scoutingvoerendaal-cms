@@ -131,6 +131,66 @@ section.alt{background:var(--light);}
 .pagina-body table{border-collapse:collapse; width:100%; margin:0 0 16px;}
 .pagina-body table td, .pagina-body table th{border:1px solid #ddd; padding:8px 10px;}
 
+/* ---- CKEditor-opmaak, overal waar CMS-tekst getoond wordt ----
+   Klassenamen komen uit CKEditor of uit de stijlen in assets/js/admin.js
+   (cms-*); houd die in sync met de .ck-content-regels in admin.css. */
+.cms-lead{font-size:1.15rem; color:#555;}
+.cms-info, .cms-warning{padding:12px 16px; border-radius:8px; border-left:4px solid;}
+.cms-info{background:#eafff2; border-color:var(--green);}
+.cms-warning{background:#fff4e0; border-color:var(--orange);}
+.cms-small{font-size:0.85rem; color:#666;}
+.cms-marked{background:var(--yellow); padding:0 3px;}
+a.cms-button{
+  display:inline-block; background:var(--green); color:#fff; padding:9px 18px; border-radius:20px;
+  font-weight:600; text-decoration:none;
+}
+a.cms-button:hover{background:var(--green-dark); color:#fff; text-decoration:none;}
+
+mark.marker-yellow{background:#fdfd77;}
+mark.marker-green{background:#62f962;}
+mark.marker-pink{background:#fc7899;}
+mark.marker-blue{background:#72ccfd;}
+mark.pen-red{background:transparent; color:#e71313;}
+mark.pen-green{background:transparent; color:#128a00;}
+
+figure.image{display:table; clear:both; margin:0.9em auto; text-align:center;}
+figure.image img{display:block; margin:0 auto; max-width:100%; min-width:100%;}
+figure.image > figcaption{display:table-caption; caption-side:bottom; padding:0.6em; font-size:0.85rem; color:#666; background:#f7f7f7;}
+figure.image.image_resized{max-width:100%; display:block; box-sizing:border-box;}
+figure.image.image_resized img{width:100%;}
+figure.image.image_resized > figcaption{display:block;}
+img.image_resized{height:auto;}
+img.image-style-align-left, figure.image.image-style-align-left{float:left; margin-right:1.5em;}
+img.image-style-align-right, figure.image.image-style-align-right{float:right; margin-left:1.5em;}
+figure.image.image-style-side{float:right; margin-left:1.5em; max-width:50%;}
+figure.image.image-style-align-center{margin-left:auto; margin-right:auto;}
+figure.image.image-style-block-align-left{margin-left:0; margin-right:auto;}
+figure.image.image-style-block-align-right{margin-left:auto; margin-right:0;}
+img.image_resized, figure.image img, .image-inline img{height:auto;}
+.image-inline{display:inline-flex; max-width:100%; align-items:flex-start;}
+.image-inline img{flex-grow:1; flex-shrink:1; max-width:100%;}
+@media (max-width:600px){
+  img.image-style-align-left, img.image-style-align-right,
+  figure.image.image-style-align-left, figure.image.image-style-align-right, figure.image.image-style-side{
+    float:none; margin-left:auto; margin-right:auto; max-width:100%;
+  }
+}
+
+figure.table{display:table; margin:0.9em auto; max-width:100%; overflow-x:auto;}
+figure.table table{border-collapse:collapse; border:1px double #b3b3b3; width:100%; height:100%;}
+figure.table td, figure.table th{min-width:2em; padding:0.4em; border:1px solid #bfbfbf;}
+figure.table th{font-weight:bold; background:rgba(0,0,0,0.05);}
+figure.table > figcaption{display:table-caption; caption-side:top; padding:0.6em; font-size:0.85rem; text-align:center; color:#555;}
+
+figure.media{clear:both; margin:0.9em 0; display:block; min-width:15em;}
+pre{background:#f5f5f5; border:1px solid #e0e0e0; border-radius:6px; padding:12px 14px; overflow:auto; font-size:0.88rem;}
+code{background:rgba(0,0,0,0.05); padding:0.1em 0.3em; border-radius:3px; font-size:0.9em;}
+pre code{background:none; padding:0;}
+hr{border:0; border-top:1px solid #ddd; margin:24px 0;}
+.todo-list{list-style:none; padding-left:0;}
+.todo-list li{position:relative; margin-bottom:4px;}
+.todo-list .todo-list__label > input{margin-right:8px;}
+
 /* ---- speltak jump nav ---- */
 .speltak-jump{
   display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:36px;
