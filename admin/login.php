@@ -62,7 +62,7 @@ if (!admin_login_allowed_from_ip($ip)) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
 <title>Inloggen — Beheer</title>
-<link rel="stylesheet" href="../assets/css/admin.css">
+<link rel="stylesheet" href="<?= e(asset_url('../assets/css/admin.css')) ?>">
 </head>
 <body style="background:#1c2b22;">
 <div class="login-wrap">

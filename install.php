@@ -27,7 +27,7 @@ function install_page(string $title, string $bodyHtml): void
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title><?= e($title) ?> — Installatie</title>
-    <link rel="stylesheet" href="assets/css/admin.css">
+    <link rel="stylesheet" href="<?= e(asset_url('assets/css/admin.css')) ?>">
     </head>
     <body style="background:#1c2b22;">
     <div class="login-wrap" style="max-width:520px;">

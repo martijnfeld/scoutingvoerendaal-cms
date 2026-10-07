@@ -8,6 +8,15 @@ function e(?string $value): string
     return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
 }
 
+/**
+ * URL naar een eigen CSS/JS-bestand met de versie als query-string, zodat
+ * browsers na een update meteen de nieuwe versie ophalen (cachebusting).
+ */
+function asset_url(string $path): string
+{
+    return $path . '?v=' . rawurlencode(APP_VERSION);
+}
+
 /** Rendert een vast Font Awesome-icoon voor decoratief gebruik in de UI. */
 function fa_icon(string $name, string $class = ''): string
 {

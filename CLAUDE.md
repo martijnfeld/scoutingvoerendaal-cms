@@ -136,7 +136,8 @@ for the fixed, decorative admin-navigation icons; it maps known internal names t
   (`get_setting()`/`set_setting()`, request-scoped statically cached), speltakken/documents/info_cards
   data access, `handle_upload()` for safe file uploads, CSRF helpers, and flash-message helpers.
   `admin/includes/auth.php` additionally requires this file. Also requires `includes/version.php`
-  (defines `APP_VERSION`, bumped per release).
+  (defines `APP_VERSION`, bumped per release). Link our own CSS/JS via `asset_url()`, which appends
+  `?v=APP_VERSION` so browsers fetch fresh files after every update (cachebusting).
 - `includes/backup.php` / `includes/updater.php` — back-up creation and the update mechanism (see
   **Back-ups** and **Updates** below).
 

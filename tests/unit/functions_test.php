@@ -14,6 +14,11 @@ test('slugify() maakt nette slugs met fallback', function () {
     assert_same('speltak', slugify('', 'speltak'));
 });
 
+test('asset_url() voegt de versie toe voor cachebusting', function () {
+    assert_same('assets/css/style.css?v=' . rawurlencode(APP_VERSION), asset_url('assets/css/style.css'));
+    assert_same('../assets/js/admin.js?v=' . rawurlencode(APP_VERSION), asset_url('../assets/js/admin.js'));
+});
+
 test('page_url() geeft een relatieve, ge-encodede URL', function () {
     assert_same('ledeninfo', page_url('ledeninfo'));
     assert_same('a%20b', page_url('a b'));

@@ -18,11 +18,11 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-<script src="assets/js/main.js"></script>
+<script src="<?= e(asset_url('assets/js/main.js')) ?>"></script>
 <?php if (get_setting('ga_measurement_id')): ?>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=<?= e(get_setting('ga_measurement_id')) ?>"></script>
-<script src="assets/js/gtag.js" data-ga-id="<?= e(get_setting('ga_measurement_id')) ?>"></script>
+<script src="<?= e(asset_url('assets/js/gtag.js')) ?>"data-ga-id="<?= e(get_setting('ga_measurement_id')) ?>"></script>
 <?php endif; ?>
 </body>
 </html>
