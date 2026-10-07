@@ -31,8 +31,7 @@ h2{font-size:1.15rem;}
   font-size:0.9rem; font-weight:600;
 }
 .admin-nav-link{padding:9px 10px; border-radius:7px;}
-.tabler-icon{display:inline-flex; flex:0 0 18px; width:18px; height:18px; color:currentColor;}
-.tabler-icon svg{display:block; width:100%; height:100%; stroke:currentColor;}
+.admin-nav-link .fa-solid, .admin-user-link .fa-solid, .logout-link .fa-solid{flex:0 0 18px; width:18px; text-align:center;}
 .admin-nav-link:hover{background:rgba(255,255,255,0.07); color:#fff; text-decoration:none;}
 .admin-nav-link.active{background:rgba(0,165,81,0.16); box-shadow:inset 3px 0 0 #00A551; color:#fff; font-weight:700;}
 .admin-nav-link.active:hover{background:rgba(0,165,81,0.22); color:#fff;}
@@ -44,7 +43,7 @@ h2{font-size:1.15rem;}
 .admin-user-trigger:hover, .admin-user-trigger[aria-expanded="true"]{background:rgba(255,255,255,0.07);}
 .admin-user-trigger::after{margin-left:auto;}
 .admin-user-avatar{display:inline-flex; align-items:center; justify-content:center; flex:0 0 30px; width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,0.10); color:#fff;}
-.admin-user-avatar .tabler-icon{width:18px; height:18px; flex-basis:18px;}
+.admin-user-avatar .fa-solid{width:18px; text-align:center;}
 .admin-user-name{min-width:0; overflow:hidden; color:#fff; font-size:0.88rem; font-weight:700; text-overflow:ellipsis; white-space:nowrap;}
 .admin-user-menu .admin-user-dropdown{position:absolute; inset:auto 12px calc(100% + 8px); width:auto; margin:0; padding:4px; border:1px solid #d7dcd8; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.16);}
 .admin-user-link{padding:8px; color:#243028; font-size:0.85rem;}
@@ -157,7 +156,7 @@ table.check-table td:nth-child(2){width:30%; font-weight:600;}
     border:0; border-top:1px solid rgba(255,255,255,0.15); background:transparent; color:#fff;
     font:inherit; font-size:0.9rem; font-weight:600; text-align:left; cursor:pointer;
   }
-  .admin-nav-toggle .tabler-icon{width:20px; height:20px; flex-basis:20px;}
+  .admin-nav-toggle .fa-solid{flex:0 0 20px; width:20px; text-align:center;}
   .admin-nav-toggle .admin-nav-chevron{margin-left:auto; width:18px; height:18px; flex-basis:18px; transition:transform 150ms ease;}
   .admin-nav-toggle[aria-expanded="true"] .admin-nav-chevron{transform:rotate(180deg);}
   .admin-navigation.collapse{overflow:visible; padding:8px 18px 12px;}

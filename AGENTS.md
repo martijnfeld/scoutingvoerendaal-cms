@@ -21,19 +21,17 @@ update both `sql/install.sql` and a new ordered migration in
 - Custom CSS is voor projectspecifieke vormgeving en uitzonderingen; refactor bestaande legacy-styling
   niet uitsluitend om Bootstrap te gebruiken, tenzij de taak dat expliciet vraagt.
 - Voeg geen nieuw CSS-framework toe zonder expliciete opdracht.
-- Gebruik de lokale Bootstrap-versie in `assets/css/bootstrap/` en `assets/js/bootstrap/`.
+- Laad Bootstrap 5.3.8 centraal via de jsDelivr-CDN in de gedeelde layouts; voeg geen lokale
+  Bootstrap-distributiebestanden toe.
 
 ### Iconen
 
-- Tabler Icons is de standaardiconlibrary; gebruik uitsluitend de lokale SVG's in
-  `assets/svg/tabler-icons/icons/`.
-- Controleer Tabler Icons voordat je een eigen SVG maakt. Alleen wanneer aantoonbaar geen geschikt
-  Tabler-icoon bestaat, is een projectspecifiek custom SVG toegestaan.
-- Gebruik Tabler Icons als eerste keuze voor nieuwe iconen.
+- Font Awesome 6.5.2 is de standaardiconlibrary en wordt centraal geladen via cdnjs. Gebruik
+  Font Awesome als eerste keuze voor nieuwe iconen; voeg geen lokale icoonbestanden toe.
 - Gebruik geen emoji als vervanging voor normale UI-iconen.
 
 ### Dependencies
 
 Dit project moet eenvoudig lokaal en op shared hosting werken. Voeg voor frontend-assets niet zonder
-expliciete opdracht npm, yarn, pnpm, Composer-pakketten of een verplichte buildpipeline toe. Lokale
-frontendlibraries moeten direct vanuit de repository bruikbaar zijn.
+expliciete opdracht npm, yarn, pnpm, Composer-pakketten, lokale distributiebestanden of een verplichte
+buildpipeline toe. Externe frontend-assets worden centraal via de vastgelegde CDN-URL's geladen.

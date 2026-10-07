@@ -91,37 +91,32 @@ sql/install.sql         volledig databaseschema voor een nieuwe installatie
 sql/migrations/         genummerde migraties voor bestaande installaties
 cron/backup_cron.php    startpunt voor de automatische back-up
 tools/                  ontwikkelscripts (bv. het bijwerken van de geo-IP-data)
-assets/css/bootstrap/   lokale Bootstrap-CSS en licentie
-assets/js/bootstrap/    lokale Bootstrap-JavaScript-bundle
-assets/svg/tabler-icons/ lokale Tabler Icons-SVG's en licentie
 ```
 
 ### Frontendbasis: Bootstrap en iconen
 
-**Bootstrap 5.3.8** is de stylingbasis voor nieuwe schermen en UI-componenten. De officiële,
-gecompileerde distributiebestanden staan lokaal in `assets/css/bootstrap/` en `assets/js/bootstrap/`;
-zowel de publieke layout als de beheerlayout laden `bootstrap.min.css` en `bootstrap.bundle.min.js`
-centraal. De bundle bevat Popper. Gebruik bij nieuwe werkzaamheden eerst Bootstrap voor layout,
+**Bootstrap 5.3.8** is de stylingbasis voor nieuwe schermen en UI-componenten. Zowel de publieke
+layout als de beheerlayout laden de CSS en `bootstrap.bundle.min.js` centraal via jsDelivr; de bundle
+bevat Popper. Gebruik bij nieuwe werkzaamheden eerst Bootstrap voor layout,
 grid/flex- en spacing-utilities, formulieren, knoppen en beschikbare componenten zoals alerts, badges,
 cards, modals, navigatie en dropdowns. Voeg alleen custom CSS toe wanneer Bootstrap niet voldoende is
 of de vormgeving specifiek voor dit project is. Bestaande styling hoeft niet alleen hiervoor te worden
 omgebouwd.
 
-**Tabler Icons 3.49.0** is de standaard iconlibrary. De complete officiële SVG-set staat lokaal in
-`assets/svg/tabler-icons/icons/` (met `outline/` en `filled/`) en heeft geen JavaScript-runtime of
-icon-font nodig. Controleer eerst deze lokale set voordat je een custom SVG maakt. Gebruik geen emoji
-voor gewone UI-iconen, geen externe SVG-URL's en geen nieuwe iconlibrary zonder expliciete reden.
+**Font Awesome 6.5.2** is de standaard iconlibrary en wordt centraal via cdnjs geladen. Gebruik de
+beschikbare Font Awesome-iconen als eerste keuze en voeg geen lokale icoonbestanden of tweede
+iconlibrary toe. Gebruik geen emoji voor gewone UI-iconen.
 
-Beide libraries zijn MIT-gelicentieerd. De originele licenties staan in
-`assets/css/bootstrap/LICENSE` en `assets/svg/tabler-icons/LICENSE`. Deze distributiebestanden worden
-niet handmatig aangepast; een update vervangt ze vanuit de officiële release.
+Bootstrap is MIT-gelicentieerd en Font Awesome hanteert de licentievoorwaarden van het project. De
+gebruikte versies staan vast in de gedeelde layouts, zodat elke pagina dezelfde CDN-assets laadt.
 
 ### Goed om te weten
 
 - **Gewone shared hosting is het uitgangspunt**: geen shell, geen Composer/npm, geen workers. Alles
   moet werken als losse PHP-bestanden plus MySQL.
-- **Frontend-afhankelijkheden**: voeg geen npm, Composer-pakket of verplichte buildstap toe voor
-  Bootstrap, Tabler Icons of nieuwe frontend-assets zonder expliciete opdracht.
+- **Frontend-afhankelijkheden**: voeg geen npm, Composer-pakket, lokale distributiebestanden of
+  verplichte buildstap toe voor Bootstrap, Font Awesome of nieuwe frontend-assets zonder expliciete
+  opdracht.
 - **Databasewijziging?** Pas `sql/install.sql` aan *én* voeg een nieuwe migratie toe in
   `sql/migrations/`. Allebei moeten op hetzelfde eindresultaat uitkomen.
 - **Geen inline `<script>` of `onclick=`**: de Content-Security-Policy blokkeert die. JavaScript hoort

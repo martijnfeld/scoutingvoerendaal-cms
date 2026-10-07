@@ -21,8 +21,8 @@ $homeHref = $isHome ? '' : 'index.php';
 if (!headers_sent()) {
     header('Content-Security-Policy: ' . implode('; ', [
         "default-src 'self'",
-        "script-src 'self' https://www.googletagmanager.com",
-        "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
+        "script-src 'self' https://www.googletagmanager.com https://cdn.jsdelivr.net",
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
         "font-src 'self' https://cdnjs.cloudflare.com data:",
         "img-src 'self' https: data:",
         "media-src 'self' https:",
@@ -91,7 +91,7 @@ if (!headers_sent()) {
 }
 </script>
 <?php endif; ?>
-<link rel="stylesheet" href="assets/css/bootstrap/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link rel="stylesheet" href="assets/css/style.css">
 </head>

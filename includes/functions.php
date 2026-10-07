@@ -8,29 +8,34 @@ function e(?string $value): string
     return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
 }
 
-/**
- * Rendert een lokaal Tabler outline-icoon voor decoratief gebruik in de UI.
- * Alleen een vaste bestandsnaam zonder pad is toegestaan; iconen komen altijd
- * uit de lokaal meegeleverde set en worden nooit vanaf een externe URL geladen.
- */
-function tabler_icon(string $name, string $class = ''): string
+/** Rendert een vast Font Awesome-icoon voor decoratief gebruik in de UI. */
+function fa_icon(string $name, string $class = ''): string
 {
-    if (!preg_match('/^[a-z0-9-]+$/', $name)) {
+    $icons = [
+        'layout-dashboard' => 'table-columns',
+        'settings' => 'gear',
+        'file-text' => 'file-lines',
+        'sitemap' => 'diagram-project',
+        'layout-cards' => 'table-cells-large',
+        'files' => 'copy',
+        'cloud-upload' => 'cloud-arrow-up',
+        'checklist' => 'list-check',
+        'database' => 'database',
+        'refresh' => 'arrows-rotate',
+        'users' => 'users',
+        'key' => 'key',
+        'user' => 'user',
+        'logout' => 'right-from-bracket',
+        'menu-2' => 'bars',
+        'chevron-down' => 'chevron-down',
+    ];
+
+    if (!isset($icons[$name])) {
         return '';
     }
 
-    $path = __DIR__ . '/../assets/svg/tabler-icons/icons/outline/' . $name . '.svg';
-    if (!is_file($path)) {
-        return '';
-    }
-
-    $svg = file_get_contents($path);
-    if ($svg === false) {
-        return '';
-    }
-
-    return '<span class="tabler-icon' . ($class !== '' ? ' ' . e($class) : '')
-        . '" aria-hidden="true">' . $svg . '</span>';
+    return '<i class="fa-solid fa-' . $icons[$name]
+        . ($class !== '' ? ' ' . e($class) : '') . '" aria-hidden="true"></i>';
 }
 
 /* ------------------------------------------------------------------ *
