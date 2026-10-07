@@ -497,6 +497,8 @@ function csrf_verify(): bool
 const LOGIN_MAX_ATTEMPTS = 5;
 const LOGIN_LOCKOUT_MINUTES = 30;
 const LOGIN_ATTEMPT_RETENTION_MONTHS = 2;
+/** Bewaartermijn van de inloggeschiedenis (admin_logins), zie purge_old_admin_logins(). */
+const ADMIN_LOGIN_RETENTION_MONTHS = 2;
 
 function client_ip(): string
 {

@@ -156,6 +156,12 @@ for the fixed, decorative admin-navigation icons; it maps known internal names t
   HTML, optional meta description, `in_menu`/`actief` flags, sort order). `inhoud` is authored via the
   same CKEditor as other rich-text fields, extended with image upload and YouTube/media embedding (see
   **Rich-text editing** below).
+- `admin_logins` — login history: one row per successful admin login (user id + username, IP,
+  user agent, time), written by `admin_record_login()` in `admin/login.php` and shown (paged, plus last
+  login per account) on `admin/accounts.php`. Like `login_attempts`, rows older than
+  `ADMIN_LOGIN_RETENTION_MONTHS` (2) are purged on every visit to `admin/login.php`
+  (`purge_old_admin_logins()`). These helpers swallow a missing table so logging in still works before
+  migration 0003 has run.
 - `admin_users` — CMS login accounts (`password_hash`), created via `install.php` (self-disables after
   first admin exists) or `admin/accounts.php`.
 - `schema_migrations` — bookkeeping for the update mechanism: one row per applied filename from

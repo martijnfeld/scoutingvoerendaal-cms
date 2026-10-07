@@ -78,6 +78,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_verify()) {
 
 $accounts = db()->query('SELECT * FROM admin_users ORDER BY username ASC')->fetchAll();
 
+$historyPerPage = 50;
+$historyPage = max(1, (int) ($_GET['p'] ?? 1));
+$history = admin_login_history($historyPerPage, ($historyPage - 1) * $historyPerPage);
+$historyPages = max(1, (int) ceil($history['total'] / $historyPerPage));
+
 include __DIR__ . '/includes/layout_top.php';
 ?>
 <p>Beheer hier wie kan inloggen op dit beheerpaneel.</p>
@@ -85,11 +90,12 @@ include __DIR__ . '/includes/layout_top.php';
 <div class="admin-card">
   <h2>Bestaande accounts</h2>
   <table class="admin-table">
-    <tr><th>Gebruikersnaam</th><th>Aangemaakt</th><th>Acties</th></tr>
+    <tr><th>Gebruikersnaam</th><th>Aangemaakt</th><th>Laatste login</th><th>Acties</th></tr>
     <?php foreach ($accounts as $account): $isSelf = (int) $account['id'] === (int) $_SESSION['admin_id']; ?>
     <tr>
       <td><strong><?= e($account['username']) ?></strong><?= $isSelf ? ' <span class="muted">(jij)</span>' : '' ?></td>
       <td><?= e($account['aangemaakt']) ?></td>
+      <td><?= isset($history['last'][$account['id']]) ? e($history['last'][$account['id']]) : '<span class="muted">niet in de laatste ' . ADMIN_LOGIN_RETENTION_MONTHS . ' maanden</span>' ?></td>
       <td class="actions">
         <form method="post" style="display:inline-flex; gap:6px; align-items:center;">
           <?= csrf_field() ?>
@@ -110,6 +116,33 @@ include __DIR__ . '/includes/layout_top.php';
     </tr>
     <?php endforeach; ?>
   </table>
+</div>
+
+<div class="admin-card" id="inloggeschiedenis">
+  <h2>Inloggeschiedenis</h2>
+  <?php if (!$history['rows']): ?>
+  <p class="muted">Nog geen logins vastgelegd.</p>
+  <?php else: ?>
+  <p class="muted"><?= $history['total'] ?> geslaagde login<?= $history['total'] === 1 ? '' : 's' ?> in de laatste <?= ADMIN_LOGIN_RETENTION_MONTHS ?> maanden, nieuwste eerst. Oudere logins worden automatisch verwijderd.</p>
+  <table class="admin-table">
+    <tr><th>Tijdstip</th><th>Gebruikersnaam</th><th>IP-adres</th><th>Browser</th></tr>
+    <?php foreach ($history['rows'] as $login): ?>
+    <tr>
+      <td><?= e($login['ingelogd_op']) ?></td>
+      <td><?= e($login['username']) ?></td>
+      <td><?= e($login['ip_address']) ?></td>
+      <td class="muted" style="font-size:0.82rem;"><?= e($login['user_agent']) ?></td>
+    </tr>
+    <?php endforeach; ?>
+  </table>
+  <?php if ($historyPages > 1): ?>
+  <p>
+    <?php if ($historyPage > 1): ?><a href="accounts.php?p=<?= $historyPage - 1 ?>#inloggeschiedenis">&laquo; Nieuwer</a><?php endif; ?>
+    <span class="muted">Pagina <?= $historyPage ?> van <?= $historyPages ?></span>
+    <?php if ($historyPage < $historyPages): ?><a href="accounts.php?p=<?= $historyPage + 1 ?>#inloggeschiedenis">Ouder &raquo;</a><?php endif; ?>
+  </p>
+  <?php endif; ?>
+  <?php endif; ?>
 </div>
 
 <div class="admin-card" style="max-width:480px;">

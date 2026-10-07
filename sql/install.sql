@@ -100,6 +100,23 @@ CREATE TABLE IF NOT EXISTS admin_users (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ------------------------------------------------------------
+-- Geslaagde logins op het beheerpaneel (inloggeschiedenis, getoond op
+-- Beheerpaneel → Accounts). Gebruikersnaam wordt mee opgeslagen zodat
+-- de geschiedenis leesbaar blijft als een account verwijderd is.
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS admin_logins (
+    id           INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    user_id      INT UNSIGNED NOT NULL,
+    username     VARCHAR(100) NOT NULL,
+    ip_address   VARCHAR(45)  NOT NULL,
+    user_agent   VARCHAR(255) NOT NULL DEFAULT '',
+    ingelogd_op  DATETIME NOT NULL,
+    PRIMARY KEY (id),
+    KEY idx_user_tijd (user_id, ingelogd_op),
+    KEY idx_tijd (ingelogd_op)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ------------------------------------------------------------
 -- Mislukte inlogpogingen (brute-force bescherming admin-login)
 -- LET OP: op een bestaande installatie voer je deze CREATE TABLE
 -- handmatig uit via phpMyAdmin, want dit bestand wordt alleen bij

@@ -39,7 +39,7 @@ const CHECK_PHP_EOL = [
 /** Tabellen die sql/install.sql (plus migraties) aanmaakt. */
 const CHECK_EXPECTED_TABLES = [
     'settings', 'speltakken', 'documents', 'info_cards', 'pages',
-    'admin_users', 'login_attempts', 'schema_migrations',
+    'admin_users', 'admin_logins', 'login_attempts', 'schema_migrations',
 ];
 
 /** .htaccess-bestanden die mappen afschermen (relatief aan de projectroot). */

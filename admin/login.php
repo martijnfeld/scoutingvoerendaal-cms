@@ -8,6 +8,7 @@ if (!empty($_SESSION['admin_id'])) {
 }
 
 purge_old_login_attempts();
+purge_old_admin_logins();
 
 $ip = client_ip();
 $error = '';
@@ -38,6 +39,7 @@ if (!admin_login_allowed_from_ip($ip)) {
         if ($user && password_verify($password, $user['password_hash'])) {
             clear_login_attempts($username);
             admin_session_login($user);
+            admin_record_login($user, $ip, $_SERVER['HTTP_USER_AGENT'] ?? '');
             header('Location: index.php');
             exit;
         }

@@ -48,6 +48,61 @@ function admin_session_login(array $user): void
 }
 
 /**
+ * Legt een geslaagde login vast in de inloggeschiedenis (getoond op
+ * Accounts). Mag het inloggen nooit blokkeren: zolang migratie 0003 nog
+ * niet gedraaid is (half geüploade update) bestaat de tabel niet, en zonder
+ * login kun je de migraties niet uitvoeren.
+ */
+function admin_record_login(array $user, string $ip, string $userAgent): void
+{
+    // Alleen afdrukbare ASCII (een user-agent is dat normaal ook), zodat
+    // ongeldige UTF-8 de INSERT niet kan laten mislukken.
+    $userAgent = substr(preg_replace('/[^\x20-\x7E]/', '', $userAgent), 0, 255);
+    try {
+        $stmt = db()->prepare('INSERT INTO admin_logins (user_id, username, ip_address, user_agent, ingelogd_op)
+                               VALUES (:id, :u, :ip, :ua, NOW())');
+        $stmt->execute(['id' => (int) $user['id'], 'u' => $user['username'], 'ip' => $ip, 'ua' => $userAgent]);
+    } catch (PDOException $e) {
+        // Tabel ontbreekt nog; logins na de migratie worden wel vastgelegd.
+    }
+}
+
+/**
+ * Ruimt de inloggeschiedenis op, net als purge_old_login_attempts() (bij
+ * elk bezoek aan login.php, met MySQL's NOW()): IP-adressen zijn
+ * persoonsgegevens, dus niet langer bewaren dan nodig.
+ */
+function purge_old_admin_logins(): void
+{
+    $months = ADMIN_LOGIN_RETENTION_MONTHS;
+    try {
+        db()->exec("DELETE FROM admin_logins WHERE ingelogd_op < DATE_SUB(NOW(), INTERVAL {$months} MONTH)");
+    } catch (PDOException $e) {
+        // Tabel ontbreekt nog (migratie 0003 niet gedraaid); niets op te ruimen.
+    }
+}
+
+/**
+ * Inloggeschiedenis, nieuwste eerst: ['total' => int, 'rows' => [...],
+ * 'last' => [user_id => laatste ingelogd_op]]. Geeft een lege
+ * geschiedenis als migratie 0003 nog niet gedraaid is.
+ */
+function admin_login_history(int $limit, int $offset = 0): array
+{
+    try {
+        $total = (int) db()->query('SELECT COUNT(*) FROM admin_logins')->fetchColumn();
+        $stmt = db()->prepare('SELECT * FROM admin_logins ORDER BY ingelogd_op DESC, id DESC LIMIT :limit OFFSET :offset');
+        $stmt->bindValue('limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue('offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        $last = db()->query('SELECT user_id, MAX(ingelogd_op) FROM admin_logins GROUP BY user_id')->fetchAll(PDO::FETCH_KEY_PAIR);
+        return ['total' => $total, 'rows' => $stmt->fetchAll(), 'last' => $last];
+    } catch (PDOException $e) {
+        return ['total' => 0, 'rows' => [], 'last' => []];
+    }
+}
+
+/**
  * Controleert bij elk verzoek of een ingelogde sessie nog geldig is:
  * niet te lang inactief, niet te oud, en het account bestaat nog met
  * hetzelfde wachtwoord. Zo niet, dan wordt de sessie leeggemaakt (met een
