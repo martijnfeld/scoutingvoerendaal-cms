@@ -1,0 +1,125 @@
+# Automatische tests (zie tests/run.php) bij elke push naar main en elke
+# pull request.
+#
+# - php:    unit- en databasetests op elke PHP-versie die shared hosts
+#           draaien (vanaf 7.4, zie INSTALL.md), tegen MySQL en MariaDB.
+#           Inclusief "php -l" op alle bestanden, zodat syntax die nieuwer
+#           is dan PHP 7.4 meteen opvalt.
+# - docker: de Docker-ontwikkelomgeving (Apache + .htaccess + MySQL) met
+#           alle suites, inclusief de http-tests tegen de echte webserver:
+#           afscherming, headers, installatie, inloggen en alle beheerschermen.
+
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  php:
+    name: PHP ${{ matrix.php }} · ${{ matrix.db }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5']
+        db: ['mysql:8.0']
+        include:
+          - php: '7.4'
+            db: 'mysql:5.7'
+          - php: '7.4'
+            db: 'mariadb:10.6'
+          - php: '8.3'
+            db: 'mariadb:11.4'
+    services:
+      db:
+        image: ${{ matrix.db }}
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MARIADB_ROOT_PASSWORD: root
+        ports: ['3306:3306']
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: pdo_mysql, zip, dom, curl
+          coverage: none
+          ini-values: error_reporting=E_ALL, display_errors=On
+
+      - name: Wachten op de database
+        run: |
+          for i in $(seq 1 60); do
+            php -r 'new PDO("mysql:host=127.0.0.1;port=3306", "root", "root");' 2>/dev/null && exit 0
+            sleep 2
+          done
+          echo "::error::Database is niet bereikbaar"
+          exit 1
+
+      - name: Tests (unit + db)
+        env:
+          TEST_DB_HOST: 127.0.0.1
+          TEST_DB_PORT: '3306'
+          TEST_DB_USER: root
+          TEST_DB_PASS: root
+          TEST_STRICT: '1'
+        run: php tests/run.php unit db
+
+  docker:
+    name: Docker-omgeving (Apache + MySQL, alle suites)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      # Apache draait als www-data, de checkout is van de runner: maak de
+      # mappen beschrijfbaar die op shared hosting ook beschrijfbaar zijn.
+      - name: Schrijfbare mappen
+        run: |
+          mkdir -p includes/cache
+          chmod -R a+rwX includes/cache assets/uploads backups
+
+      - name: Containers starten
+        run: |
+          docker compose up -d --build --wait web db
+          # Database bereikbaar vanuit de web-container (zoals de site en de
+          # db-tests verbinden), niet alleen "healthy" volgens Docker.
+          ok=
+          for i in $(seq 1 60); do
+            if docker compose exec -T web php -r 'new PDO("mysql:host=db;port=3306", "root", "root");' 2>/dev/null; then
+              ok=1; break
+            fi
+            sleep 2
+          done
+          [ -n "$ok" ] || { echo "::error::Database is niet bereikbaar vanuit de web-container"; exit 1; }
+          for i in $(seq 1 60); do
+            curl -fsS -o /dev/null http://localhost:8080/ && exit 0
+            sleep 2
+          done
+          echo "::error::Website is niet bereikbaar"
+          exit 1
+
+      - name: Tests (unit + db + http)
+        run: >
+          docker compose exec -T
+          -e XDEBUG_MODE=off -e TEST_STRICT=1 -e TEST_INSTALL_ADMIN=1
+          web php tests/run.php
+
+      - name: Logs bij een fout
+        if: failure()
+        run: docker compose logs web db
+
+      - name: Opruimen
+        if: always()
+        run: docker compose down -v

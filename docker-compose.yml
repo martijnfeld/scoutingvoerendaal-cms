@@ -28,6 +28,11 @@ services:
       DB_USER: scouting
       DB_PASS: scouting
       APP_DEBUG: "1"
+      # Voor de tests (docker compose exec web php tests/run.php, zie tests/run.php):
+      # aparte database scouting_test (wordt gewist!) en de site in deze container.
+      TEST_DB_USER: root
+      TEST_DB_PASS: root
+      TEST_BASE_URL: http://localhost
     extra_hosts:
       # Op Linux-Docker-hosts bestaat host.docker.internal niet standaard;
       # op Docker Desktop (Windows/Mac) is dit een no-op omdat het al bestaat.
@@ -52,7 +57,10 @@ services:
     ports:
       - "3307:3306"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      # Via TCP, niet via de socket: tijdens het importeren van install.sql
+      # draait MySQL tijdelijk zonder netwerk en zou een socket-ping al
+      # "gezond" melden terwijl de web-container nog niet kan verbinden.
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--protocol=tcp", "-uroot", "-proot"]
       interval: 5s
       timeout: 5s
       retries: 20

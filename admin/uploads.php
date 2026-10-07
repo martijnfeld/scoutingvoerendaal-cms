@@ -5,47 +5,6 @@ require_login();
 $pageTitle = 'Geüploade bestanden';
 $error = '';
 
-/**
- * Zoekt uit waar een bestand wordt gebruikt.
- *
- * Documenten (PDF's) slaan alleen de kale bestandsnaam op, dus daar volstaat
- * een exacte match. Afbeeldingen kunnen ook binnen een groter HTML-veld
- * voorkomen (bv. binnen een CKEditor-tekst) of met een licht afwijkend pad
- * zijn opgeslagen, dus daar wordt ook op een LIKE-patroon met de
- * bestandsnaam gezocht. Geüploade bestandsnamen zijn altijd hexadecimaal
- * (of eenvoudige seed-namen) en bevatten dus nooit LIKE-jokertekens.
- */
-function find_upload_usage(string $filename): array
-{
-    $used = [];
-    $urlPath = rtrim(UPLOAD_URL, '/') . '/' . $filename;
-    $likePattern = '%' . $filename . '%';
-
-    $stmt = db()->prepare('SELECT naam FROM documents WHERE bestand = :f');
-    $stmt->execute(['f' => $filename]);
-    foreach ($stmt->fetchAll() as $row) {
-        $used[] = 'Document: ' . $row['naam'];
-    }
-
-    $stmt = db()->prepare(
-        'SELECT titel FROM info_cards WHERE afbeelding = :f OR afbeelding LIKE :p1 OR tekst LIKE :p2'
-    );
-    $stmt->execute(['f' => $urlPath, 'p1' => $likePattern, 'p2' => $likePattern]);
-    foreach ($stmt->fetchAll() as $row) {
-        $used[] = 'Info-vakje: ' . $row['titel'];
-    }
-
-    $stmt = db()->prepare(
-        'SELECT setting_key FROM settings WHERE setting_value = :f OR setting_value LIKE :p'
-    );
-    $stmt->execute(['f' => $urlPath, 'p' => $likePattern]);
-    foreach ($stmt->fetchAll() as $row) {
-        $used[] = 'Instelling: ' . $row['setting_key'];
-    }
-
-    return array_unique($used);
-}
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_verify()) {
     $action = $_POST['action'] ?? '';
     $filename = basename((string) ($_POST['filename'] ?? ''));

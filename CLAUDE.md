@@ -53,7 +53,34 @@ The project directory is bind-mounted into the container, so PHP/CSS/JS edits ar
 no rebuild needed unless `Dockerfile` itself changes. `sql/install.sql` is auto-imported only the first
 time the `db_data` volume is created.
 
-There are no automated tests, linters, or formatters configured in this repo.
+## Tests
+
+A small dependency-free runner (`tests/run.php` + `tests/lib.php`, no Composer/PHPUnit, PHP 7.4+). Each
+`tests/<suite>/*_test.php` file runs in its own PHP process (fresh constants, static caches, session),
+registers tests with `test('…', fn)` and uses `assert_*()`/`skip()`; PHP warnings/deprecations fail a test.
+
+```bash
+docker compose exec -e XDEBUG_MODE=off web php tests/run.php              # all suites
+docker compose exec -e XDEBUG_MODE=off web php tests/run.php unit db --filter=slug
+```
+
+- `unit` — pure PHP, plus repo-rule checks (`repository_test.php`): `php -l` on every file, no inline
+  scripts/handlers, no bare `session_start()`, every blocked dir has the canonical `.htaccess` and is in
+  `CHECK_HTACCESS_FILES`, `.htaccess` ↔ nginx snippet in `INSTALL.md` in sync, every top-level dir in
+  `PAGE_RESERVED_SLUGS`, `handle_upload()` extensions ⊆ the uploads allowlist, migration naming.
+- `db` — against a separate database (`TEST_DB_*`, default `scouting_test`, name **must** end in
+  `_test`; dropped and re-imported from `sql/install.sql` per file). Constants like `DB_*`/`BACKUP_DIR`
+  are defined by `test_bootstrap()` before `config.php`, so tests never touch the real DB or back-ups.
+- `http` — against a running site (`TEST_BASE_URL`, set to `http://localhost` in the Docker web
+  container): blocked paths, headers/CSP, uploads not executing, install → login → every admin screen →
+  page CRUD → logout. Admin tests need `TEST_ADMIN_USER/PASS`, or `TEST_INSTALL_ADMIN=1` on a fresh DB.
+- `TEST_STRICT=1` (CI) turns skipped tests/suites into failures.
+
+CI: `.github/workflows/tests.yml` — unit + db on PHP 7.4–8.5 × MySQL 8.0 (+ MySQL 5.7, MariaDB 10.6/11.4),
+and all suites inside the Docker stack. `tests/` is `export-ignore`d (`.gitattributes`) so it's not in
+release zipballs, and blocked via `tests/.htaccess` + the root rewrite rule. When adding a feature, add
+tests in the matching suite; when adding a sensitive dir/file, the repo checks will tell you which lists
+to extend.
 
 ## Configuration
 
@@ -167,7 +194,7 @@ the adapter always returns a fully-qualified URL to avoid that mismatch. `mediaE
 enabled so pasting a YouTube URL bakes the actual responsive iframe markup into the saved HTML, instead of
 a semantic placeholder that would only render correctly inside CKEditor itself.
 
-**Security surface**: `includes/`, `admin/includes/`, `sql/`, `tools/`, `backups/` and `docker/` are
+**Security surface**: `includes/`, `admin/includes/`, `sql/`, `tools/`, `backups/`, `docker/` and `tests/` are
 blocked from direct HTTP access via per-directory `.htaccess`. Admin passwords must satisfy
 `password_policy_error()` in `includes/functions.php` (12+ chars, 2+ digits, 2+ non-alphanumeric) — use
 it wherever a password is set.
@@ -181,7 +208,7 @@ it wherever a password is set.
   PHP-FPM. Assumed minimum `AllowOverride`: `AuthConfig FileInfo Indexes Limit Options` (restricted
   `Options=` list is enough); don't add directives that need more (e.g. `Options -ExecCGI` was dropped).
 - A **new sensitive directory** needs both its own `.htaccess` with the canonical block *and* an entry in
-  the `^(includes|admin/includes|sql|backups|tools|docker)` rewrite rule in the root `.htaccess` (the
+  the `^(includes|admin/includes|sql|backups|tools|docker|tests)` rewrite rule in the root `.htaccess` (the
   rewrite rule is the only protection on OpenLiteSpeed). New dev/config file types go in the root
   `FilesMatch`, and in the nginx snippet in `INSTALL.md` (**Hostingvereisten en nginx**) — keep the two
   in sync.
@@ -207,8 +234,12 @@ processed) unless `admin_login_allowed_from_ip()` passes — i.e. the IP is in a
 (`GEO_EUROPE_COUNTRIES`, optionally narrowed by `ADMIN_LOGIN_COUNTRIES` in `config.local.php`). No external
 API: lookups binary-search (`fseek`, no full load) the bundled fixed-record files
 `includes/geo/europe-ipv4.bin`/`europe-ipv6.bin`, generated from the five RIRs' public delegated stats by
-the dev-only CLI script `tools/build_geo_europe.php` — **re-run it before each release** to keep the
-ranges current (`docker run --rm -v "$PWD":/app -w /app php:8.2-cli php tools/build_geo_europe.php`).
+the dev-only CLI script `tools/build_geo_europe.php`. `.github/workflows/geo-data.yml` re-runs it on the
+1st of every month (or manually via `workflow_dispatch`); when the `.bin` files changed it publishes a
+**patch release** on its own (latest tag `vX.Y.Z` → `vX.Y.(Z+1)`, built on top of that tag so it contains
+only geo data, release notes marked as an automatic GeoIP-only update) and brings that commit back into
+`main` (fast-forward, else merge). `release.yml` also re-runs it for every release (non-fatal — on failure the release keeps the
+existing ranges). To run it locally: `docker run --rm -v "$PWD":/app -w /app php:8.2-cli php tools/build_geo_europe.php`.
 Deliberately fails open for private/reserved IPs (local Docker) and when the data files are missing
 (half-uploaded update), so the owner can't lock themselves out; `ADMIN_GEO_BLOCK=false` in
 `config.local.php` is the escape hatch for admins abroad. CSRF tokens (`csrf_field()`/`csrf_verify()`) guard all admin POST forms.
@@ -296,9 +327,12 @@ never inject raw HTML/JS). Applying an update (`perform_full_update()`) always:
    migrations don't build on a half-applied one; the pre-update backup is the recovery path.
 
 **Releasing**: don't bump `APP_VERSION` by hand — push a tag `vX.Y.Z` and `.github/workflows/release.yml`
-commits the matching `APP_VERSION` on top of the tagged commit, moves the tag to that commit (the
+commits the matching `APP_VERSION` (plus refreshed `includes/geo/*.bin` if the ranges changed) on top of
+the tagged commit, moves the tag to that commit (the
 release zipball must contain the right version), fast-forwards `main` if possible, and creates the GitHub
-release with generated notes if it doesn't exist yet.
+release with generated notes if it doesn't exist yet. Check the latest tag before tagging — the monthly
+GeoIP workflow may have published a patch release in the meantime, and a lower version is never offered
+as an update.
 
 There's also a "run migrations only" action on the same admin page, for hosts where automatic
 download/overwrite isn't possible (no outgoing HTTPS, or file permissions) — the site owner uploads the
