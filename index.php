@@ -52,7 +52,7 @@ include __DIR__ . '/includes/site_layout_top.php';
 
     <?php foreach ($speltakken as $sp):
         $heading = $sp['naam'] . ($sp['leeftijd'] ? ' (' . $sp['leeftijd'] . ')' : '');
-        $meta = trim(implode(' &middot; ', array_filter([$sp['dag_tijd'], $sp['leiding']])));
+        $meta = trim(implode(' · ', array_filter([$sp['dag_tijd'], $sp['leiding']])));
     ?>
     <div class="speltak-block" id="sk-<?= e($sp['slug']) ?>">
       <div class="speltak-head"><span class="speltak-dot" style="background:<?= e($sp['kleur']) ?>"></span><h3><?= e($heading) ?></h3></div>
