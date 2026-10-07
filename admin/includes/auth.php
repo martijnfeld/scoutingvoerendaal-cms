@@ -16,8 +16,8 @@ if (!headers_sent()) {
         "img-src 'self' https: data: blob:",
         "media-src 'self' https:",
         "frame-src https:",
-        // CDN alleen voor de source map van CKEditor (opgevraagd door DevTools).
-        "connect-src 'self' https://cdn.ckeditor.com",
+        // CDN's alleen voor de source maps van CKEditor en Bootstrap (opgevraagd door DevTools).
+        "connect-src 'self' https://cdn.ckeditor.com https://cdn.jsdelivr.net",
         "object-src 'none'",
         "base-uri 'self'",
         "form-action 'self'",

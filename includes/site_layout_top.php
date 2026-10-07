@@ -27,7 +27,8 @@ if (!headers_sent()) {
         "img-src 'self' https: data:",
         "media-src 'self' https:",
         "frame-src https:",
-        "connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com",
+        // jsDelivr alleen voor de source maps van Bootstrap (opgevraagd door DevTools).
+        "connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://cdn.jsdelivr.net",
         "object-src 'none'",
         "base-uri 'self'",
         "form-action 'self'",
