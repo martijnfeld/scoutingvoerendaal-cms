@@ -94,6 +94,23 @@ tools/                  ontwikkelscripts (bv. het bijwerken van de geo-IP-data)
 tests/                  automatische tests (tests/run.php), niet in de release-zip
 ```
 
+### Frontendbasis: Bootstrap en iconen
+
+**Bootstrap 5.3.8** is de stylingbasis voor nieuwe schermen en UI-componenten. Zowel de publieke
+layout als de beheerlayout laden de CSS en `bootstrap.bundle.min.js` centraal via jsDelivr; de bundle
+bevat Popper. Gebruik bij nieuwe werkzaamheden eerst Bootstrap voor layout,
+grid/flex- en spacing-utilities, formulieren, knoppen en beschikbare componenten zoals alerts, badges,
+cards, modals, navigatie en dropdowns. Voeg alleen custom CSS toe wanneer Bootstrap niet voldoende is
+of de vormgeving specifiek voor dit project is. Bestaande styling hoeft niet alleen hiervoor te worden
+omgebouwd.
+
+**Font Awesome 6.5.2** is de standaard iconlibrary en wordt centraal via cdnjs geladen. Gebruik de
+beschikbare Font Awesome-iconen als eerste keuze en voeg geen lokale icoonbestanden of tweede
+iconlibrary toe. Gebruik geen emoji voor gewone UI-iconen.
+
+Bootstrap is MIT-gelicentieerd en Font Awesome hanteert de licentievoorwaarden van het project. De
+gebruikte versies staan vast in de gedeelde layouts, zodat elke pagina dezelfde CDN-assets laadt.
+
 ### Tests
 
 Eigen, kleine testrunner zonder Composer of PHPUnit. Drie suites: `unit` (pure PHP), `db` (tegen
@@ -116,6 +133,9 @@ Docker-omgeving.
 
 - **Gewone shared hosting is het uitgangspunt**: geen shell, geen Composer/npm, geen workers. Alles
   moet werken als losse PHP-bestanden plus MySQL.
+- **Frontend-afhankelijkheden**: voeg geen npm, Composer-pakket, lokale distributiebestanden of
+  verplichte buildstap toe voor Bootstrap, Font Awesome of nieuwe frontend-assets zonder expliciete
+  opdracht.
 - **Databasewijziging?** Pas `sql/install.sql` aan *én* voeg een nieuwe migratie toe in
   `sql/migrations/`. Allebei moeten op hetzelfde eindresultaat uitkomen.
 - **Geen inline `<script>` of `onclick=`**: de Content-Security-Policy blokkeert die. JavaScript hoort

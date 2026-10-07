@@ -122,6 +122,13 @@ clobbers site-specific secrets:
   `backups`, `updates`, `controle`, `paginas`/`pagina_form`). Every admin page requires `admin/includes/auth.php` and
   calls `require_login()` first.
 
+**Frontendbasis**: Bootstrap 5.3.8 is loaded centrally via the jsDelivr CDN by both shared public and
+authenticated-admin layouts. Its bundled JavaScript includes Popper. Use its components and utilities as
+the basis for new UI work. Existing custom styling is intentionally not being refactored merely to use
+Bootstrap. Font Awesome 6.5.2 is loaded centrally via the cdnjs CDN and is the default icon source. Do
+not use emoji as ordinary UI icons or add local icon files. Use `fa_icon()` from `includes/functions.php`
+for the fixed, decorative admin-navigation icons; it maps known internal names to Font Awesome classes.
+
 **Shared includes** (`includes/`, loaded via `require_once`, not web-accessible — blocked by `.htaccess`):
 - `includes/db.php` — `db(): PDO` returns a lazily-created, memoized PDO singleton (prepared statements,
   exceptions on error, no emulated prepares).
@@ -242,7 +249,7 @@ bind-mounted git checkout). If that fails (file permissions) it tells the owner 
 
 **Content-Security-Policy**: public pages send a CSP from `includes/site_layout_top.php`, the admin panel
 from `admin/includes/auth.php` (as a PHP `header()`, so it doesn't depend on `mod_headers`). Both allow
-scripts only from our own origin plus a fixed CDN (Google Tag Manager / CKEditor) — **no inline `<script>`
+scripts only from our own origin plus fixed CDNs (Google Tag Manager, Bootstrap and CKEditor) — **no inline `<script>`
 blocks and no inline event handlers** (`onclick=`, `onsubmit=`, …); they would silently stop working. Put
 JS in `assets/js/` instead: admin confirmation prompts use `<form data-confirm="...">` (handled in
 `assets/js/admin.js`), and Google Analytics is initialised from `assets/js/gtag.js`. Inline `style`

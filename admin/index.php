@@ -2,7 +2,7 @@
 require_once __DIR__ . '/includes/auth.php';
 require_login();
 
-$pageTitle = 'Dashboard';
+$pageTitle = 'Overzicht';
 $speltakCount = (int) db()->query('SELECT COUNT(*) FROM speltakken')->fetchColumn();
 $infoCardCount = (int) db()->query('SELECT COUNT(*) FROM info_cards')->fetchColumn();
 $documentCount = (int) db()->query('SELECT COUNT(*) FROM documents')->fetchColumn();

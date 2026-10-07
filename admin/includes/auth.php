@@ -4,14 +4,14 @@ require_once __DIR__ . '/../../includes/functions.php';
 start_secure_session();
 
 // Content-Security-Policy voor het beheerpaneel: alleen scripts van onze
-// eigen site en de CKEditor-CDN, geen inline-scripts of event-handlers
+// eigen site en de vaste CDN's, geen inline-scripts of event-handlers
 // (bevestigingsvragen lopen via data-confirm in assets/js/admin.js).
 // Inline styles en blob:-afbeeldingen zijn nodig voor CKEditor.
 if (!headers_sent()) {
     header('Content-Security-Policy: ' . implode('; ', [
         "default-src 'self'",
-        "script-src 'self' https://cdn.ckeditor.com",
-        "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
+        "script-src 'self' https://cdn.ckeditor.com https://cdn.jsdelivr.net",
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
         "font-src 'self' https://cdnjs.cloudflare.com data:",
         "img-src 'self' https: data: blob:",
         "media-src 'self' https:",
