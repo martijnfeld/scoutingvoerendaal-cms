@@ -3,7 +3,8 @@
 #
 # De release-zip die sites via Beheerpaneel → Updates downloaden wordt gebouwd
 # vanaf de commit waar de tag naar wijst, dus die commit moet de juiste versie
-# bevatten. Daarom: versie-commit bovenop de getagde commit maken, de tag daar
+# bevatten. Daarom: versie-commit (plus, als die veranderd zijn, verse
+# Europese IP-ranges in includes/geo/) bovenop de getagde commit maken, de tag daar
 # naartoe verplaatsen, main fast-forwarden en (als die nog niet bestaat) de
 # GitHub-release aanmaken.
 
@@ -40,23 +41,49 @@ jobs:
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+
+      # Verse Europese IP-ranges meenemen in de release (zie geo-data.yml).
+      # Is een RIR-server onbereikbaar, dan gaat de release door met de
+      # bestaande ranges.
+      - name: Geo-data bijwerken
+        id: geo
+        continue-on-error: true
+        run: php tools/build_geo_europe.php
+
       - name: version.php bijwerken en tag verplaatsen
         env:
           TAG: ${{ steps.version.outputs.tag }}
           VERSION: ${{ steps.version.outputs.version }}
+          GEO_OUTCOME: ${{ steps.geo.outcome }}
         run: |
           sed -i -E "s/(APP_VERSION\s*=\s*')[^']*(')/\1${VERSION}\2/" includes/version.php
           grep -q "APP_VERSION = '${VERSION}'" includes/version.php || {
             echo "::error file=includes/version.php::APP_VERSION niet gevonden/bijgewerkt"
             exit 1
           }
+          git add includes/version.php
 
-          if git diff --quiet -- includes/version.php; then
-            echo "APP_VERSION staat al op ${VERSION}, tag blijft staan."
+          # Geo-data alleen meenemen als het script helemaal geslaagd is (bij
+          # een fout halverwege kan één van de twee bestanden al vervangen
+          # zijn) en de ranges zelf veranderd zijn — GENERATED.txt krijgt
+          # altijd een nieuwe tijdstempel. De rest van includes/geo/ terugzetten.
+          if [ "$GEO_OUTCOME" != "success" ]; then
+            echo "::warning::Geo-data bijwerken mislukt; release gebruikt de bestaande IP-ranges."
+          elif ! git diff --quiet -- 'includes/geo/*.bin'; then
+            git add includes/geo/
+          fi
+          git checkout -- includes/geo/
+
+          if git diff --cached --quiet; then
+            echo "APP_VERSION en geo-data zijn al actueel, tag blijft staan."
           else
             git config user.name "github-actions[bot]"
             git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
-            git commit -am "Versie ${VERSION}"
+            git commit -m "Versie ${VERSION}"
             git tag -f "$TAG"
             # Tags gepusht met GITHUB_TOKEN starten geen nieuwe workflow-run, dus geen lus.
             git push -f origin "refs/tags/${TAG}"

@@ -91,7 +91,26 @@ sql/install.sql         volledig databaseschema voor een nieuwe installatie
 sql/migrations/         genummerde migraties voor bestaande installaties
 cron/backup_cron.php    startpunt voor de automatische back-up
 tools/                  ontwikkelscripts (bv. het bijwerken van de geo-IP-data)
+tests/                  automatische tests (tests/run.php), niet in de release-zip
 ```
+
+### Tests
+
+Eigen, kleine testrunner zonder Composer of PHPUnit. Drie suites: `unit` (pure PHP), `db` (tegen
+een aparte testdatabase `scouting_test`, die bij elke run gewist wordt) en `http` (tegen de draaiende
+site: afscherming, headers, inloggen en alle beheerschermen).
+
+```bash
+docker compose exec -e XDEBUG_MODE=off web php tests/run.php            # alle suites
+docker compose exec -e XDEBUG_MODE=off web php tests/run.php unit       # alleen unit
+docker compose exec -e XDEBUG_MODE=off web php tests/run.php --filter=slug
+```
+
+De beheerdertests in de `http`-suite draaien lokaal alleen als je inloggegevens van je lokale
+beheerder meegeeft (`-e TEST_ADMIN_USER=... -e TEST_ADMIN_PASS=...`); anders worden ze overgeslagen.
+GitHub Actions (`.github/workflows/tests.yml`) draait bij elke push en pull request de unit- en
+databasetests op PHP 7.4 t/m 8.5 tegen MySQL 5.7/8.0 en MariaDB, plus alle suites in de
+Docker-omgeving.
 
 ### Goed om te weten
 
@@ -102,8 +121,12 @@ tools/                  ontwikkelscripts (bv. het bijwerken van de geo-IP-data)
 - **Geen inline `<script>` of `onclick=`**: de Content-Security-Policy blokkeert die. JavaScript hoort
   in `assets/js/`.
 - **Releasen**: push een tag `vX.Y.Z`. De GitHub Action zet `APP_VERSION` goed en maakt de release
-  aan. Draai vóór een release `tools/build_geo_europe.php` om de Europese IP-ranges bij te werken.
-- Er zijn geen automatische tests; test je wijziging lokaal in Docker.
+  aan, en neemt daarbij verse Europese IP-ranges (`includes/geo/`) mee. Daarnaast controleert de
+  workflow *Geo-data bijwerken* die ranges maandelijks; zijn ze veranderd, dan publiceert hij zelf een
+  nieuwe patch-release (bv. `v0.3.2` → `v0.3.3`) met alleen de geo-data. Kijk dus vóór het taggen wat
+  de laatste tag is.
+- **Tests**: draai `tests/run.php` (zie [Tests](#tests)) en test je wijziging daarnaast lokaal in
+  Docker.
 
 Uitgebreide technische achtergrond (architectuur, beveiligingsregels, back-ups, updates) staat in
 [CLAUDE.md](CLAUDE.md).

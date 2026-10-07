@@ -177,7 +177,7 @@ function get_page_by_slug(string $slug): ?array
  * Slugs die niet als pagina-URL gebruikt mogen worden, omdat er een echte
  * map met die naam in de websitemap staat (die gaat in .htaccess voor).
  */
-const PAGE_RESERVED_SLUGS = ['admin', 'api', 'assets', 'backups', 'cron', 'docker', 'docs', 'includes', 'sql', 'tools'];
+const PAGE_RESERVED_SLUGS = ['admin', 'api', 'assets', 'backups', 'cron', 'docker', 'docs', 'includes', 'sql', 'tests', 'tools'];
 
 /**
  * URL van een losse pagina: "<slug>" (relatief t.o.v. de websitemap, via

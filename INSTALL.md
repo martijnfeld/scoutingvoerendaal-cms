@@ -280,7 +280,7 @@ het controlepaneel.
 autoindex off;
 location = /sitemap.xml { rewrite ^ /sitemap.php last; }
 location ~ /\.(?!well-known/) { return 404; }
-location ~ ^/(includes|admin/includes|sql|backups|tools|docker)(/|$) { return 404; }
+location ~ ^/(includes|admin/includes|sql|backups|tools|docker|tests)(/|$) { return 404; }
 location ~* (\.(bak|old|orig|save|swp|swo|tmp|dist|example|sample|sql|sqlite|db|log|md|markdown|ini|conf|cnf|yml|yaml|toml|env|sh|bash|bat|cmd|ps1|inc|phps|lock|bin|zip|tar|tgz|gz|bz2|7z|rar)|~)$ { return 404; }
 location ~* /(Dockerfile|docker-compose\.ya?ml|composer\.(json|lock)|package(-lock)?\.json|Makefile|error_log)$ { return 404; }
 location ^~ /assets/uploads/ {

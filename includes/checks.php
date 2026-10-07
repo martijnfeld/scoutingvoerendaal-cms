@@ -45,7 +45,7 @@ const CHECK_EXPECTED_TABLES = [
 /** .htaccess-bestanden die mappen afschermen (relatief aan de projectroot). */
 const CHECK_HTACCESS_FILES = [
     '.htaccess', 'assets/uploads/.htaccess', 'includes/.htaccess', 'admin/includes/.htaccess',
-    'sql/.htaccess', 'tools/.htaccess', 'backups/.htaccess', 'docker/.htaccess',
+    'sql/.htaccess', 'tools/.htaccess', 'backups/.htaccess', 'docker/.htaccess', 'tests/.htaccess',
 ];
 
 /**
@@ -56,7 +56,7 @@ const CHECK_HTACCESS_FILES = [
 const CHECK_BLOCKED_FILES = [
     'includes/functions.php', 'includes/geo/europe-ipv4.bin', 'includes/cache/opkomsten.json',
     'admin/includes/auth.php', 'sql/install.sql', 'tools/build_geo_europe.php',
-    'docker/xdebug.ini', 'backups/.htaccess', '.htaccess', 'config.local.php.example',
+    'docker/xdebug.ini', 'tests/run.php', 'backups/.htaccess', '.htaccess', 'config.local.php.example',
     'INSTALL.md', 'CLAUDE.md', 'Dockerfile', 'docker-compose.yml',
 ];
 

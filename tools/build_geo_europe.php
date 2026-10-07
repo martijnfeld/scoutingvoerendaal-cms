@@ -4,8 +4,9 @@
  * includes/geoip.php) uit de openbare "delegated-extended"-statistieken van
  * de vijf regionale internetregisters.
  *
- * Alleen voor ontwikkelaars, draait NIET op de webserver. Draai dit vóór een
- * release zodat de lijst actueel blijft, bv. via Docker:
+ * Alleen voor ontwikkelaars, draait NIET op de webserver. Draait automatisch
+ * bij elke release (.github/workflows/release.yml) en maandelijks via
+ * .github/workflows/geo-data.yml; lokaal bv. via Docker:
  *
  *   docker run --rm -v "$PWD":/app -w /app php:8.2-cli php tools/build_geo_europe.php
  *

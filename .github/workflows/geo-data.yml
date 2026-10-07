@@ -1,0 +1,136 @@
+# Werkt de Europese IP-ranges voor de geoblokkering van de admin-login
+# (includes/geo/*.bin, zie includes/geoip.php) maandelijks automatisch bij met
+# tools/build_geo_europe.php. Zijn de ranges veranderd, dan wordt er meteen een
+# nieuwe patch-release van gemaakt (bv. v0.3.2 -> v0.3.3), zodat sites ze via
+# Beheerpaneel → Updates binnenkrijgen.
+#
+# De release wordt gebouwd bovenop de laatste release-tag, niet bovenop main:
+# zo bevat hij gegarandeerd alleen de geo-data, ook als er op main nog
+# onuitgebrachte wijzigingen staan. Die commit wordt daarna in main
+# teruggebracht (fast-forward of merge), zodat main de nieuwe APP_VERSION heeft.
+#
+# Tags gepusht met GITHUB_TOKEN starten release.yml niet, daarom doet deze
+# workflow versie-commit, tag en GitHub-release zelf.
+#
+# Handmatig starten kan via Actions → "Run workflow".
+
+name: Geo-data bijwerken
+
+on:
+  schedule:
+    - cron: '17 3 1 * *'   # 1e van de maand, 03:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Zelfde groep als release.yml, zodat die twee nooit tegelijk tags/main pushen.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Laatste release-tag bepalen
+        id: base
+        run: |
+          tag=$(git tag --list 'v*' --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)
+          if [ -z "$tag" ]; then
+            echo "::error::Geen release-tag (vX.Y.Z) gevonden"
+            exit 1
+          fi
+          IFS=. read -r major minor patch <<< "${tag#v}"
+          version="${major}.${minor}.$((patch + 1))"
+          echo "Laatste release ${tag}, nieuwe versie ${version}"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          git checkout --detach "$tag"
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+
+      - name: Ranges opnieuw genereren
+        run: php tools/build_geo_europe.php
+
+      - name: Versie-commit en tag maken
+        id: commit
+        env:
+          BASE_TAG: ${{ steps.base.outputs.tag }}
+          VERSION: ${{ steps.base.outputs.version }}
+        run: |
+          # GENERATED.txt bevat een tijdstempel en verandert dus altijd; alleen
+          # een release maken als de .bin-bestanden zelf anders zijn.
+          if git diff --quiet -- 'includes/geo/*.bin'; then
+            echo "IP-ranges ongewijzigd t.o.v. ${BASE_TAG}, geen release."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if git rev-parse -q --verify "refs/tags/v${VERSION}" >/dev/null; then
+            echo "::error::Tag v${VERSION} bestaat al"
+            exit 1
+          fi
+
+          sed -i -E "s/(APP_VERSION\s*=\s*')[^']*(')/\1${VERSION}\2/" includes/version.php
+          grep -q "APP_VERSION = '${VERSION}'" includes/version.php || {
+            echo "::error file=includes/version.php::APP_VERSION niet gevonden/bijgewerkt"
+            exit 1
+          }
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add includes/version.php includes/geo/
+          git commit -m "Versie ${VERSION}: Europese IP-ranges bijgewerkt (automatisch)"
+          git tag "v${VERSION}"
+          git push origin "refs/tags/v${VERSION}"
+          echo "release=true" >> "$GITHUB_OUTPUT"
+
+      - name: GitHub-release aanmaken
+        if: steps.commit.outputs.release == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_TAG: ${{ steps.base.outputs.tag }}
+          VERSION: ${{ steps.base.outputs.version }}
+        run: |
+          cat > notes.md <<EOF
+          ## Automatische update: alleen GeoIP-data
+
+          Deze release is **automatisch** aangemaakt door de maandelijkse GeoIP-update. Ten opzichte van ${BASE_TAG} bevat hij **alleen** bijgewerkte Europese IP-ranges (\`includes/geo/\`) voor de geoblokkering van de admin-login.
+
+          - Geen codewijzigingen
+          - Geen databasemigraties
+          - Bijwerken is veilig, maar niet dringend
+          EOF
+          gh release create "v${VERSION}" --verify-tag \
+            --title "v${VERSION} (automatische GeoIP-update)" \
+            --notes-file notes.md
+
+      - name: Release-commit terugbrengen in main
+        if: steps.commit.outputs.release == 'true'
+        env:
+          VERSION: ${{ steps.base.outputs.version }}
+        run: |
+          release_commit=$(git rev-parse HEAD)
+          for attempt in 1 2 3; do
+            git fetch origin main
+            git checkout -B main origin/main
+            if git merge-base --is-ancestor main "$release_commit"; then
+              git merge --ff-only "$release_commit"
+            else
+              # main heeft onuitgebrachte commits: mergen, bij conflicten in
+              # geo-data/version.php wint de release.
+              git merge --no-edit -X theirs "$release_commit" \
+                -m "Merge v${VERSION} (automatische GeoIP-update) in main"
+            fi
+            git push origin main && exit 0
+            sleep 5
+          done
+          echo "::warning::main kon niet bijgewerkt worden; release v${VERSION} staat wel online. Merge tag v${VERSION} zelf in main."

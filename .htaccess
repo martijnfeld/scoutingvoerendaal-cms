@@ -50,7 +50,7 @@ ServerSignature Off
     # verborgen mappen (.git, .idea, ...) en interne mappen weigeren.
     # .well-known blijft bereikbaar (nodig voor Let's Encrypt/AutoSSL).
     RewriteRule (^|/)\.(?!well-known(/|$)) - [F]
-    RewriteRule ^(includes|admin/includes|sql|backups|tools|docker)(/|$) - [F]
+    RewriteRule ^(includes|admin/includes|sql|backups|tools|docker|tests)(/|$) - [F]
 
     # Losse pagina's: /<slug> wordt intern afgehandeld door pagina.php.
     # Slugs bestaan alleen uit a-z, 0-9 en '-' (zie slugify()), dus bestanden
