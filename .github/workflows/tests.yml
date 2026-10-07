@@ -49,7 +49,7 @@ jobs:
           MARIADB_ROOT_PASSWORD: root
         ports: ['3306:3306']
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -81,7 +81,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # Apache draait als www-data, de checkout is van de runner: maak de
       # mappen beschrijfbaar die op shared hosting ook beschrijfbaar zijn.
