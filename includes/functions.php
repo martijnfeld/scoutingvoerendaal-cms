@@ -289,6 +289,62 @@ function get_uploaded_files(array $extensions = []): array
     return $files;
 }
 
+/**
+ * Zoekt uit waar een geüpload bestand wordt gebruikt (voor admin/uploads.php,
+ * zodat een bestand dat nog in gebruik is niet verwijderd kan worden).
+ *
+ * Documenten (PDF's) slaan alleen de kale bestandsnaam op, dus daar volstaat
+ * een exacte match. Afbeeldingen kunnen ook binnen een groter HTML-veld
+ * voorkomen (alle CKEditor-velden: info-vakjes, speltak-toelichtingen,
+ * pagina's en instellingen; via de upload-adapter als absolute URL) of met
+ * een licht afwijkend pad zijn opgeslagen, dus daar wordt ook op een
+ * LIKE-patroon met de bestandsnaam gezocht. Geüploade bestandsnamen zijn
+ * altijd hexadecimaal (of eenvoudige seed-namen) en bevatten dus nooit
+ * LIKE-jokertekens.
+ */
+function find_upload_usage(string $filename): array
+{
+    $used = [];
+    $urlPath = rtrim(UPLOAD_URL, '/') . '/' . $filename;
+    $likePattern = '%' . $filename . '%';
+
+    $stmt = db()->prepare('SELECT naam FROM documents WHERE bestand = :f');
+    $stmt->execute(['f' => $filename]);
+    foreach ($stmt->fetchAll() as $row) {
+        $used[] = 'Document: ' . $row['naam'];
+    }
+
+    $stmt = db()->prepare(
+        'SELECT titel FROM info_cards WHERE afbeelding = :f OR afbeelding LIKE :p1 OR tekst LIKE :p2'
+    );
+    $stmt->execute(['f' => $urlPath, 'p1' => $likePattern, 'p2' => $likePattern]);
+    foreach ($stmt->fetchAll() as $row) {
+        $used[] = 'Info-vakje: ' . $row['titel'];
+    }
+
+    $stmt = db()->prepare('SELECT naam FROM speltakken WHERE toelichting LIKE :p');
+    $stmt->execute(['p' => $likePattern]);
+    foreach ($stmt->fetchAll() as $row) {
+        $used[] = 'Speltak: ' . $row['naam'];
+    }
+
+    $stmt = db()->prepare('SELECT titel FROM pages WHERE inhoud LIKE :p');
+    $stmt->execute(['p' => $likePattern]);
+    foreach ($stmt->fetchAll() as $row) {
+        $used[] = 'Pagina: ' . $row['titel'];
+    }
+
+    $stmt = db()->prepare(
+        'SELECT setting_key FROM settings WHERE setting_value = :f OR setting_value LIKE :p'
+    );
+    $stmt->execute(['f' => $urlPath, 'p' => $likePattern]);
+    foreach ($stmt->fetchAll() as $row) {
+        $used[] = 'Instelling: ' . $row['setting_key'];
+    }
+
+    return array_values(array_unique($used));
+}
+
 /* ------------------------------------------------------------------ *
  * Sessies
  * ------------------------------------------------------------------ */

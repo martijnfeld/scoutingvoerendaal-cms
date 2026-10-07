@@ -65,6 +65,24 @@ test('pagina-functies filteren op actief en menu', function () {
     assert_same('A zichtbaar', get_page((int) get_page_by_slug('a')['id'])['titel']);
 });
 
+test('find_upload_usage() vindt gebruik in alle CKEditor-velden', function () {
+    $file = 'abcdef0123456789.jpg';
+    assert_same([], find_upload_usage($file));
+
+    $img = '<p><img src="https://example.org/' . rtrim(UPLOAD_URL, '/') . '/' . $file . '"></p>';
+    db()->prepare("INSERT INTO pages (titel, slug, inhoud) VALUES ('Met foto', 'met-foto', :h)")->execute(['h' => $img]);
+    db()->prepare('UPDATE speltakken SET toelichting = :h WHERE id = 1')->execute(['h' => $img]);
+    db()->prepare("INSERT INTO info_cards (titel, tekst) VALUES ('Kaart met foto', :h)")->execute(['h' => $img]);
+    set_setting('test_upload_html', $img);
+
+    $usage = find_upload_usage($file);
+    assert_true(in_array('Pagina: Met foto', $usage, true), 'pagina');
+    assert_true(in_array('Speltak: ' . get_speltak(1)['naam'], $usage, true), 'speltak');
+    assert_true(in_array('Info-vakje: Kaart met foto', $usage, true), 'info-vakje');
+    assert_true(in_array('Instelling: test_upload_html', $usage, true), 'instelling');
+    assert_same([], find_upload_usage('0000000000000000.jpg'));
+});
+
 test('documenten en info-vakjes', function () {
     $docs = get_documents();
     assert_true(count($docs) > 0);
