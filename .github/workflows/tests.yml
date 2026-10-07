@@ -93,11 +93,21 @@ jobs:
       - name: Containers starten
         run: |
           docker compose up -d --build --wait web db
+          # Database bereikbaar vanuit de web-container (zoals de site en de
+          # db-tests verbinden), niet alleen "healthy" volgens Docker.
+          ok=
           for i in $(seq 1 60); do
-            curl -fsS -o /dev/null http://localhost:8080/robots.txt && exit 0
+            if docker compose exec -T web php -r 'new PDO("mysql:host=db;port=3306", "root", "root");' 2>/dev/null; then
+              ok=1; break
+            fi
             sleep 2
           done
-          echo "::error::Webserver is niet bereikbaar"
+          [ -n "$ok" ] || { echo "::error::Database is niet bereikbaar vanuit de web-container"; exit 1; }
+          for i in $(seq 1 60); do
+            curl -fsS -o /dev/null http://localhost:8080/ && exit 0
+            sleep 2
+          done
+          echo "::error::Website is niet bereikbaar"
           exit 1
 
       - name: Tests (unit + db + http)
