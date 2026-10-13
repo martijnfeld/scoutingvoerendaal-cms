@@ -88,6 +88,23 @@ test('formulier opslaan zonder CSRF-token wordt geweigerd', function () {
     assert_contains('Ongeldige aanvraag', $r['body']);
 });
 
+test('Statistieken & cookies: ongeldig measurement-ID wordt geweigerd', function () {
+    admin_login();
+    $r = http_get('admin/settings.php?tab=analytics');
+    assert_status(200, $r, 'tab Statistieken & cookies');
+    assert_no_php_errors($r, 'tab Statistieken & cookies');
+    assert_contains('name="ga_measurement_id"', $r['body']);
+
+    $r = http_post('admin/settings.php?tab=analytics', [
+        'csrf_token' => http_csrf_token($r), 'tab' => 'analytics',
+        'ga_measurement_id' => 'UA-12345678-1', 'cookie_banner_title' => 'Mag niet worden opgeslagen',
+    ]);
+    assert_status(200, $r, 'opslaan met ongeldig ID');
+    assert_contains('Universal Analytics', $r['body']);
+    assert_not_contains('value="UA-12345678-1"', $r['body']);
+    assert_not_contains('Mag niet worden opgeslagen', $r['body'], 'bij een fout wordt niets opgeslagen');
+});
+
 test('pagina aanmaken, publiek bekijken en verwijderen', function () {
     admin_login();
     $title = 'CI-testpagina ' . bin2hex(random_bytes(3));

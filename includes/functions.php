@@ -86,6 +86,85 @@ function set_setting(string $key, string $value): void
 }
 
 /* ------------------------------------------------------------------ *
+ * Google Analytics + cookiebanner
+ * ------------------------------------------------------------------ */
+
+/** Versie van orestbida/cookieconsent (jsDelivr), gebruikt voor de cookiebanner. */
+const COOKIECONSENT_VERSION = '3.1.0';
+
+/** GA4-measurement-ID: G- gevolgd door letters/cijfers. */
+const GA_MEASUREMENT_ID_PATTERN = '/^G-[A-Z0-9]{4,15}$/';
+
+/**
+ * Standaardteksten van de cookiebanner; gelijk aan de waarden in
+ * sql/install.sql en migratie 0004, en de terugvaloptie als een veld leeg is.
+ */
+const COOKIE_BANNER_DEFAULTS = [
+    'cookie_banner_title' => 'Wij gebruiken cookies',
+    'cookie_banner_text' => 'Met jouw toestemming gebruiken we Google Analytics om anoniem bij te houden hoe onze website wordt gebruikt. Zonder toestemming plaatsen we geen analytische cookies.',
+    'cookie_banner_accept' => 'Accepteren',
+    'cookie_banner_reject' => 'Weigeren',
+    'cookie_banner_settings' => 'Instellingen',
+    'cookie_privacy_link' => '',
+];
+
+/**
+ * Normaliseert een ingevoerd measurement-ID (spaties weg, hoofdletters).
+ * Leeg mag (= Google Analytics uit); anders moet het een GA4-ID zijn.
+ *
+ * @throws RuntimeException met een Nederlandse foutmelding
+ */
+function ga_measurement_id_normalize(string $value): string
+{
+    $value = strtoupper(trim($value));
+    if ($value === '' || preg_match(GA_MEASUREMENT_ID_PATTERN, $value)) {
+        return $value;
+    }
+    if (strpos($value, 'UA-') === 0) {
+        throw new RuntimeException('Dit is een oude Universal Analytics-code (UA-…); die werkt niet meer. Gebruik het measurement-ID van een GA4-gegevensstream, dat begint met G-.');
+    }
+    throw new RuntimeException('Ongeldig Google Analytics measurement-ID. Het begint met G- gevolgd door letters en cijfers, bijvoorbeeld G-AB12CD34EF.');
+}
+
+/**
+ * Link naar de privacyverklaring: leeg, een volledige http(s)-URL of een
+ * pad op de eigen site (bijvoorbeeld "privacy" voor een CMS-pagina).
+ *
+ * @throws RuntimeException met een Nederlandse foutmelding
+ */
+function cookie_privacy_link_normalize(string $value): string
+{
+    $value = trim($value);
+    if ($value === '' || preg_match('#^/?[A-Za-z0-9._~%/-]+(\?[A-Za-z0-9._~%&=+-]*)?(\#[A-Za-z0-9._~-]*)?$#', $value)) {
+        return $value;
+    }
+    $scheme = strtolower((string) parse_url($value, PHP_URL_SCHEME));
+    if (filter_var($value, FILTER_VALIDATE_URL) !== false && in_array($scheme, ['http', 'https'], true)
+        && (string) parse_url($value, PHP_URL_HOST) !== '') {
+        return $value;
+    }
+    throw new RuntimeException('Ongeldige link naar de privacyverklaring. Gebruik een volledig adres (https://…) of de slug van een pagina, bijvoorbeeld privacy.');
+}
+
+/** Het ingestelde measurement-ID, of '' als het leeg of ongeldig is (dan geen GA). */
+function ga_measurement_id(): string
+{
+    $id = strtoupper(trim(get_setting('ga_measurement_id')));
+    return preg_match(GA_MEASUREMENT_ID_PATTERN, $id) ? $id : '';
+}
+
+/** Teksten voor de cookiebanner, met de standaardtekst voor lege velden. */
+function cookie_banner_texts(): array
+{
+    $texts = [];
+    foreach (COOKIE_BANNER_DEFAULTS as $key => $default) {
+        $value = trim(get_setting($key));
+        $texts[$key] = $value !== '' ? $value : $default;
+    }
+    return $texts;
+}
+
+/* ------------------------------------------------------------------ *
  * Speltakken
  * ------------------------------------------------------------------ */
 

@@ -74,6 +74,99 @@ aangemaakte account. Vanuit het beheerpaneel kun je:
   om er automatisch een downloadknop bij te tonen.
 - **Wachtwoord wijzigen** — je eigen inlogwachtwoord aanpassen.
 - **Updates** — controleer op een nieuwe versie, lees de releasenotes en werk de website met één klik bij.
+- **Teksten & gegevens → Statistieken & cookies** — Google Analytics aanzetten
+  en de teksten van de cookiebanner aanpassen (zie hieronder).
+
+## Google Analytics (bezoekersstatistieken)
+
+De website kan bezoekersstatistieken bijhouden met Google Analytics 4 (GA4).
+Dat staat standaard **uit**; je zet het aan door een measurement-ID in te
+vullen. Er is geen extra code, plug-in of FTP-werk voor nodig.
+
+### Aanzetten
+
+1. Ga naar [analytics.google.com](https://analytics.google.com/) en log in
+   met een Google-account (bij voorkeur een algemeen account van de groep,
+   niet een persoonlijk account van één vrijwilliger).
+2. Maak een **account** en een **property** aan (bijvoorbeeld "Scouting
+   Voerendaal", tijdzone Nederland, valuta euro). Heb je al een property,
+   sla deze stap dan over.
+3. Kies bij **Beheer → Gegevensverzameling en -aanpassing → Gegevensstreams**
+   voor **Web**, vul het adres van de website in (`https://jouw-domein.nl`)
+   en geef de stream een naam.
+4. Kopieer het **measurement-ID** van de stream. Dat begint met `G-`
+   (bijvoorbeeld `G-AB12CD34EF`). Oude Universal Analytics-codes (`UA-…`)
+   werken niet meer en worden geweigerd.
+5. Ga in het beheerpaneel naar **Teksten & gegevens → Statistieken &
+   cookies**, plak het ID in **Google Analytics measurement-ID** en klik op
+   **Opslaan**.
+6. Vul daar ook de **link naar je privacyverklaring** in: een volledig adres
+   (`https://…`) of de slug van een pagina op deze site (bijvoorbeeld
+   `privacy`, aangemaakt via **Pagina's**).
+
+Wil je Google Analytics weer uitzetten, maak het measurement-ID dan leeg en
+sla op. De cookiebanner verdwijnt dan ook.
+
+### Cookiebanner en Consent Mode
+
+Zodra er een measurement-ID is ingesteld, toont de website een cookiebanner
+([cookieconsent](https://github.com/orestbida/cookieconsent) van
+orestbida). Google Analytics draait in **Consent Mode v2**:
+
+- Zolang een bezoeker geen toestemming heeft gegeven, plaatst Google
+  Analytics **geen cookies**. Google ontvangt dan alleen anonieme,
+  cookieloze meldingen, waarmee GA4 het bezoek kan schatten.
+- Kiest de bezoeker **Accepteren**, dan mag Google Analytics wel cookies
+  plaatsen (`_ga`, `_ga_…`) en worden bezoeken volledig gemeten.
+- Kiest de bezoeker **Weigeren**, dan blijft alles cookieloos. Trekt een bezoeker
+  de toestemming later in, dan worden de `_ga`-cookies gewist.
+- Advertentiefuncties (Google Signals, advertentiepersonalisatie) staan
+  altijd uit.
+- De keuze wordt 6 maanden onthouden in de cookie `cc_cookie`. Bezoekers
+  kunnen hem altijd aanpassen via **Cookie-instellingen** onderaan elke pagina.
+
+De titel, tekst en knopteksten van de banner pas je aan op hetzelfde
+tabblad; laat je een veld leeg, dan wordt de standaardtekst gebruikt. De
+bibliotheek wordt vanaf jsDelivr geladen (net als Bootstrap). Is jsDelivr
+onbereikbaar of geblokkeerd, dan verschijnt er geen banner en blijft Google
+Analytics cookieloos.
+
+### Privacy (AVG)
+
+Je bent als groep zelf verantwoordelijk voor het privacyvriendelijk inzetten
+van Google Analytics. De Autoriteit Persoonsgegevens adviseert in elk geval:
+
+- Accepteer in Google Analytics de **gegevensverwerkingsvoorwaarden** (Beheer
+  → Accountinstellingen → *Gegevensverwerkingsvoorwaarden*); dat geldt als
+  verwerkersovereenkomst met Google.
+- Zet onder **Beheer → Accountinstellingen** het **delen van gegevens** met
+  Google (voor producten, technische ondersteuning, enz.) uit.
+- Laat **Google Signals** en **gegevens voor advertenties** uitgeschakeld
+  (Beheer → Gegevensverzameling).
+- Kies een korte **bewaartermijn** (Beheer → Gegevensbewaring, bijvoorbeeld 2
+  maanden).
+- Beschrijf in je **privacyverklaring** dat je Google Analytics gebruikt,
+  waarvoor, welke cookies, en dat dit alleen met toestemming gebeurt. Link
+  ernaar vanuit de cookiebanner.
+
+**Beheer → Systeemcontrole** waarschuwt als het ingestelde ID ongeldig is of
+als de link naar de privacyverklaring ontbreekt.
+
+### Controleren of het werkt
+
+1. Open de website in een privévenster: de cookiebanner moet verschijnen.
+2. Klik op **Accepteren** en open in Google Analytics **Rapporten →
+   Realtime**; binnen een minuut hoort je bezoek daar te staan.
+3. Voor meer detail: gebruik [Tag Assistant](https://tagassistant.google.com/)
+   of de ontwikkelaarstools van je browser (tabblad *Netwerk*, zoek op
+   `collect`). Vóór toestemming zie je daar `gcs=G100`, na Accepteren
+   `gcs=G101` (advertentieopslag blijft altijd geweigerd).
+4. Klik onderaan de pagina op **Cookie-instellingen**, zet *Analytische
+   cookies* uit en sla op: de `_ga`-cookies verdwijnen.
+
+Het kan tot 24–48 uur duren voordat bezoeken in de gewone rapporten
+(buiten Realtime) verschijnen. Houd er rekening mee dat bezoekers die
+weigeren of een adblocker gebruiken niet of slechts geschat meetellen.
 
 ## Mappenstructuur
 

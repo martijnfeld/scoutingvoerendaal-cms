@@ -259,9 +259,23 @@ from `admin/includes/auth.php` (as a PHP `header()`, so it doesn't depend on `mo
 scripts only from our own origin plus fixed CDNs (Google Tag Manager, Bootstrap and CKEditor) — **no inline `<script>`
 blocks and no inline event handlers** (`onclick=`, `onsubmit=`, …); they would silently stop working. Put
 JS in `assets/js/` instead: admin confirmation prompts use `<form data-confirm="...">` (handled in
-`assets/js/admin.js`), and Google Analytics is initialised from `assets/js/gtag.js`. Inline `style`
+`assets/js/admin.js`), and Google Analytics is initialised from `assets/js/gtag.js` (see **Google
+Analytics** below). Inline `style`
 attributes are allowed (CKEditor output relies on them). Adding a new external script/font/API host means
 extending the relevant CSP directive.
+
+**Google Analytics**: off unless **Teksten & gegevens → Statistieken & cookies** (`admin/settings.php`, tab
+`analytics`) has a GA4 measurement ID. Input goes through `ga_measurement_id_normalize()` (settings fields can
+declare a `'normalize'` callback that throws `RuntimeException`; the whole tab is validated before anything is
+saved); the public layout only uses `ga_measurement_id()`, which returns `''` for empty/invalid values. When set,
+`includes/site_layout_*.php` load the cookie banner [orestbida/cookieconsent](https://github.com/orestbida/cookieconsent)
+v3 from jsDelivr (`COOKIECONSENT_VERSION`), then `assets/js/gtag.js` (ID + banner texts from
+`cookie_banner_texts()` passed as `data-ga-id`/`data-cc-texts` JSON attributes — no inline script), then gtag.
+gtag.js runs Consent Mode v2: everything `denied` by default, `analytics_storage` granted only when the
+`analytics` category is accepted (choice in `cc_cookie`; `_ga*` auto-cleared on withdrawal); ad signals always
+off. The footer "Cookie-instellingen" button uses the library's `data-cc="show-preferencesModal"`. Banner text
+defaults live in `COOKIE_BANNER_DEFAULTS` and must match `sql/install.sql` / migration 0004. Owner docs:
+`INSTALL.md` → **Google Analytics**.
 
 **Public JSON feed integration**: the browser never calls Scoutdash directly. `assets/js/main.js` makes a
 single AJAX call to our own `api/opkomsten.php` and distributes the per-speltak results into each

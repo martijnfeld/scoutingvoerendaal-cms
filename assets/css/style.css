@@ -289,6 +289,20 @@ footer .container{padding-top:36px; padding-bottom:26px;}
 .footer-grid{display:flex; justify-content:space-between; flex-wrap:wrap; gap:20px;}
 footer a{color:#fff;}
 footer a:hover{opacity:0.85;}
+/* Knop die eruitziet als een link (bv. "Cookie-instellingen" in de footer). */
+.link-button{background:none; border:0; padding:0; font:inherit; color:inherit; text-decoration:underline; cursor:pointer;}
+footer .link-button:hover{opacity:0.85;}
+
+/* ---- cookiebanner (orestbida/cookieconsent) in huisstijl ---- */
+#cc-main{
+  --cc-font-family:inherit;
+  --cc-btn-primary-bg:var(--green);
+  --cc-btn-primary-border-color:var(--green);
+  --cc-btn-primary-hover-bg:var(--green-dark);
+  --cc-btn-primary-hover-border-color:var(--green-dark);
+  --cc-toggle-on-bg:var(--green);
+  --cc-link-color:var(--green-dark);
+}
 .footer-note{
   text-align:center; font-size:0.82rem; opacity:0.9; margin-top:22px;
   border-top:1px solid rgba(255,255,255,0.3); padding-top:16px;

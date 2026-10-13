@@ -200,6 +200,12 @@ INSERT INTO settings (setting_key, setting_value) VALUES
     ('site_url', 'https://www.example.org/'),
     ('og_image', ''),
     ('ga_measurement_id', ''),
+    ('cookie_banner_title', 'Wij gebruiken cookies'),
+    ('cookie_banner_text', 'Met jouw toestemming gebruiken we Google Analytics om anoniem bij te houden hoe onze website wordt gebruikt. Zonder toestemming plaatsen we geen analytische cookies.'),
+    ('cookie_banner_accept', 'Accepteren'),
+    ('cookie_banner_reject', 'Weigeren'),
+    ('cookie_banner_settings', 'Instellingen'),
+    ('cookie_privacy_link', ''),
     ('notice_bar_enabled', '0'),
     ('notice_bar_text', '<strong>Let op:</strong> dit is een voorbeeldmelding.'),
 

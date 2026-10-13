@@ -14,6 +14,9 @@ geen Composer of npm. Het draait op vrijwel elke gewone shared hosting.
   bewaart ze 10 minuten in een cache en schoont de inhoud op, zodat de site gewoon blijft werken als
   Scoutdash even plat ligt.
 - `sitemap.xml`, `robots.txt` en gestructureerde gegevens (JSON-LD) voor zoekmachines.
+- Optioneel Google Analytics 4 met een cookiebanner en Consent Mode v2: zonder toestemming geen
+  analytische cookies. Aan te zetten vanuit het beheerpaneel, zie
+  [INSTALL.md → Google Analytics](INSTALL.md#google-analytics-bezoekersstatistieken).
 
 **Beheerpaneel** (`/admin/`)
 - Alle teksten en gegevens van de site (contact, verhuur, footer, social media, …).

@@ -12,9 +12,13 @@ $ogImage = $ogImage ?? get_setting('og_image');
 $isHome = $isHome ?? false;
 $currentPageSlug = $currentPageSlug ?? null;
 $homeHref = $isHome ? '' : 'index.php';
+// Leeg als Google Analytics uit staat; dan ook geen cookiebanner.
+$gaId = ga_measurement_id();
 
 // Content-Security-Policy: de browser voert alleen scripts uit van onze
 // eigen site (en Google Analytics), nooit inline-scripts of event-handlers.
+// De cookiebanner (cookieconsent) komt van jsDelivr; de cookieloze pings van
+// Consent Mode vallen onder connect-src *.google-analytics.com.
 // Mocht er via CMS-HTML of de Scoutdash-feed toch een script in de pagina
 // belanden, dan wordt het dus niet uitgevoerd. Inline styles blijven
 // toegestaan (CKEditor-opmaak); iframes alleen via https (bv. YouTube).
@@ -94,6 +98,9 @@ if (!headers_sent()) {
 <?php endif; ?>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+<?php if ($gaId): ?>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vanilla-cookieconsent@<?= COOKIECONSENT_VERSION ?>/dist/cookieconsent.css">
+<?php endif; ?>
 <link rel="stylesheet" href="<?= e(asset_url('assets/css/style.css')) ?>">
 </head>
 <body>

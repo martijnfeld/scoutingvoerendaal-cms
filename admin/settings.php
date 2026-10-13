@@ -12,9 +12,28 @@ $SETTINGS_SCHEMA = [
             'meta_description' => ['label' => 'Meta omschrijving (SEO)', 'type' => 'textarea'],
             'site_url' => ['label' => 'Website-adres', 'type' => 'text', 'hint' => 'Bijvoorbeeld https://scoutingvoerendaal.nl/'],
             'og_image' => ['label' => 'Deelafbeelding (social media)', 'type' => 'image'],
-            'ga_measurement_id' => ['label' => 'Google Analytics Measurement ID', 'type' => 'text', 'hint' => 'Leeg laten om Google Analytics uit te schakelen.'],
             'notice_bar_enabled' => ['label' => 'Meldingsbalk bovenaan tonen', 'type' => 'checkbox'],
             'notice_bar_text' => ['label' => 'Tekst meldingsbalk', 'type' => 'html'],
+        ],
+    ],
+    'analytics' => [
+        'label' => 'Statistieken & cookies',
+        'intro' => '<p><strong>Google Analytics instellen</strong></p>'
+            . '<ol>'
+            . '<li>Log in op <a href="https://analytics.google.com/" target="_blank" rel="noopener">analytics.google.com</a> en maak (als je die nog niet hebt) een account en een <em>property</em> aan voor de website.</li>'
+            . '<li>Kies bij <em>Beheer → Gegevensstreams</em> voor <em>Web</em> en vul het adres van de website in.</li>'
+            . '<li>Kopieer het <em>measurement-ID</em> van die stream (begint met <code>G-</code>) en plak het hieronder.</li>'
+            . '</ol>'
+            . '<p>Zodra er een ID staat, toont de website een cookiebanner. Google Analytics draait in <em>Consent Mode</em>: zonder toestemming worden er geen analytische cookies geplaatst, en advertentiefuncties staan altijd uit. Bezoekers kunnen hun keuze later aanpassen via <em>Cookie-instellingen</em> onderaan de pagina.</p>'
+            . '<p>Vermeld Google Analytics in je privacyverklaring en vul hieronder de link ernaar in. Meer uitleg (ook over de AVG-instellingen in Google Analytics) staat in <code>INSTALL.md</code>, onder <em>Google Analytics</em>.</p>',
+        'fields' => [
+            'ga_measurement_id' => ['label' => 'Google Analytics measurement-ID', 'type' => 'text', 'hint' => 'Bijvoorbeeld G-AB12CD34EF. Leeg laten om Google Analytics en de cookiebanner uit te schakelen.', 'normalize' => 'ga_measurement_id_normalize'],
+            'cookie_privacy_link' => ['label' => 'Link naar privacyverklaring', 'type' => 'text', 'hint' => 'Een volledig adres (https://…) of de slug van een pagina op deze site, bijvoorbeeld privacy. Wordt in de cookiebanner getoond.', 'normalize' => 'cookie_privacy_link_normalize'],
+            'cookie_banner_title' => ['label' => 'Cookiebanner - titel', 'type' => 'text', 'hint' => 'Leeg laten voor: ' . COOKIE_BANNER_DEFAULTS['cookie_banner_title']],
+            'cookie_banner_text' => ['label' => 'Cookiebanner - tekst', 'type' => 'textarea', 'hint' => 'Leg kort uit waarvoor je de cookies gebruikt. Eenvoudige HTML (zoals <strong>) is toegestaan.'],
+            'cookie_banner_accept' => ['label' => 'Cookiebanner - knop accepteren', 'type' => 'text', 'hint' => 'Leeg laten voor: ' . COOKIE_BANNER_DEFAULTS['cookie_banner_accept']],
+            'cookie_banner_reject' => ['label' => 'Cookiebanner - knop weigeren', 'type' => 'text', 'hint' => 'Leeg laten voor: ' . COOKIE_BANNER_DEFAULTS['cookie_banner_reject']],
+            'cookie_banner_settings' => ['label' => 'Cookiebanner - knop instellingen', 'type' => 'text', 'hint' => 'Leeg laten voor: ' . COOKIE_BANNER_DEFAULTS['cookie_banner_settings']],
         ],
     ],
     'organisatie' => [
@@ -124,7 +143,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (isset($SETTINGS_SCHEMA[$postedTab])) {
             $activeTab = $postedTab;
             try {
+                // Eerst alle velden met een normalize-functie controleren, zodat
+                // er bij een fout niets (half) wordt opgeslagen.
+                $normalized = [];
                 foreach ($SETTINGS_SCHEMA[$activeTab]['fields'] as $key => $field) {
+                    if (!empty($field['normalize']) && array_key_exists($key, $_POST)) {
+                        $normalized[$key] = $field['normalize']((string) $_POST[$key]);
+                    }
+                }
+                foreach ($SETTINGS_SCHEMA[$activeTab]['fields'] as $key => $field) {
+                    if (array_key_exists($key, $normalized)) {
+                        set_setting($key, $normalized[$key]);
+                        continue;
+                    }
                     if ($field['type'] === 'checkbox') {
                         set_setting($key, isset($_POST[$key]) ? '1' : '0');
                         continue;
@@ -161,6 +192,12 @@ include __DIR__ . '/includes/layout_top.php';
 </div>
 
 <?php if ($error): ?><div class="admin-flash admin-flash-error"><?= e($error) ?></div><?php endif; ?>
+
+<?php if (!empty($SETTINGS_SCHEMA[$activeTab]['intro'])): ?>
+<div class="admin-card">
+  <?= $SETTINGS_SCHEMA[$activeTab]['intro'] /* vaste tekst uit deze file */ ?>
+</div>
+<?php endif; ?>
 
 <div class="admin-card">
   <form method="post" enctype="multipart/form-data">

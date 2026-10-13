@@ -102,3 +102,39 @@ test('flash_get() geeft een melding één keer terug', function () {
 test('APP_VERSION is een geldige versie', function () {
     assert_matches('/^\d+\.\d+\.\d+$/', APP_VERSION);
 });
+
+test('ga_measurement_id_normalize() accepteert GA4-ID\'s en leeg', function () {
+    assert_same('G-AB12CD34EF', ga_measurement_id_normalize('G-AB12CD34EF'));
+    assert_same('G-AB12CD34EF', ga_measurement_id_normalize('  g-ab12cd34ef '), 'spaties en kleine letters');
+    assert_same('', ga_measurement_id_normalize('   '), 'leeg = uit');
+});
+
+test('ga_measurement_id_normalize() weigert UA-codes en onzin', function () {
+    foreach (['UA-12345678-1', 'G-', 'AB12CD34', 'G-AB12"><script>', 'GTM-ABC123', 'G-ABCDEFGHIJKLMNOPQ'] as $value) {
+        $error = null;
+        try {
+            ga_measurement_id_normalize($value);
+        } catch (RuntimeException $e) {
+            $error = $e->getMessage();
+        }
+        assert_true(is_string($error), 'geweigerd: ' . $value);
+    }
+});
+
+test('cookie_privacy_link_normalize() accepteert URL\'s en paden', function () {
+    foreach (['', 'privacy', '/privacy', 'privacy#cookies', 'https://example.org/privacy', 'http://example.org/a?b=c'] as $value) {
+        assert_same($value, cookie_privacy_link_normalize($value));
+    }
+});
+
+test('cookie_privacy_link_normalize() weigert andere schema\'s en HTML', function () {
+    foreach (['javascript:alert(1)', 'data:text/html,x', 'privacy"><b>', 'https://', 'ftp://example.org/'] as $value) {
+        $error = null;
+        try {
+            cookie_privacy_link_normalize($value);
+        } catch (RuntimeException $e) {
+            $error = $e->getMessage();
+        }
+        assert_true(is_string($error), 'geweigerd: ' . $value);
+    }
+});

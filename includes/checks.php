@@ -389,6 +389,21 @@ function checks_config(): array
         }
     }
 
+    $gaLink = ['href' => 'settings.php?tab=analytics', 'text' => 'Naar Statistieken & cookies'];
+    $gaSaved = trim(get_setting('ga_measurement_id'));
+    $gaId = ga_measurement_id();
+    if ($gaSaved === '') {
+        $r[] = check_result('Google Analytics', 'info', 'Uit (geen measurement-ID ingesteld).', $gaLink);
+    } elseif ($gaId === '') {
+        $r[] = check_result('Google Analytics', 'warn',
+            'Het ingestelde ID "' . $gaSaved . '" is geen geldig GA4-measurement-ID (G-…), dus Google Analytics staat feitelijk uit. Oude UA-codes werken niet meer.', $gaLink);
+    } elseif (trim(get_setting('cookie_privacy_link')) === '') {
+        $r[] = check_result('Google Analytics', 'warn',
+            'Aan (' . $gaId . ', met cookiebanner en Consent Mode), maar er is geen link naar een privacyverklaring ingesteld. Vermeld Google Analytics in je privacyverklaring en link ernaar vanuit de cookiebanner.', $gaLink);
+    } else {
+        $r[] = check_result('Google Analytics', 'ok', 'Aan (' . $gaId . ', met cookiebanner en Consent Mode).', $gaLink);
+    }
+
     if (defined('ADMIN_GEO_BLOCK') && !ADMIN_GEO_BLOCK) {
         $r[] = check_result('Geoblokkade inloggen', 'warn',
             'Uitgeschakeld (ADMIN_GEO_BLOCK in config.local.php): er kan van overal ter wereld worden ingelogd.');

@@ -21,6 +21,23 @@ test('homepage stuurt CSP- en beveiligingsheaders', function () {
     assert_contains('camera=()', http_header($r, 'Permissions-Policy'));
 });
 
+test('Google Analytics alleen samen met cookiebanner en Consent Mode', function () {
+    $r = http_get('');
+    if (strpos($r['body'], 'googletagmanager.com/gtag/js') === false) {
+        // Standaard (verse installatie): GA uit, dus ook geen banner.
+        assert_not_contains('cookieconsent', $r['body']);
+        assert_not_contains('data-cc="show-preferencesModal"', $r['body']);
+        return;
+    }
+    assert_contains('cookieconsent.umd.js', $r['body']);
+    assert_contains('cookieconsent.css', $r['body']);
+    assert_matches('#<script src="[^"]*assets/js/gtag\.js[^"]*" data-ga-id="G-[A-Z0-9]+" data-cc-texts="#', $r['body']);
+    assert_contains('data-cc="show-preferencesModal"', $r['body']);
+    $js = http_get('assets/js/gtag.js');
+    assert_status(200, $js, 'gtag.js');
+    assert_contains("'consent', 'default'", $js['body']);
+});
+
 test('sitemap.xml en robots.txt', function () {
     $r = http_get('sitemap.xml');
     assert_status(200, $r, 'sitemap.xml');
