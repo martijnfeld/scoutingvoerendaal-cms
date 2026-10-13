@@ -147,9 +147,13 @@ test('pagina van een speltak: gegevens, programma, kruimelpad en SEO', function 
     assert_contains('href="./#programma"', $r['body'], 'menu linkt naar de homepage');
 
     $blocks = http_json_ld_blocks($r['body']);
-    assert_same(['BreadcrumbList'], array_column($blocks, '@type'));
-    assert_same(3, count($blocks[0]['itemListElement']));
-    assert_matches('#/speltakken/' . $slug . '$#', $blocks[0]['itemListElement'][2]['item']);
+    assert_same(['Organization', 'BreadcrumbList'], array_column($blocks, '@type'));
+    assert_matches('#/speltakken/' . $slug . '$#', $blocks[0]['url']);
+    assert_same('NGO', $blocks[0]['parentOrganization']['@type']);
+    $home = http_json_ld_blocks(http_get('')['body']);
+    assert_same($home[0]['@id'], $blocks[0]['parentOrganization']['@id'], 'zelfde organisatie als op de homepage');
+    assert_same(3, count($blocks[1]['itemListElement']));
+    assert_matches('#/speltakken/' . $slug . '$#', $blocks[1]['itemListElement'][2]['item']);
 
     $sitemap = http_get('sitemap.xml')['body'];
     assert_contains('/speltakken</loc>', $sitemap);

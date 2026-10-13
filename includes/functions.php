@@ -452,6 +452,7 @@ function organization_json_ld(): array
     $data = [
         '@context' => 'https://schema.org',
         '@type' => 'NGO',
+        '@id' => organization_json_ld_id(),
         'name' => get_setting('org_naam'),
         'url' => get_setting('site_url'),
         'logo' => get_setting('logo_image') !== '' ? absolute_url(get_setting('logo_image')) : '',
@@ -459,14 +460,9 @@ function organization_json_ld(): array
         'email' => get_setting('org_email'),
         'telephone' => get_setting('org_telefoon'),
     ];
-    $address = array_filter([
-        'streetAddress' => get_setting('org_straat'),
-        'postalCode' => get_setting('org_postcode'),
-        'addressLocality' => get_setting('org_plaats'),
-        'addressCountry' => get_setting('org_land'),
-    ], fn($v) => $v !== '');
+    $address = organization_address_json_ld();
     if ($address) {
-        $data['address'] = ['@type' => 'PostalAddress'] + $address;
+        $data['address'] = $address;
     }
     $sameAs = [];
     foreach (['social_facebook', 'social_instagram', 'social_youtube'] as $key) {
@@ -476,6 +472,83 @@ function organization_json_ld(): array
         }
     }
     $data['sameAs'] = $sameAs;
+    return array_filter($data, fn($v) => $v !== '' && $v !== []);
+}
+
+/**
+ * Vaste @id van de organisatie in structured data, zodat andere pagina's
+ * (bv. een speltak via parentOrganization) naar dezelfde entiteit verwijzen.
+ */
+function organization_json_ld_id(): string
+{
+    return absolute_url('') . '#organisatie';
+}
+
+/** PostalAddress van het clubgebouw, of [] als er geen adres is ingevuld. */
+function organization_address_json_ld(): array
+{
+    $address = array_filter([
+        'streetAddress' => get_setting('org_straat'),
+        'postalCode' => get_setting('org_postcode'),
+        'addressLocality' => get_setting('org_plaats'),
+        'addressCountry' => get_setting('org_land'),
+    ], fn($v) => $v !== '');
+    return $address ? ['@type' => 'PostalAddress'] + $address : [];
+}
+
+/**
+ * Leeftijdsgrenzen uit de vrije tekst van een speltak: "7–11 jaar" →
+ * [7, 11], "18+ (leden)" → [18, null]. Onherkenbaar → [null, null].
+ */
+function speltak_age_range(?string $leeftijd): array
+{
+    $leeftijd = (string) $leeftijd;
+    if (preg_match('/(\d{1,2})\s*(?:-|–|—|t\/m|tot)\s*(\d{1,2})/u', $leeftijd, $m)) {
+        return [(int) $m[1], (int) $m[2]];
+    }
+    if (preg_match('/(\d{1,2})\s*\+/', $leeftijd, $m)) {
+        return [(int) $m[1], null];
+    }
+    return [null, null];
+}
+
+/**
+ * Structured data voor de pagina van een speltak: een Organization die
+ * via parentOrganization bij de vereniging (organization_json_ld()) hoort,
+ * met doelgroep (leeftijden), logo en het clubgebouw als locatie. Lege
+ * velden worden weggelaten.
+ */
+function speltak_json_ld(array $sp): array
+{
+    $url = speltak_url($sp['slug'], true);
+    $data = [
+        '@context' => 'https://schema.org',
+        '@type' => 'Organization',
+        '@id' => $url . '#speltak',
+        'name' => $sp['naam'] . ' — ' . get_setting('org_naam'),
+        'alternateName' => $sp['naam'],
+        'url' => $url,
+        'description' => speltak_meta_description($sp),
+        'logo' => !empty($sp['logo']) ? absolute_url($sp['logo']) : '',
+        'parentOrganization' => [
+            '@type' => 'NGO',
+            '@id' => organization_json_ld_id(),
+            'name' => get_setting('org_naam'),
+            'url' => absolute_url(''),
+        ],
+    ];
+    [$min, $max] = speltak_age_range($sp['leeftijd'] ?? null);
+    if ($min !== null) {
+        $data['audience'] = array_filter([
+            '@type' => 'PeopleAudience',
+            'suggestedMinAge' => $min,
+            'suggestedMaxAge' => $max,
+        ], fn($v) => $v !== null);
+    }
+    $address = organization_address_json_ld();
+    if ($address) {
+        $data['location'] = ['@type' => 'Place', 'name' => get_setting('org_naam'), 'address' => $address];
+    }
     return array_filter($data, fn($v) => $v !== '' && $v !== []);
 }
 

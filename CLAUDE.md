@@ -124,7 +124,9 @@ clobbers site-specific secrets:
   `$useBaseHref = true` so the top layout emits `<base href>` (derived from `SCRIPT_NAME`, not
   `site_url`) and every relative link (assets, uploads, `api/opkomsten.php`, `./#programma`) keeps
   working — any new nested public URL needs the same. Both render visible breadcrumbs via
-  `breadcrumbs_html()` plus matching `breadcrumb_json_ld()`, set `$activeNav`/`$gaPage`, and are listed
+  `breadcrumbs_html()` plus matching `breadcrumb_json_ld()` (the speltak page also `speltak_json_ld()`:
+  an `Organization` whose `parentOrganization` points at the homepage NGO via the shared
+  `organization_json_ld_id()`, with `PeopleAudience` ages parsed by `speltak_age_range()`), set `$activeNav`/`$gaPage`, and are listed
   in `sitemap.php`. The speltak page shows logo, leeftijd/dag_tijd/leiding, the CKEditor `inhoud`, and
   the programme (same `.prog-list[data-feed-slug]` markup as the homepage, else `toelichting`).
 - `admin/*.php` — one PHP file per admin screen (`speltakken.php` list + `speltak_form.php` create/edit,

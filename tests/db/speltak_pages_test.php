@@ -12,6 +12,7 @@ test('speltak-URL\'s: relatief en absoluut op basis van site_url', function () {
     // Vóór de eerste get_setting(): get_all_settings() cachet per request.
     set_setting('site_url', 'https://www.example.org/');
     set_setting('org_naam', 'Scouting Dorp');
+    set_setting('org_straat', 'Kerkstraat 1');
 
     assert_same('speltakken', speltakken_url());
     assert_same('https://www.example.org/speltakken', speltakken_url(true));
@@ -35,6 +36,34 @@ test('speltak_meta_description(): ingevuld, anders samengesteld', function () {
         'Stam bij Scouting Dorp. Lees meer over de speltak en bekijk het actuele programma.',
         speltak_meta_description(['naam' => 'Stam', 'leeftijd' => null, 'dag_tijd' => '', 'meta_omschrijving' => ''])
     );
+});
+
+test('speltak_age_range() herkent gangbare notaties', function () {
+    assert_same([7, 11], speltak_age_range('7–11 jaar'));
+    assert_same([5, 7], speltak_age_range('5-7 jaar'));
+    assert_same([11, 15], speltak_age_range('11 t/m 15 jaar'));
+    assert_same([18, null], speltak_age_range('18+ (vrijwilligers/leden)'));
+    assert_same([null, null], speltak_age_range('voor iedereen'));
+    assert_same([null, null], speltak_age_range(null));
+});
+
+test('speltak_json_ld(): Organization onder de vereniging, met doelgroep en locatie', function () {
+    $data = speltak_json_ld([
+        'naam' => 'Welpen', 'slug' => 'welpen', 'leeftijd' => '7–11 jaar', 'dag_tijd' => null,
+        'logo' => 'assets/uploads/welpen.png', 'meta_omschrijving' => 'Over de welpen',
+    ]);
+    assert_same('Organization', $data['@type']);
+    assert_same('https://www.example.org/speltakken/welpen#speltak', $data['@id']);
+    assert_same('Welpen — Scouting Dorp', $data['name']);
+    assert_same('Over de welpen', $data['description']);
+    assert_same('https://www.example.org/assets/uploads/welpen.png', $data['logo']);
+    assert_same(organization_json_ld()['@id'], $data['parentOrganization']['@id'], 'verwijst naar de organisatie van de homepage');
+    assert_same(['@type' => 'PeopleAudience', 'suggestedMinAge' => 7, 'suggestedMaxAge' => 11], $data['audience']);
+    assert_same('Kerkstraat 1', $data['location']['address']['streetAddress']);
+
+    $zonder = speltak_json_ld(['naam' => 'Stam', 'slug' => 'stam', 'leeftijd' => '', 'logo' => null, 'meta_omschrijving' => '']);
+    assert_false(array_key_exists('logo', $zonder), 'geen logo → weggelaten');
+    assert_false(array_key_exists('audience', $zonder), 'geen leeftijd → weggelaten');
 });
 
 test('"speltakken" is gereserveerd voor losse pagina\'s', function () {

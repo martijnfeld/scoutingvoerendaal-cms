@@ -25,11 +25,14 @@ $gaPage = $sp ? ['page_type' => 'speltak', 'page_slug' => $sp['slug']] : ['page_
 
 if ($sp) {
     $crumbs = [['Home', './'], ['Speltakken', speltakken_url()], [$sp['naam'], speltak_url($sp['slug'])]];
-    $jsonLd = [breadcrumb_json_ld([
-        ['Home', absolute_url('')],
-        ['Speltakken', speltakken_url(true)],
-        [$sp['naam'], $canonicalUrl],
-    ])];
+    $jsonLd = [
+        speltak_json_ld($sp),
+        breadcrumb_json_ld([
+            ['Home', absolute_url('')],
+            ['Speltakken', speltakken_url(true)],
+            [$sp['naam'], $canonicalUrl],
+        ]),
+    ];
     $andere = array_values(array_filter(get_speltakken(true), fn($o) => (int) $o['id'] !== (int) $sp['id']));
 }
 
