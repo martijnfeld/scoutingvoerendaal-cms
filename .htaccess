@@ -80,6 +80,14 @@ ServerSignature Off
     RewriteCond %{THE_REQUEST} ^[A-Z]+\s(/(?:[^?\s]*/)?)speltakken\.php[\s?]
     RewriteRule ^speltakken\.php$ %1speltakken [R=301,L]
 
+    # Alle overige onbekende URL's: eigen 404-pagina (404.php stuurt zelf
+    # de 404-status). Relatief pad, dus ook goed in een submap — daarom
+    # geen "ErrorDocument 404 /404.php". Ontbrekende bestanden onder
+    # assets/ krijgen de gewone (lichte) 404 van Apache.
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule !^assets/ 404.php [L]
+
     # HTTPS afdwingen staat bewust UIT: achter een proxy of CDN (nginx
     # vóór Apache, Cloudflare) ziet Apache zelf vaak alleen http, en dan
     # geeft deze regel een oneindige redirect-lus. Zet hem alleen aan als

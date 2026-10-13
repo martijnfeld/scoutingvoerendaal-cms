@@ -129,6 +129,18 @@ section.alt{background:var(--light);}
 .pagina-body figure.media{position:relative;}
 .pagina-body blockquote{margin:0 0 16px; padding:6px 20px; border-left:4px solid var(--green); color:#555; font-style:italic;}
 
+/* ---- 404-pagina ---- */
+.niet-gevonden{text-align:center; padding:72px 0 88px;}
+.niet-gevonden-code{margin:0; font-size:5.5rem; font-weight:800; line-height:1; color:var(--green);}
+.niet-gevonden h1{margin:8px 0 14px;}
+.niet-gevonden p{color:#555;}
+.niet-gevonden-knoppen{display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-top:28px;}
+.btn-home{background:var(--green); color:#fff; font-size:1.05rem; padding:13px 28px;}
+.btn-home:hover{background:var(--green-dark); color:#fff; text-decoration:none;}
+.btn-home i{margin-right:6px;}
+.btn-ghost{background:transparent; color:var(--green-dark); border-color:var(--green);}
+.btn-ghost:hover{background:#eafff2; color:var(--green-dark); text-decoration:none;}
+
 /* ---- kruimelpad (Bootstrap .breadcrumb) ---- */
 .breadcrumbs .breadcrumb{margin:0 0 20px; font-size:0.9rem;}
 .breadcrumbs .breadcrumb-item.active{color:#666;}

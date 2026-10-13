@@ -106,6 +106,22 @@ test('onbekende pagina geeft 404', function () {
     assert_no_php_errors($r, '404-pagina');
 });
 
+test('onbekende URL in een submap geeft de 404-pagina met Home-knop', function () {
+    foreach (['bestaat/echt/niet', 'bestaat-niet.html', 'speltakken/bestaat-echt-niet'] as $path) {
+        $r = http_get($path);
+        assert_status(404, $r, '/' . $path);
+        assert_contains('class="btn btn-home"', $r['body'], '/' . $path);
+        assert_matches('#<base href="[^"]*/">#', $r['body'], '/' . $path);
+        assert_no_php_errors($r, '/' . $path);
+    }
+});
+
+test('ontbrekend bestand onder assets/ krijgt geen 404-pagina', function () {
+    $r = http_get('assets/css/bestaat-niet.css');
+    assert_status(404, $r, 'ontbrekend asset');
+    assert_not_contains('btn-home', $r['body']);
+});
+
 test('oude pagina.php?slug=-links sturen permanent door', function () {
     $r = http_get('pagina.php?slug=ledeninfo');
     assert_status(301, $r, 'pagina.php?slug=');

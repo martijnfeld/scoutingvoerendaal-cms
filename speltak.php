@@ -11,36 +11,34 @@ $slug = isset($_GET['slug']) ? trim((string) $_GET['slug']) : '';
 $sp = $slug !== '' ? get_speltak_by_slug($slug) : null;
 
 if (!$sp || !$sp['actief']) {
-    http_response_code(404);
-    $sp = null;
+    $notFoundTitle = 'Speltak niet gevonden';
+    require __DIR__ . '/404.php';
+    exit;
 }
 
 $orgNaam = get_setting('org_naam');
-$pageTitle = ($sp ? $sp['naam'] . ($sp['leeftijd'] ? ' (' . $sp['leeftijd'] . ')' : '') : 'Speltak niet gevonden') . ' — ' . $orgNaam;
-$metaDescription = $sp ? speltak_meta_description($sp) : get_setting('meta_description');
-$canonicalUrl = $sp ? speltak_url($sp['slug'], true) : speltakken_url(true);
+$pageTitle = $sp['naam'] . ($sp['leeftijd'] ? ' (' . $sp['leeftijd'] . ')' : '') . ' — ' . $orgNaam;
+$metaDescription = speltak_meta_description($sp);
+$canonicalUrl = speltak_url($sp['slug'], true);
 $activeNav = 'speltakken';
 $useBaseHref = true;
-$gaPage = $sp ? ['page_type' => 'speltak', 'page_slug' => $sp['slug']] : ['page_type' => 'niet_gevonden'];
+$gaPage = ['page_type' => 'speltak', 'page_slug' => $sp['slug']];
 
-if ($sp) {
-    $crumbs = [['Home', './'], ['Speltakken', speltakken_url()], [$sp['naam'], speltak_url($sp['slug'])]];
-    $jsonLd = [
-        speltak_json_ld($sp),
-        breadcrumb_json_ld([
-            ['Home', absolute_url('')],
-            ['Speltakken', speltakken_url(true)],
-            [$sp['naam'], $canonicalUrl],
-        ]),
-    ];
-    $andere = array_values(array_filter(get_speltakken(true), fn($o) => (int) $o['id'] !== (int) $sp['id']));
-}
+$crumbs = [['Home', './'], ['Speltakken', speltakken_url()], [$sp['naam'], speltak_url($sp['slug'])]];
+$jsonLd = [
+    speltak_json_ld($sp),
+    breadcrumb_json_ld([
+        ['Home', absolute_url('')],
+        ['Speltakken', speltakken_url(true)],
+        [$sp['naam'], $canonicalUrl],
+    ]),
+];
+$andere = array_values(array_filter(get_speltakken(true), fn($o) => (int) $o['id'] !== (int) $sp['id']));
 
 include __DIR__ . '/includes/site_layout_top.php';
 ?>
 <section class="pagina-content">
   <div class="container pagina-container">
-    <?php if ($sp): ?>
     <?= breadcrumbs_html($crumbs) ?>
     <div class="speltak-titel" style="--speltak-kleur:<?= e($sp['kleur']) ?>">
       <?php if (!empty($sp['logo'])): ?>
@@ -99,10 +97,6 @@ include __DIR__ . '/includes/site_layout_top.php';
         <?php endforeach; ?>
       </ul>
     </nav>
-    <?php endif; ?>
-    <?php else: ?>
-    <h1>Speltak niet gevonden</h1>
-    <p>Deze speltak bestaat niet (meer). <a href="<?= e(speltakken_url()) ?>">Bekijk alle speltakken</a> of ga <a href="./">terug naar de homepage</a>.</p>
     <?php endif; ?>
   </div>
 </section>

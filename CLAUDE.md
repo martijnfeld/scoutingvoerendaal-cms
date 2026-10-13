@@ -129,6 +129,10 @@ clobbers site-specific secrets:
   `organization_json_ld_id()`, with `PeopleAudience` ages parsed by `speltak_age_range()`), set `$activeNav`/`$gaPage`, and are listed
   in `sitemap.php`. The speltak page shows logo, leeftijd/dag_tijd/leiding, the CKEditor `inhoud`, and
   the programme (same `.prog-list[data-feed-slug]` markup as the homepage, else `toelichting`).
+- `404.php` — the shared "niet gevonden" page (404 status, big "Terug naar Home" button, always
+  `$useBaseHref`). Reached via a catch-all rewrite (last rule; skips existing files/dirs and `assets/`),
+  and `pagina.php`/`speltak.php` `require` it + `exit` for unknown/inactive slugs (optional
+  `$notFoundTitle`).
 - `admin/*.php` — one PHP file per admin screen (`speltakken.php` list + `speltak_form.php` create/edit,
   same pattern for `info_cards`/`info_card_form`, `documents`, `accounts`, `settings`, `uploads`,
   `backups`, `updates`, `controle`, `paginas`/`pagina_form`). Every admin page requires `admin/includes/auth.php` and
