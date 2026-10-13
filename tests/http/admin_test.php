@@ -1,8 +1,8 @@
 <?php
 /**
  * Beheerpaneel van begin tot eind: (eventueel) installeren via install.php,
- * inloggen, alle schermen openen, een pagina aanmaken en weer verwijderen,
- * uitloggen.
+ * inloggen, alle schermen openen, een pagina en een speltak aanmaken en
+ * weer verwijderen, uitloggen.
  *
  * Inloggegevens: TEST_ADMIN_USER/TEST_ADMIN_PASS. Met TEST_INSTALL_ADMIN=1
  * (CI, verse database) maakt de test die beheerder zelf aan via install.php;
@@ -162,6 +162,51 @@ test('pagina aanmaken, publiek bekijken en verwijderen', function () {
         }
     }
     assert_status(404, http_get($slug), 'verwijderde pagina');
+});
+
+test('speltak met logo en inhoud aanmaken, eigen pagina bekijken en verwijderen', function () {
+    admin_login();
+    $name = 'CI-speltak ' . bin2hex(random_bytes(3));
+    $slug = slugify($name);
+
+    $r = http_get('admin/speltak_form.php');
+    assert_contains('enctype="multipart/form-data"', $r['body']);
+    assert_contains('name="upload_logo"', $r['body']);
+    $r = http_post('admin/speltak_form.php', [
+        'csrf_token' => http_csrf_token($r), 'naam' => $name, 'kleur' => '#123456',
+        'leeftijd' => '9–12 jaar', 'dag_tijd' => 'Woensdag 18:30 – 20:00 uur', 'leiding' => 'leiding: Test',
+        'logo' => 'assets/uploads/ci-logo.png', 'inhoud' => '<p>Over de <strong>CI-speltak</strong></p>',
+        'meta_omschrijving' => 'CI-omschrijving van de speltak', 'toelichting' => '<p>Nog geen programma</p>',
+        'feed_url' => '', 'afmeld_url' => '', 'actief' => '1', 'volgorde' => '0',
+    ]);
+    assert_status(302, $r, 'speltak opslaan');
+
+    try {
+        $r = http_get('speltakken/' . $slug);
+        assert_status(200, $r, '/speltakken/' . $slug);
+        assert_no_php_errors($r, '/speltakken/' . $slug);
+        assert_contains('<h1>' . $name . '</h1>', $r['body']);
+        assert_contains('<img src="assets/uploads/ci-logo.png" alt="Logo ' . $name . '"', $r['body'], 'logo');
+        assert_contains('<dd>9–12 jaar</dd>', $r['body'], 'leeftijd');
+        assert_contains('<dd>Woensdag 18:30 – 20:00 uur</dd>', $r['body'], 'tijd');
+        assert_contains('<p>Over de <strong>CI-speltak</strong></p>', $r['body'], 'inhoud');
+        assert_contains('<p>Nog geen programma</p>', $r['body'], 'toelichting als programma');
+        assert_contains('<meta name="description" content="CI-omschrijving van de speltak">', $r['body']);
+        assert_contains('<title>' . $name . ' (9–12 jaar) — ', $r['body']);
+
+        $r = http_get('speltakken');
+        assert_contains('href="speltakken/' . $slug . '"', $r['body'], 'op het overzicht');
+    } finally {
+        $r = http_get('admin/speltakken.php');
+        $pos = strpos($r['body'], '<strong>' . $name . '</strong>');
+        if ($pos !== false && preg_match('/name="action" value="delete">\s*<input type="hidden" name="id" value="(\d+)"/', $r['body'], $m, 0, $pos)) {
+            $r = http_post('admin/speltakken.php', ['csrf_token' => http_csrf_token($r), 'action' => 'delete', 'id' => $m[1]]);
+            assert_status(302, $r, 'speltak verwijderen');
+        } else {
+            fail('Test-speltak niet gevonden in admin/speltakken.php');
+        }
+    }
+    assert_status(404, http_get('speltakken/' . $slug), 'verwijderde speltak');
 });
 
 test('uitloggen via POST beëindigt de sessie', function () {

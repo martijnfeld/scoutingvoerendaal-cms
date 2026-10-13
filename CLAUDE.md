@@ -104,7 +104,7 @@ clobbers site-specific secrets:
 
 ## Architecture
 
-**Two public front controllers plus the admin panel, no router/framework:**
+**Public front controllers plus the admin panel, no router/framework:**
 - `index.php` — the public one-page site. Pulls all content from the DB via helper functions and renders
   a single long HTML page (hero → programma → lidworden → verhuur → contact).
 - `pagina.php` — standalone informational pages (e.g. member info) that don't belong on the one-pager,
@@ -117,6 +117,16 @@ clobbers site-specific secrets:
   render as same-page `#fragment` links instead of `index.php#fragment`, and so the homepage-only JSON-LD
   schema block renders. Active pages flagged `in_menu` in the admin are appended to the header nav
   automatically by the shared top layout.
+- `speltakken.php` (overview, `/speltakken`) and `speltak.php` (one speltak, `/speltakken/<slug>`,
+  404 for unknown/inactive) — rewrite rules in the root `.htaccess` placed *before* the pages rule
+  (`speltakken` is in `PAGE_RESERVED_SLUGS`; old `speltak.php?slug=`/`speltakken.php` URLs 301). Build
+  links with `speltakken_url()`/`speltak_url()`. Because their URLs sit one "directory" deep, they set
+  `$useBaseHref = true` so the top layout emits `<base href>` (derived from `SCRIPT_NAME`, not
+  `site_url`) and every relative link (assets, uploads, `api/opkomsten.php`, `./#programma`) keeps
+  working — any new nested public URL needs the same. Both render visible breadcrumbs via
+  `breadcrumbs_html()` plus matching `breadcrumb_json_ld()`, set `$activeNav`/`$gaPage`, and are listed
+  in `sitemap.php`. The speltak page shows logo, leeftijd/dag_tijd/leiding, the CKEditor `inhoud`, and
+  the programme (same `.prog-list[data-feed-slug]` markup as the homepage, else `toelichting`).
 - `admin/*.php` — one PHP file per admin screen (`speltakken.php` list + `speltak_form.php` create/edit,
   same pattern for `info_cards`/`info_card_form`, `documents`, `accounts`, `settings`, `uploads`,
   `backups`, `updates`, `controle`, `paginas`/`pagina_form`). Every admin page requires `admin/includes/auth.php` and
@@ -146,7 +156,10 @@ for the fixed, decorative admin-navigation icons; it maps known internal names t
   contact info, verhuur terms, footer, social links, feature cards, etc). This is the CMS's core: adding
   a new piece of editable copy means adding a new settings key, not a new table/column.
 - `speltakken` — scouting sections/groups (name, color, age range, schedule, leader, optional external
-  JSON "opkomsten" feed URL (Scoutdash), active flag, sort order). Public homepage renders one block per
+  JSON "opkomsten" feed URL (Scoutdash), `logo` upload, `inhoud` HTML for its own page (CKEditor),
+  optional `meta_omschrijving` (else `speltak_meta_description()` builds one), active flag, sort order,
+  `bijgewerkt` for the sitemap). The slug follows the name (`unique_speltak_slug()`) and is also the
+  public URL and the opkomsten-cache key. Public homepage renders one block per
   active speltak; if `feed_url` is set the block is populated client-side via AJAX against our own
   `api/opkomsten.php` (see below), otherwise it falls back to the static `toelichting` HTML field.
 - `documents` — uploaded PDFs (registration forms etc.), referenced by filename in `UPLOAD_DIR`.

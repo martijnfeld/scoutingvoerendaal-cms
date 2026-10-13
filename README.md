@@ -10,6 +10,8 @@ geen Composer of npm. Het draait op vrijwel elke gewone shared hosting.
 - Een one-pager met hero, programma per speltak, lid worden, verhuur en contact.
 - Losse informatiepagina's (bv. ledeninformatie) op nette adressen zoals `/ledeninfo`, eventueel in
   het menu.
+- Een eigen pagina per speltak (`/speltakken/welpen`) met logo, leeftijd, opkomsttijd, eigen tekst en
+  het programma, plus een overzichtspagina (`/speltakken`), met kruimelpad en structured data.
 - Programma per speltak automatisch uit Scoutdash (opkomsten-feed): de server haalt de feeds op,
   bewaart ze 10 minuten in een cache en schoont de inhoud op, zodat de site gewoon blijft werken als
   Scoutdash even plat ligt.
@@ -88,6 +90,7 @@ geen `config.local.php` nodig.
 
 ```
 index.php, pagina.php   publieke website (one-pager en losse pagina's)
+speltakken.php, speltak.php  speltakkenoverzicht en de pagina per speltak
 admin/                  beheerpaneel, één bestand per scherm
 api/opkomsten.php       opkomsten-feed voor de browser (via de server opgehaald uit Scoutdash)
 includes/               gedeelde PHP-code (niet via de browser bereikbaar)

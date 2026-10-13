@@ -4,7 +4,9 @@
  * meldingsbalk, header/nav en de openende <main>. Verwacht (optioneel)
  * vooraf gedefinieerd: $pageTitle, $metaDescription, $canonicalUrl,
  * $ogImage, $isHome (bool), $currentPageSlug, $jsonLd (lijst van
- * structured-data-arrays, zie json_ld_script()).
+ * structured-data-arrays, zie json_ld_script()), $gaPage (paginacontext
+ * voor Google Analytics), $activeNav ('speltakken' markeert dat
+ * menu-item) en $useBaseHref (bool, voor pagina's in een submap-URL).
  */
 $pageTitle = $pageTitle ?? get_setting('site_title');
 $metaDescription = $metaDescription ?? get_setting('meta_description');
@@ -13,6 +15,15 @@ $ogImage = $ogImage ?? get_setting('og_image');
 $isHome = $isHome ?? false;
 $currentPageSlug = $currentPageSlug ?? null;
 $jsonLd = $jsonLd ?? [];
+$activeNav = $activeNav ?? null;
+// Pagina's met een URL in een "submap" (/speltakken/welpen) krijgen een
+// <base> naar de websitemap, zodat alle relatieve links (CSS/JS, logo,
+// geüploade afbeeldingen, api/opkomsten.php, ./#programma) blijven werken.
+// Afgeleid van het pad van het PHP-script zelf, dus ook goed in een submap
+// en onafhankelijk van site_url.
+$baseHref = !empty($useBaseHref)
+    ? rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/')), '/') . '/'
+    : null;
 if ($isHome) {
     array_unshift($jsonLd, organization_json_ld());
 }
@@ -22,8 +33,8 @@ $homeHref = $isHome ? '' : './';
 // Leeg als Google Analytics uit staat; dan ook geen cookiebanner.
 $gaId = ga_measurement_id();
 // Paginacontext die met elke GA-gebeurtenis meegaat (zie assets/js/gtag.js).
-$gaPage = $isHome ? ['page_type' => 'home']
-    : ($currentPageSlug !== null ? ['page_type' => 'pagina', 'page_slug' => $currentPageSlug] : ['page_type' => 'niet_gevonden']);
+$gaPage = $gaPage ?? ($isHome ? ['page_type' => 'home']
+    : ($currentPageSlug !== null ? ['page_type' => 'pagina', 'page_slug' => $currentPageSlug] : ['page_type' => 'niet_gevonden']));
 
 // Content-Security-Policy: de browser voert alleen scripts uit van onze
 // eigen site (en Google Analytics), nooit inline-scripts of event-handlers.
@@ -54,6 +65,9 @@ if (!headers_sent()) {
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
+<?php if ($baseHref !== null): ?>
+<base href="<?= e($baseHref) ?>">
+<?php endif; ?>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><?= e($pageTitle) ?></title>
 <meta name="description" content="<?= e($metaDescription) ?>">
@@ -68,7 +82,7 @@ if (!headers_sent()) {
 <meta property="og:image" content="<?= e(absolute_url($ogImage)) ?>">
 <?php endif; ?>
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="<?= e(get_setting('org_naam')) ?>">
+<meta name="twitter:title" content="<?= e($pageTitle) ?>">
 <meta name="twitter:description" content="<?= e($metaDescription) ?>">
 <?php if ($ogImage): ?>
 <meta name="twitter:image" content="<?= e(absolute_url($ogImage)) ?>">
@@ -111,6 +125,7 @@ if (!headers_sent()) {
       <ul>
         <li><a href="<?= $homeHref ?>#top">Home</a></li>
         <li><a href="<?= $homeHref ?>#programma">Programma</a></li>
+        <li><a href="<?= e(speltakken_url()) ?>"<?= $activeNav === 'speltakken' ? ' class="active"' : '' ?>>Speltakken</a></li>
         <li><a href="<?= $homeHref ?>#lidworden">Lid worden</a></li>
         <li><a href="<?= $homeHref ?>#verhuur">Verhuur</a></li>
         <li><a href="<?= $homeHref ?>#contact">Contact</a></li>

@@ -1,6 +1,7 @@
 <?php
 /**
- * Dynamische sitemap: de homepage plus alle actieve pagina's uit de tabel
+ * Dynamische sitemap: de homepage, het speltakkenoverzicht en de pagina
+ * van elke actieve speltak, plus alle actieve pagina's uit de tabel
  * `pages`. Wordt via .htaccess ook op /sitemap.xml geserveerd (als
  * mod_rewrite beschikbaar is); robots.txt verwijst rechtstreeks naar dit
  * bestand zodat het ook zonder mod_rewrite werkt.
@@ -14,6 +15,17 @@ $urls = [
 ];
 
 try {
+    $speltakken = get_speltakken(true);
+    $urls[] = ['loc' => speltakken_url(true), 'changefreq' => 'monthly', 'priority' => '0.9'];
+    foreach ($speltakken as $sp) {
+        $urls[] = [
+            'loc'        => speltak_url($sp['slug'], true),
+            'lastmod'    => !empty($sp['bijgewerkt']) ? date('Y-m-d', strtotime($sp['bijgewerkt'])) : null,
+            // Het programma (Scoutdash-feed) verandert wekelijks.
+            'changefreq' => 'weekly',
+            'priority'   => '0.8',
+        ];
+    }
     foreach (get_pages(true) as $page) {
         $urls[] = [
             'loc'        => page_url($page['slug'], true),

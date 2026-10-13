@@ -92,6 +92,7 @@ $SETTINGS_SCHEMA = [
         'fields' => [
             'programma_intro' => ['label' => 'Introtekst', 'type' => 'textarea'],
             'programma_footer_note' => ['label' => 'Tekst onderaan programma', 'type' => 'text'],
+            'speltakken_intro' => ['label' => 'Introtekst overzichtspagina speltakken', 'type' => 'textarea', 'hint' => 'Getoond bovenaan /speltakken en gebruikt als omschrijving in zoekmachines.'],
         ],
     ],
     'lidworden' => [

@@ -45,7 +45,7 @@ $speltakken = get_speltakken();
 $opkomstenCache = opkomsten_cache_overview();
 include __DIR__ . '/includes/layout_top.php';
 ?>
-<p>Beheer hier de speltakken: naam, kleur, leeftijden, volgorde, toelichting, leiding en de link naar de opkomsten-feed (JSON).</p>
+<p>Beheer hier de speltakken: naam, kleur, logo, leeftijden, volgorde, de inhoud van de eigen pagina, toelichting, leiding en de link naar de opkomsten-feed (JSON). Elke actieve speltak heeft een eigen pagina, en alle actieve speltakken staan op het <a href="../<?= e(speltakken_url()) ?>" target="_blank" rel="noopener">overzicht</a>.</p>
 <div class="top-actions">
   <a href="speltak_form.php" class="btn">+ Nieuwe speltak</a>
   <form method="post" data-confirm="Opkomsten-cache legen? Bij het eerstvolgende bezoek wordt alles opnieuw bij Scoutdash opgehaald." style="display:inline;">
@@ -76,7 +76,10 @@ include __DIR__ . '/includes/layout_top.php';
           <button type="submit" class="btn btn-secondary btn-small" title="Omlaag"><i class="fa-solid fa-arrow-down"></i></button>
         </form>
       </td>
-      <td><span class="color-swatch" style="background:<?= e($sp['kleur']) ?>"></span><strong><?= e($sp['naam']) ?></strong></td>
+      <td>
+        <?php if (!empty($sp['logo'])): ?><img src="<?= e(preg_match('#^https?://#i', $sp['logo']) ? $sp['logo'] : '../' . $sp['logo']) ?>" alt="" style="width:28px; height:28px; object-fit:contain; vertical-align:middle; margin-right:6px;"><?php endif; ?>
+        <span class="color-swatch" style="background:<?= e($sp['kleur']) ?>"></span><strong><?= e($sp['naam']) ?></strong>
+      </td>
       <td><?= e($sp['leeftijd'] ?: '-') ?></td>
       <td><?= e(trim(implode(' · ', array_filter([$sp['dag_tijd'], $sp['leiding']])))) ?: '<span class="muted">-</span>' ?></td>
       <td><?= $sp['feed_url'] ? '<span title="' . e($sp['feed_url']) . '"><i class="fa-solid fa-check"></i> ingesteld</span>' : '<span class="muted">geen</span>' ?></td>
@@ -90,6 +93,7 @@ include __DIR__ . '/includes/layout_top.php';
       </td>
       <td class="actions">
         <a class="btn btn-small" href="speltak_form.php?id=<?= $sp['id'] ?>">Bewerken</a>
+        <?php if ($sp['actief']): ?><a class="btn btn-secondary btn-small" href="../<?= e(speltak_url($sp['slug'])) ?>" target="_blank" rel="noopener">Bekijken</a><?php endif; ?>
         <form method="post" data-confirm="Deze speltak verwijderen?" style="display:inline;">
           <?= csrf_field() ?>
           <input type="hidden" name="action" value="delete">

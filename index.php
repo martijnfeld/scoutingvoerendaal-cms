@@ -55,7 +55,7 @@ include __DIR__ . '/includes/site_layout_top.php';
         $meta = trim(implode(' · ', array_filter([$sp['dag_tijd'], $sp['leiding']])));
     ?>
     <div class="speltak-block" id="sk-<?= e($sp['slug']) ?>">
-      <div class="speltak-head"><span class="speltak-dot" style="background:<?= e($sp['kleur']) ?>"></span><h3><?= e($heading) ?></h3></div>
+      <div class="speltak-head"><span class="speltak-dot" style="background:<?= e($sp['kleur']) ?>"></span><h3><a href="<?= e(speltak_url($sp['slug'])) ?>"><?= e($heading) ?></a></h3></div>
       <?php if (!empty($sp['feed_url'])): ?>
         <?php if ($meta !== ''): ?><p class="speltak-meta"><?= e($meta) ?></p><?php endif; ?>
         <?php if (!empty($sp['afmeld_url'])): ?>
@@ -67,6 +67,7 @@ include __DIR__ . '/includes/site_layout_top.php';
       <?php elseif (!empty($sp['toelichting'])): ?>
         <p class="speltak-meta"><?= add_lazy_loading($sp['toelichting']) /* HTML toegestaan */ ?></p>
       <?php endif; ?>
+      <p class="speltak-more"><a href="<?= e(speltak_url($sp['slug'])) ?>">Meer over de <?= e($sp['naam']) ?> <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></p>
     </div>
     <?php endforeach; ?>
 
@@ -87,7 +88,7 @@ include __DIR__ . '/includes/site_layout_top.php';
       <tr><th>Speltak</th><th>Leeftijd</th><th>Wanneer</th></tr>
       <?php foreach ($speltakken as $sp): ?>
       <tr>
-        <td><?= e($sp['naam']) ?></td>
+        <td><a href="<?= e(speltak_url($sp['slug'])) ?>"><?= e($sp['naam']) ?></a></td>
         <td><?= e($sp['leeftijd'] ?: '-') ?></td>
         <td><?= e($sp['dag_tijd'] ?: '-') ?></td>
       </tr>

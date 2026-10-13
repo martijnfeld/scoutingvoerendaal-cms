@@ -52,6 +52,12 @@ ServerSignature Off
     RewriteRule (^|/)\.(?!well-known(/|$)) - [F]
     RewriteRule ^(includes|admin/includes|sql|backups|tools|docker|tests)(/|$) - [F]
 
+    # Speltakken: /speltakken (overzicht) en /speltakken/<slug> (eigen
+    # pagina per speltak). Vóór de regel voor losse pagina's; "speltakken"
+    # staat daarom ook in PAGE_RESERVED_SLUGS.
+    RewriteRule ^speltakken/?$ speltakken.php [L,QSA]
+    RewriteRule ^speltakken/([a-z0-9-]+)/?$ speltak.php?slug=$1 [L,QSA]
+
     # Losse pagina's: /<slug> wordt intern afgehandeld door pagina.php.
     # Slugs bestaan alleen uit a-z, 0-9 en '-' (zie slugify()), dus bestanden
     # met een extensie (index.php, robots.txt) matchen nooit. Bestaande
@@ -67,6 +73,12 @@ ServerSignature Off
     # websitemap, zodat dit ook in een submap werkt.
     RewriteCond %{THE_REQUEST} ^[A-Z]+\s(/(?:[^?\s]*/)?)pagina\.php\?slug=([a-z0-9-]+)(?:\s|&)
     RewriteRule ^pagina\.php$ %1%2? [R=301,L]
+
+    # Idem voor speltak.php?slug=... en speltakken.php → nette URL.
+    RewriteCond %{THE_REQUEST} ^[A-Z]+\s(/(?:[^?\s]*/)?)speltak\.php\?slug=([a-z0-9-]+)(?:\s|&)
+    RewriteRule ^speltak\.php$ %1speltakken/%2? [R=301,L]
+    RewriteCond %{THE_REQUEST} ^[A-Z]+\s(/(?:[^?\s]*/)?)speltakken\.php[\s?]
+    RewriteRule ^speltakken\.php$ %1speltakken [R=301,L]
 
     # HTTPS afdwingen staat bewust UIT: achter een proxy of CDN (nginx
     # vóór Apache, Cloudflare) ziet Apache zelf vaak alleen http, en dan

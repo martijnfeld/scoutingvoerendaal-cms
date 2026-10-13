@@ -63,9 +63,12 @@ aangemaakte account. Vanuit het beheerpaneel kun je:
 
 - **Teksten & gegevens** — alle vaste teksten en gegevens (hero, contact,
   telefoonnummer, adres, verhuurvoorwaarden, footer, social media, etc.)
-- **Speltakken** — naam, kleur, leeftijden, volgorde, toelichting, leiding
-  en de opkomsten-JSON-feed-URL per speltak. Zet een speltak op "inactief"
-  om hem (tijdelijk) van de website te halen.
+- **Speltakken** — naam, kleur, logo, leeftijden, volgorde, toelichting,
+  leiding en de opkomsten-JSON-feed-URL per speltak. Elke actieve speltak
+  heeft een eigen pagina op `/speltakken/<naam>` (met leeftijd, tijd,
+  leiding, een eigen tekst via de editor en het programma), en
+  `/speltakken` is het overzicht van alle speltakken. Zet een speltak op
+  "inactief" om hem (tijdelijk) van de website te halen.
 - **Info-vakjes** — de kaarten bij "Doe mee!" zoals *Gratis kennismaken*,
   *Inschrijven & contributie*, etc. Je kunt er zoveel toevoegen, bewerken
   of verwijderen als je wilt, en de volgorde met de pijltjes aanpassen.
@@ -171,8 +174,8 @@ Daarbovenop stuurt de website deze eigen gebeurtenissen:
 | `document_download` | Klik op een downloadknop bij een "Doe mee!"-vakje | `document_name`, `card_title` |
 
 Elke gebeurtenis (ook de paginaweergave) krijgt bovendien `page_type`
-(`home`, `pagina` of `niet_gevonden`) en, bij losse pagina's, `page_slug`
-mee. Er worden **geen persoonsgegevens** verstuurd: van een e-mailadres of
+(`home`, `pagina`, `speltakken`, `speltak` of `niet_gevonden`) en, bij losse
+pagina's en speltakpagina's, `page_slug` mee. Er worden **geen persoonsgegevens** verstuurd: van een e-mailadres of
 telefoonnummer gaat alleen het soort contact mee, niet het adres zelf.
 
 `document_download` staat los van het automatische `file_download`: dat

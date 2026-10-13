@@ -230,6 +230,53 @@ function unique_speltak_slug(string $base, ?int $excludeId = null): string
     }
 }
 
+function get_speltak_by_slug(string $slug): ?array
+{
+    $stmt = db()->prepare('SELECT * FROM speltakken WHERE slug = :slug');
+    $stmt->execute(['slug' => $slug]);
+    $row = $stmt->fetch();
+    return $row ?: null;
+}
+
+/**
+ * Pad van de overzichtspagina van de speltakken (/speltakken, via de
+ * rewrite-regel in .htaccess). Staat daarom ook in PAGE_RESERVED_SLUGS.
+ */
+const SPELTAKKEN_PATH = 'speltakken';
+
+/** URL van de overzichtspagina: relatief t.o.v. de websitemap, of met $absolute volledig. */
+function speltakken_url(bool $absolute = false): string
+{
+    return $absolute ? absolute_url(SPELTAKKEN_PATH) : SPELTAKKEN_PATH;
+}
+
+/** URL van de eigen pagina van een speltak: "speltakken/<slug>". */
+function speltak_url(string $slug, bool $absolute = false): string
+{
+    $path = SPELTAKKEN_PATH . '/' . rawurlencode($slug);
+    return $absolute ? absolute_url($path) : $path;
+}
+
+/**
+ * Meta-omschrijving van een speltakpagina: de ingevulde, of anders een
+ * samenvatting uit naam, leeftijd en opkomsttijd.
+ */
+function speltak_meta_description(array $sp): string
+{
+    if (trim((string) ($sp['meta_omschrijving'] ?? '')) !== '') {
+        return trim($sp['meta_omschrijving']);
+    }
+    $text = $sp['naam'] . ' bij ' . get_setting('org_naam');
+    if (!empty($sp['leeftijd'])) {
+        $text .= ', voor jeugd van ' . $sp['leeftijd'];
+    }
+    $text .= '.';
+    if (!empty($sp['dag_tijd'])) {
+        $text .= ' Opkomst: ' . $sp['dag_tijd'] . '.';
+    }
+    return $text . ' Lees meer over de speltak en bekijk het actuele programma.';
+}
+
 /* ------------------------------------------------------------------ *
  * Documenten (PDF's)
  * ------------------------------------------------------------------ */
@@ -307,9 +354,10 @@ function get_page_by_slug(string $slug): ?array
 
 /**
  * Slugs die niet als pagina-URL gebruikt mogen worden, omdat er een echte
- * map met die naam in de websitemap staat (die gaat in .htaccess voor).
+ * map met die naam in de websitemap staat (die gaat in .htaccess voor), of
+ * een eigen rewrite-regel (de speltakpagina's, SPELTAKKEN_PATH).
  */
-const PAGE_RESERVED_SLUGS = ['admin', 'api', 'assets', 'backups', 'cron', 'docker', 'docs', 'includes', 'sql', 'tests', 'tools'];
+const PAGE_RESERVED_SLUGS = ['admin', 'api', 'assets', 'backups', 'cron', 'docker', 'docs', 'includes', 'speltakken', 'sql', 'tests', 'tools'];
 
 /**
  * URL van een losse pagina: "<slug>" (relatief t.o.v. de websitemap, via
@@ -445,6 +493,23 @@ function breadcrumb_json_ld(array $items): array
 }
 
 /**
+ * Zichtbaar kruimelpad. $items: lijst van [naam, href], van de homepage
+ * naar de huidige pagina; het laatste item is de huidige pagina en wordt
+ * geen link. Hoort bij breadcrumb_json_ld() met dezelfde items.
+ */
+function breadcrumbs_html(array $items): string
+{
+    $last = count($items) - 1;
+    $html = '<nav class="breadcrumbs" aria-label="Kruimelpad"><ol class="breadcrumb">';
+    foreach (array_values($items) as $i => [$name, $href]) {
+        $html .= $i === $last
+            ? '<li class="breadcrumb-item active" aria-current="page">' . e($name) . '</li>'
+            : '<li class="breadcrumb-item"><a href="' . e($href) . '">' . e($name) . '</a></li>';
+    }
+    return $html . '</ol></nav>';
+}
+
+/**
  * <script type="application/ld+json">-blok. json_encode() zorgt voor geldige
  * JSON (aanhalingstekens, regeleinden, ongeldige UTF-8); JSON_HEX_TAG zet
  * < en > om, zodat een waarde met "</script>" het blok niet kan afsluiten.
@@ -571,8 +636,8 @@ function find_upload_usage(string $filename): array
         $used[] = 'Info-vakje: ' . $row['titel'];
     }
 
-    $stmt = db()->prepare('SELECT naam FROM speltakken WHERE toelichting LIKE :p');
-    $stmt->execute(['p' => $likePattern]);
+    $stmt = db()->prepare('SELECT naam FROM speltakken WHERE toelichting LIKE :p1 OR inhoud LIKE :p2 OR logo LIKE :p3');
+    $stmt->execute(['p1' => $likePattern, 'p2' => $likePattern, 'p3' => $likePattern]);
     foreach ($stmt->fetchAll() as $row) {
         $used[] = 'Speltak: ' . $row['naam'];
     }

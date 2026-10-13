@@ -112,6 +112,67 @@ test('oude pagina.php?slug=-links sturen permanent door', function () {
     assert_matches('#/ledeninfo$#', http_header($r, 'Location'));
 });
 
+/** Slug van de eerste speltak op het overzicht (er is altijd minstens één, zie install.sql). */
+function http_first_speltak_slug(string $overviewBody): string
+{
+    if (!preg_match('#<a class="speltak-card" href="speltakken/([a-z0-9-]+)"#', $overviewBody, $m)) {
+        fail('Geen speltak gevonden op /speltakken');
+    }
+    return $m[1];
+}
+
+test('speltakkenoverzicht met kruimelpad, JSON-LD en links naar elke speltak', function () {
+    $r = http_get('speltakken');
+    assert_status(200, $r, '/speltakken');
+    assert_no_php_errors($r, '/speltakken');
+    assert_contains('<h1>Speltakken</h1>', $r['body']);
+    assert_contains('<nav class="breadcrumbs" aria-label="Kruimelpad">', $r['body']);
+    assert_matches('#<link rel="canonical" href="https?://[^"]+/speltakken">#', $r['body']);
+    assert_matches('#<base href="/[^"]*">#', $r['body']);
+    $types = array_column(http_json_ld_blocks($r['body']), '@type');
+    assert_same(['BreadcrumbList', 'ItemList'], $types);
+    http_first_speltak_slug($r['body']);
+});
+
+test('pagina van een speltak: gegevens, programma, kruimelpad en SEO', function () {
+    $slug = http_first_speltak_slug(http_get('speltakken')['body']);
+    $r = http_get('speltakken/' . $slug);
+    assert_status(200, $r, '/speltakken/' . $slug);
+    assert_no_php_errors($r, 'speltakpagina');
+    assert_matches('#<base href="/[^"]*">#', $r['body'], 'base voor relatieve links');
+    assert_matches('#<link rel="canonical" href="https?://[^"]+/speltakken/' . $slug . '">#', $r['body']);
+    assert_matches('#<meta name="description" content="[^"]{20,}">#', $r['body']);
+    assert_contains('<h2 class="speltak-programma-titel">Programma</h2>', $r['body']);
+    assert_contains('<li class="breadcrumb-item"><a href="speltakken">Speltakken</a></li>', $r['body']);
+    assert_contains('href="./#programma"', $r['body'], 'menu linkt naar de homepage');
+
+    $blocks = http_json_ld_blocks($r['body']);
+    assert_same(['BreadcrumbList'], array_column($blocks, '@type'));
+    assert_same(3, count($blocks[0]['itemListElement']));
+    assert_matches('#/speltakken/' . $slug . '$#', $blocks[0]['itemListElement'][2]['item']);
+
+    $sitemap = http_get('sitemap.xml')['body'];
+    assert_contains('/speltakken</loc>', $sitemap);
+    assert_contains('/speltakken/' . $slug . '</loc>', $sitemap);
+});
+
+test('onbekende speltak geeft 404', function () {
+    $r = http_get('speltakken/deze-speltak-bestaat-echt-niet');
+    assert_status(404, $r, '/speltakken/<onbekende slug>');
+    assert_contains('Speltak niet gevonden', $r['body']);
+    assert_no_php_errors($r, '404-speltak');
+    assert_same([], http_json_ld_blocks($r['body']), 'geen structured data op de 404-pagina');
+});
+
+test('speltak.php?slug= en speltakken.php sturen permanent door', function () {
+    $r = http_get('speltak.php?slug=welpen');
+    assert_status(301, $r, 'speltak.php?slug=');
+    assert_matches('#/speltakken/welpen$#', http_header($r, 'Location'));
+    $r = http_get('speltakken.php');
+    assert_status(301, $r, 'speltakken.php');
+    assert_matches('#/speltakken$#', http_header($r, 'Location'));
+});
+
 test('beheerpaneel stuurt door naar de loginpagina', function () {
     $r = http_get('admin/');
     assert_status(302, $r, 'admin/');

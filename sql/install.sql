@@ -32,8 +32,12 @@ CREATE TABLE IF NOT EXISTS speltakken (
     toelichting  TEXT NULL,
     feed_url     VARCHAR(500) NULL,
     afmeld_url   VARCHAR(500) NULL,
+    logo         VARCHAR(255) NULL,
+    inhoud       LONGTEXT NULL,
+    meta_omschrijving VARCHAR(255) NULL,
     actief       TINYINT(1) NOT NULL DEFAULT 1,
     volgorde     INT NOT NULL DEFAULT 0,
+    bijgewerkt   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     UNIQUE KEY uniq_slug (slug)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -253,6 +257,7 @@ INSERT INTO settings (setting_key, setting_value) VALUES
 
     ('programma_intro', 'Het actuele programma per speltak, rechtstreeks opgehaald uit onze planning.'),
     ('programma_footer_note', 'Het programma is ook te zien in de Scouting-app.'),
+    ('speltakken_intro', 'Bij scouting worden de leden ingedeeld in speltakken: groepen op basis van leeftijd. Bekijk per speltak wat we doen, wanneer we opkomst hebben en wat er op het programma staat.'),
 
     ('lidworden_intro', 'Nieuwsgierig naar Scouting? Je bent van harte welkom.'),
     ('lidworden_tekst_1', 'Scouting staat voor uitdaging! Scouting biedt leuke en spannende activiteiten waarmee meiden en jongens worden uitgedaagd zich persoonlijk te ontwikkelen. Al vanaf 5 jaar ben je welkom bij Scouting, waar je iedere week weer uitdagende activiteiten doet. Bij Scouting Voorbeeld willen we kinderen en jongeren iedere week een uitdagend spelaanbod bieden. Lid worden? <a href="#inschrijven">Klik hier</a> voor meer informatie!'),
