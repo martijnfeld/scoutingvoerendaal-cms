@@ -164,6 +164,20 @@ function cookie_banner_texts(): array
     return $texts;
 }
 
+/**
+ * HTML-attributen voor een Google Analytics-gebeurtenis bij een klik, verwerkt
+ * door assets/js/ga-events.js. Zonder GA doen de attributen niets. Zet hier
+ * nooit persoonsgegevens (zoals e-mailadressen) in de parameters.
+ */
+function ga_event_attrs(string $event, array $params = []): string
+{
+    $attrs = ' data-ga-event="' . e($event) . '"';
+    if ($params) {
+        $attrs .= ' data-ga-params="' . e((string) json_encode($params, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) . '"';
+    }
+    return $attrs;
+}
+
 /* ------------------------------------------------------------------ *
  * Speltakken
  * ------------------------------------------------------------------ */

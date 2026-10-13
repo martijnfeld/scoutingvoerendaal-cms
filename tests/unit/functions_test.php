@@ -194,3 +194,12 @@ test('add_lazy_loading() voegt loading="lazy" toe, behalve waar al een loading s
     assert_same('<imgx src="a"><p>geen img</p>', add_lazy_loading('<imgx src="a"><p>geen img</p>'));
     assert_same('', add_lazy_loading(null), 'null (lege kolom) mag');
 });
+
+test('ga_event_attrs() escapet en geeft geldige JSON-parameters', function () {
+    assert_same(' data-ga-event="section_view"', ga_event_attrs('section_view'));
+    $attrs = ga_event_attrs('cta_click', ['cta_text' => 'Kom "kijken" <nu> & café', 'n' => 2]);
+    assert_true((bool) preg_match('/^ data-ga-event="cta_click" data-ga-params="([^"]*)"$/', $attrs, $m), 'geen losse aanhalingstekens');
+    assert_not_contains('<', $attrs);
+    assert_same(['cta_text' => 'Kom "kijken" <nu> & café', 'n' => 2],
+        json_decode(html_entity_decode($m[1], ENT_QUOTES, 'UTF-8'), true));
+});

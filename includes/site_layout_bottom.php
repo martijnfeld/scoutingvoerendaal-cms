@@ -34,7 +34,8 @@
     'reject' => $ccTexts['cookie_banner_reject'],
     'settings' => $ccTexts['cookie_banner_settings'],
     'privacy_link' => $ccTexts['cookie_privacy_link'],
-])) ?>"></script>
+])) ?>" data-ga-page="<?= e(json_encode($gaPage)) ?>"></script>
+<script src="<?= e(asset_url('assets/js/ga-events.js')) ?>"></script>
 <script async src="https://www.googletagmanager.com/gtag/js?id=<?= e($gaId) ?>"></script>
 <?php endif; ?>
 </body>

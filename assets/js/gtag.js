@@ -27,10 +27,16 @@
     wait_for_update: 500
   });
   window.gtag('js', new Date());
-  window.gtag('config', id, {
-    allow_google_signals: false,
-    allow_ad_personalization_signals: false
-  });
+  // Paginacontext (page_type, page_slug) gaat mee met elke gebeurtenis van
+  // deze tag; zichtbaar in rapporten na registratie als aangepaste dimensie.
+  var config = { allow_google_signals: false, allow_ad_personalization_signals: false };
+  try {
+    var page = JSON.parse(script.getAttribute('data-ga-page') || '{}') || {};
+    for(var key in page){
+      if(Object.prototype.hasOwnProperty.call(page, key)) config[key] = page[key];
+    }
+  } catch(e) {}
+  window.gtag('config', id, config);
 
   // Zonder cookieconsent-bibliotheek (CDN geblokkeerd) blijft alles op
   // 'denied': geen banner, maar ook geen cookies.

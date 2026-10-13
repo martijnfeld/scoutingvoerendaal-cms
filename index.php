@@ -17,8 +17,8 @@ include __DIR__ . '/includes/site_layout_top.php';
     <h1><?= e(get_setting('hero_title')) ?></h1>
     <p><?= e(get_setting('hero_text')) ?></p>
     <div class="hero-buttons">
-      <a href="<?= e(get_setting('hero_btn1_link')) ?>" class="btn btn-light"><?= e(get_setting('hero_btn1_text')) ?></a>
-      <a href="<?= e(get_setting('hero_btn2_link')) ?>" class="btn btn-outline"><?= e(get_setting('hero_btn2_text')) ?></a>
+      <a href="<?= e(get_setting('hero_btn1_link')) ?>" class="btn btn-light"<?= ga_event_attrs('cta_click', ['cta_position' => 'hero_1', 'cta_text' => get_setting('hero_btn1_text')]) ?>><?= e(get_setting('hero_btn1_text')) ?></a>
+      <a href="<?= e(get_setting('hero_btn2_link')) ?>" class="btn btn-outline"<?= ga_event_attrs('cta_click', ['cta_position' => 'hero_2', 'cta_text' => get_setting('hero_btn2_text')]) ?>><?= e(get_setting('hero_btn2_text')) ?></a>
     </div>
   </div>
 </section>
@@ -46,7 +46,7 @@ include __DIR__ . '/includes/site_layout_top.php';
 
     <div class="speltak-jump">
       <?php foreach ($speltakken as $sp): ?>
-      <a href="#sk-<?= e($sp['slug']) ?>" style="background:<?= e($sp['kleur']) ?>"><?= e($sp['naam']) ?></a>
+      <a href="#sk-<?= e($sp['slug']) ?>" style="background:<?= e($sp['kleur']) ?>"<?= ga_event_attrs('speltak_select', ['speltak' => $sp['slug']]) ?>><?= e($sp['naam']) ?></a>
       <?php endforeach; ?>
     </div>
 
@@ -59,7 +59,7 @@ include __DIR__ . '/includes/site_layout_top.php';
       <?php if (!empty($sp['feed_url'])): ?>
         <?php if ($meta !== ''): ?><p class="speltak-meta"><?= e($meta) ?></p><?php endif; ?>
         <?php if (!empty($sp['afmeld_url'])): ?>
-        <p class="speltak-afmelden">Afmelden voor een opkomst? <a href="<?= e($sp['afmeld_url']) ?>" target="_blank" rel="noopener">Klik hier</a>.</p>
+        <p class="speltak-afmelden">Afmelden voor een opkomst? <a href="<?= e($sp['afmeld_url']) ?>" target="_blank" rel="noopener"<?= ga_event_attrs('afmeld_click', ['speltak' => $sp['slug']]) ?>>Klik hier</a>.</p>
         <?php endif; ?>
         <div class="prog-list" data-feed-slug="<?= e($sp['slug']) ?>" id="feed-<?= e($sp['slug']) ?>">
           <p class="prog-loading">Programma wordt geladen&hellip;</p>
@@ -103,7 +103,7 @@ include __DIR__ . '/includes/site_layout_top.php';
         <h3><?= $card['titel'] /* mag eenvoudige HTML zoals &amp; bevatten */ ?></h3>
         <?= add_lazy_loading($card['tekst']) /* HTML toegestaan, beheerd via CMS */ ?>
         <?php if ($doc): ?>
-        <a class="btn-download" href="<?= e(doc_url($doc)) ?>" target="_blank" rel="noopener"><i class="fa-solid fa-file-pdf"></i> <?= e($card['knop_tekst'] ?: $doc['naam']) ?></a>
+        <a class="btn-download" href="<?= e(doc_url($doc)) ?>" target="_blank" rel="noopener"<?= ga_event_attrs('document_download', ['document_name' => $doc['naam'], 'card_title' => html_entity_decode(strip_tags($card['titel']), ENT_QUOTES, 'UTF-8')]) ?>><i class="fa-solid fa-file-pdf"></i> <?= e($card['knop_tekst'] ?: $doc['naam']) ?></a>
         <?php endif; ?>
       </div>
       <?php endforeach; ?>
@@ -130,7 +130,7 @@ include __DIR__ . '/includes/site_layout_top.php';
         <h3>Voorwaarden</h3>
         <?= get_setting('verhuur_voorwaarden') /* HTML toegestaan, beheerd via CMS */ ?>
         <p><?= e(get_setting('verhuur_contact_tekst')) ?><br>
-        Mail naar <a href="mailto:<?= e(get_setting('verhuur_email')) ?>"><?= e(get_setting('verhuur_email')) ?></a></p>
+        Mail naar <a href="mailto:<?= e(get_setting('verhuur_email')) ?>"<?= ga_event_attrs('contact_click', ['contact_type' => 'verhuur', 'contact_method' => 'email', 'section' => 'verhuur']) ?>><?= e(get_setting('verhuur_email')) ?></a></p>
       </div>
     </div>
   </div>
@@ -156,7 +156,7 @@ include __DIR__ . '/includes/site_layout_top.php';
       <div class="contact-card">
         <h3>Correspondentieadres</h3>
         <p><?= get_setting('correspondentie_adres') /* HTML toegestaan (regeleinde) */ ?></p>
-        <p><a href="mailto:<?= e(get_setting('org_email')) ?>"><?= e(get_setting('org_email')) ?></a></p>
+        <p><a href="mailto:<?= e(get_setting('org_email')) ?>"<?= ga_event_attrs('contact_click', ['contact_type' => 'algemeen', 'contact_method' => 'email', 'section' => 'contact']) ?>><?= e(get_setting('org_email')) ?></a></p>
         <hr>
         <h3>Declaraties</h3>
         <p>Wil je gemaakte onkosten declareren? Dat kan digitaal <a href="<?= e(get_setting('declaratie_link')) ?>" target="_blank">via deze link.</a></p>

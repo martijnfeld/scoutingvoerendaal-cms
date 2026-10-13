@@ -27,8 +27,13 @@ test('Google Analytics alleen samen met cookiebanner en Consent Mode', function 
         // Standaard (verse installatie): GA uit, dus ook geen banner.
         assert_not_contains('cookieconsent', $r['body']);
         assert_not_contains('data-cc="show-preferencesModal"', $r['body']);
+        assert_not_contains('ga-events.js', $r['body']);
         return;
     }
+    assert_matches('#<script src="[^"]*assets/js/ga-events\.js[^"]*"></script>#', $r['body']);
+    assert_contains('data-ga-page="{&quot;page_type&quot;:&quot;home&quot;}"', $r['body']);
+    $events = http_get('assets/js/ga-events.js');
+    assert_status(200, $events, 'ga-events.js');
     assert_contains('cookieconsent.umd.js', $r['body']);
     assert_contains('cookieconsent.css', $r['body']);
     assert_matches('#<script src="[^"]*assets/js/gtag\.js[^"]*" data-ga-id="G-[A-Z0-9]+" data-cc-texts="#', $r['body']);

@@ -21,6 +21,9 @@ if ($isHome) {
 $homeHref = $isHome ? '' : './';
 // Leeg als Google Analytics uit staat; dan ook geen cookiebanner.
 $gaId = ga_measurement_id();
+// Paginacontext die met elke GA-gebeurtenis meegaat (zie assets/js/gtag.js).
+$gaPage = $isHome ? ['page_type' => 'home']
+    : ($currentPageSlug !== null ? ['page_type' => 'pagina', 'page_slug' => $currentPageSlug] : ['page_type' => 'niet_gevonden']);
 
 // Content-Security-Policy: de browser voert alleen scripts uit van onze
 // eigen site (en Google Analytics), nooit inline-scripts of event-handlers.

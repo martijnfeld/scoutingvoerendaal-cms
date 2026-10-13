@@ -275,7 +275,12 @@ gtag.js runs Consent Mode v2: everything `denied` by default, `analytics_storage
 `analytics` category is accepted (choice in `cc_cookie`; `_ga*` auto-cleared on withdrawal); ad signals always
 off. The footer "Cookie-instellingen" button uses the library's `data-cc="show-preferencesModal"`. Banner text
 defaults live in `COOKIE_BANNER_DEFAULTS` and must match `sql/install.sql` / migration 0004. Owner docs:
-`INSTALL.md` → **Google Analytics**.
+`INSTALL.md` → **Google Analytics** (incl. the table of custom events — keep it in sync).
+Custom events: `assets/js/ga-events.js` (loaded after gtag.js) sends `gtag('event', …)` for clicks on elements
+carrying `ga_event_attrs($event, $params)` (`data-ga-event`/`data-ga-params`; give new trackable links these),
+`contact_click` for any other `mailto:`/`tel:` link (incl. CMS HTML), and one `section_view` per
+`main section[id]` per page load. `page_type`/`page_slug` (`$gaPage` in `site_layout_top.php`, passed as
+`data-ga-page`) go into `gtag('config')`. Never put personal data (e-mail addresses, names) in event params.
 
 **Public JSON feed integration**: the browser never calls Scoutdash directly. `assets/js/main.js` makes a
 single AJAX call to our own `api/opkomsten.php` and distributes the per-speltak results into each

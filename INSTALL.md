@@ -152,6 +152,49 @@ van Google Analytics. De Autoriteit Persoonsgegevens adviseert in elk geval:
 **Beheer → Systeemcontrole** waarschuwt als het ingestelde ID ongeldig is of
 als de link naar de privacyverklaring ontbreekt.
 
+### Wat wordt er gemeten?
+
+Google Analytics meet zelf al (via *Verbeterde metingen*, standaard aan bij
+een webstream): paginaweergaven, scrollen tot onderaan (`scroll`), klikken
+op links naar andere websites zoals Facebook, Instagram, Google Maps en de
+afmeldlinks (`click`), en downloads van PDF's (`file_download`).
+
+Daarbovenop stuurt de website deze eigen gebeurtenissen:
+
+| Gebeurtenis | Wanneer | Parameters |
+|---|---|---|
+| `section_view` | Een onderdeel van de homepage komt in beeld (één keer per bezoek aan de pagina) | `section` (`programma`, `lidworden`, `verhuur`, `contact`) |
+| `contact_click` | Klik op een e-mailadres of telefoonnummer | `contact_type` (`algemeen`, `verhuur` of `overig`), `contact_method` (`email`/`telefoon`), `section` |
+| `cta_click` | Klik op een van de knoppen bovenaan de homepage | `cta_position` (`hero_1`/`hero_2`), `cta_text` |
+| `speltak_select` | Klik op een speltak in de knoppenrij bij Programma | `speltak` |
+| `afmeld_click` | Klik op de afmeldlink van een speltak | `speltak` |
+| `document_download` | Klik op een downloadknop bij een "Doe mee!"-vakje | `document_name`, `card_title` |
+
+Elke gebeurtenis (ook de paginaweergave) krijgt bovendien `page_type`
+(`home`, `pagina` of `niet_gevonden`) en, bij losse pagina's, `page_slug`
+mee. Er worden **geen persoonsgegevens** verstuurd: van een e-mailadres of
+telefoonnummer gaat alleen het soort contact mee, niet het adres zelf.
+
+`document_download` staat los van het automatische `file_download`: dat
+laatste kent alleen de (willekeurige) bestandsnaam, het eigen event de naam
+van het document.
+
+**Parameters zichtbaar maken in rapporten.** Google Analytics ontvangt de
+parameters altijd, maar toont ze pas in rapporten en verkenningen als je ze
+registreert: ga naar **Beheer → Gegevensweergave → Aangepaste definities →
+Aangepaste dimensie maken**, kies bereik *Gebeurtenis* en vul als
+gebeurtenisparameter achtereenvolgens `section`, `contact_type`,
+`contact_method`, `cta_position`, `speltak`, `document_name`, `page_type` en
+`page_slug` in (de weergavenaam mag Nederlands zijn, bijvoorbeeld "Sectie").
+Registratie werkt alleen vooruit: oudere gegevens krijgen de dimensie niet
+alsnog.
+
+**Belangrijke acties als conversie.** Markeer onder **Beheer →
+Gegevensweergave → Belangrijke gebeurtenissen** in elk geval `contact_click`
+(iemand wil contact, bijvoorbeeld om lid te worden of het clubgebouw te
+huren), en eventueel `document_download`. Ze verschijnen in die lijst zodra
+ze één keer zijn binnengekomen.
+
 ### Controleren of het werkt
 
 1. Open de website in een privévenster: de cookiebanner moet verschijnen.
@@ -163,6 +206,10 @@ als de link naar de privacyverklaring ontbreekt.
    `gcs=G101` (advertentieopslag blijft altijd geweigerd).
 4. Klik onderaan de pagina op **Cookie-instellingen**, zet *Analytische
    cookies* uit en sla op: de `_ga`-cookies verdwijnen.
+5. De eigen gebeurtenissen controleer je in **Beheer → DebugView**: open de
+   website met [Tag Assistant](https://tagassistant.google.com/) verbonden,
+   scrol over de homepage en klik op een speltak, een downloadknop en een
+   e-mailadres. De gebeurtenissen en hun parameters verschijnen dan direct.
 
 Het kan tot 24–48 uur duren voordat bezoeken in de gewone rapporten
 (buiten Realtime) verschijnen. Houd er rekening mee dat bezoekers die
