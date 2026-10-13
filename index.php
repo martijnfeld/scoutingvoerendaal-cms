@@ -85,14 +85,25 @@ include __DIR__ . '/includes/site_layout_top.php';
     <p><?= get_setting('lidworden_tekst_2') ?></p>
 
     <table class="leeftijden">
-      <tr><th>Speltak</th><th>Leeftijd</th><th>Wanneer</th></tr>
+      <thead><tr><th>Speltak</th><th>Leeftijd</th><th>Wanneer</th></tr></thead>
+      <tbody>
       <?php foreach ($speltakken as $sp): ?>
       <tr>
-        <td><a href="<?= e(speltak_url($sp['slug'])) ?>"><?= e($sp['naam']) ?></a></td>
-        <td><?= e($sp['leeftijd'] ?: '-') ?></td>
-        <td><?= e($sp['dag_tijd'] ?: '-') ?></td>
+        <td class="leeftijden-naam">
+          <a class="leeftijden-speltak" href="<?= e(speltak_url($sp['slug'])) ?>">
+            <?php if (!empty($sp['logo'])): ?>
+            <img src="<?= e($sp['logo']) ?>" alt="" width="36" height="36" loading="lazy">
+            <?php else: ?>
+            <span class="leeftijden-dot" style="background:<?= e($sp['kleur']) ?>" aria-hidden="true"></span>
+            <?php endif; ?>
+            <?= e($sp['naam']) ?>
+          </a>
+        </td>
+        <td data-label="Leeftijd"><?= e($sp['leeftijd'] ?: '-') ?></td>
+        <td data-label="Wanneer"><?= e($sp['dag_tijd'] ?: '-') ?></td>
       </tr>
       <?php endforeach; ?>
+      </tbody>
     </table>
 
     <div class="info-cards">
