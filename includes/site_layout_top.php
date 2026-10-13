@@ -98,7 +98,7 @@ if (!headers_sent()) {
 
 <?php endforeach; ?>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+<?= font_awesome_head('assets/js/async-css.js') ?>
 <?php if ($gaId): ?>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vanilla-cookieconsent@<?= COOKIECONSENT_VERSION ?>/dist/cookieconsent.css">
 <?php endif; ?>

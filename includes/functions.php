@@ -17,6 +17,26 @@ function asset_url(string $path): string
     return $path . '?v=' . rawurlencode(APP_VERSION);
 }
 
+const FONT_AWESOME_BASE_URL = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2';
+
+/**
+ * <head>-tags voor Font Awesome, zonder dat het renderen van de pagina erop
+ * wacht: vroege verbinding met cdnjs, het (overal gebruikte) solid-font
+ * alvast ophalen, en de stylesheet met media="print" laden zodat hij niet
+ * render-blocking is. assets/js/async-css.js zet hem daarna op media="all"
+ * (geen inline onload-handler, die blokkeert de CSP); <noscript> als fallback.
+ * $asyncCssJs is het pad naar async-css.js vanaf de huidige pagina.
+ */
+function font_awesome_head(string $asyncCssJs): string
+{
+    $css = FONT_AWESOME_BASE_URL . '/css/all.min.css';
+    return '<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>' . "\n"
+        . '<link rel="preload" href="' . FONT_AWESOME_BASE_URL . '/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>' . "\n"
+        . '<link rel="stylesheet" href="' . $css . '" media="print" data-async-css crossorigin="anonymous" referrerpolicy="no-referrer">' . "\n"
+        . '<noscript><link rel="stylesheet" href="' . $css . '" crossorigin="anonymous" referrerpolicy="no-referrer"></noscript>' . "\n"
+        . '<script src="' . e(asset_url($asyncCssJs)) . '" defer></script>' . "\n";
+}
+
 /** Rendert een vast Font Awesome-icoon voor decoratief gebruik in de UI. */
 function fa_icon(string $name, string $class = ''): string
 {

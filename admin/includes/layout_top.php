@@ -38,7 +38,7 @@ $userNavigation = [
 <link rel="icon" type="image/png" href="../<?= e(get_setting('logo_image')) ?>">
 <?php endif; ?>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+<?= font_awesome_head('../assets/js/async-css.js') ?>
 <link rel="stylesheet" href="<?= e(asset_url('../assets/css/admin.css')) ?>">
 </head>
 <body>

@@ -141,7 +141,8 @@ clobbers site-specific secrets:
 **Frontendbasis**: Bootstrap 5.3.8 is loaded centrally via the jsDelivr CDN by both shared public and
 authenticated-admin layouts. Its bundled JavaScript includes Popper. Use its components and utilities as
 the basis for new UI work. Existing custom styling is intentionally not being refactored merely to use
-Bootstrap. Font Awesome 6.5.2 is loaded centrally via the cdnjs CDN and is the default icon source. Do
+Bootstrap. Font Awesome 6.5.2 is loaded centrally via the cdnjs CDN (non-render-blocking, via
+`font_awesome_head()` + `assets/js/async-css.js`) and is the default icon source. Do
 not use emoji as ordinary UI icons or add local icon files. Use `fa_icon()` from `includes/functions.php`
 for the fixed, decorative admin-navigation icons; it maps known internal names to Font Awesome classes.
 
