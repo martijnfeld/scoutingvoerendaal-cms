@@ -159,3 +159,10 @@ test('testbestanden zijn niet via de webserver bereikbaar en gaan niet mee in ee
     assert_true(in_array('tests', repo_rewrite_blocked_dirs(), true), 'tests/ in de rewrite-regel');
     assert_matches('#^/?tests/?\s+export-ignore#m', repo_read('.gitattributes'), 'tests/ in .gitattributes');
 });
+
+test('compressie in .htaccess staat binnen mod_deflate én mod_filter', function () {
+    $htaccess = repo_read('.htaccess');
+    assert_matches('#<IfModule mod_deflate\.c>\s*<IfModule mod_filter\.c>\s*AddOutputFilterByType DEFLATE [^\n]*text/html[^\n]*\s*</IfModule>\s*</IfModule>#', $htaccess,
+        'AddOutputFilterByType zonder mod_filter geeft een 500 op Apache 2.4');
+    assert_same(1, preg_match_all('#^\h*AddOutputFilterByType #m', $htaccess), 'nergens anders AddOutputFilterByType');
+});

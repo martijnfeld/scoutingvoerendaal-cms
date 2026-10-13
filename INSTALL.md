@@ -168,6 +168,24 @@ Het kan tot 24–48 uur duren voordat bezoeken in de gewone rapporten
 (buiten Realtime) verschijnen. Houd er rekening mee dat bezoekers die
 weigeren of een adblocker gebruiken niet of slechts geschat meetellen.
 
+## Google Search Console (vindbaarheid)
+
+Met [Google Search Console](https://search.google.com/search-console) zie je
+waarop mensen de website in Google vinden en of Google problemen ziet.
+
+1. Kies in Search Console **Property toevoegen → URL-voorvoegsel** en vul
+   het adres van de website in (precies zoals bij *Website-adres* in het
+   beheerpaneel, bv. `https://www.scoutingvoerendaal.nl/`).
+2. Kies als verificatiemethode **HTML-tag** en kopieer de tag
+   (`<meta name="google-site-verification" content="…">`).
+3. Plak die in het beheerpaneel bij **Teksten & gegevens → Algemeen →
+   Google Search Console - verificatiecode** (de hele tag of alleen de
+   code) en sla op. Klik daarna in Search Console op **Verifiëren**.
+4. Dien bij **Sitemaps** de sitemap in: `sitemap.xml`.
+
+Laat de code staan zolang je Search Console gebruikt: Google controleert
+de verificatie af en toe opnieuw.
+
 ## Mappenstructuur
 
 ```
@@ -383,6 +401,17 @@ location ^~ /assets/uploads/ {
     }
     return 404;   # alles anders (ook .php) nooit serveren/uitvoeren
 }
+```
+
+De `.htaccess` comprimeert ook tekstbestanden (HTML, CSS, JS) met gzip.
+Op nginx staat dat meestal al aan; controleer het in je browser
+(ontwikkelaarstools → Netwerk → de pagina → `Content-Encoding: gzip`). Staat het
+uit, voeg dan ook deze regels toe — maar niet als je host `gzip` al zelf
+instelt, want dan weigert nginx de dubbele regel:
+
+```nginx
+gzip on;
+gzip_types text/plain text/css text/xml text/javascript application/javascript application/json application/xml image/svg+xml;
 ```
 
 Juist op zulke hosts is het extra belangrijk dat back-ups buiten de

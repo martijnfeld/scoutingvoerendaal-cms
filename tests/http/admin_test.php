@@ -105,6 +105,19 @@ test('Statistieken & cookies: ongeldig measurement-ID wordt geweigerd', function
     assert_not_contains('Mag niet worden opgeslagen', $r['body'], 'bij een fout wordt niets opgeslagen');
 });
 
+test('Algemeen: ongeldige Search Console-code wordt geweigerd', function () {
+    admin_login();
+    $r = http_get('admin/settings.php?tab=algemeen');
+    assert_contains('name="google_site_verification"', $r['body']);
+    $r = http_post('admin/settings.php?tab=algemeen', [
+        'csrf_token' => http_csrf_token($r), 'tab' => 'algemeen',
+        'google_site_verification' => 'geen"geldige code', 'site_title' => 'Mag niet worden opgeslagen',
+    ]);
+    assert_status(200, $r, 'opslaan met ongeldige code');
+    assert_contains('Ongeldige verificatiecode', $r['body']);
+    assert_not_contains('Mag niet worden opgeslagen', $r['body'], 'bij een fout wordt niets opgeslagen');
+});
+
 test('pagina aanmaken, publiek bekijken en verwijderen', function () {
     admin_login();
     $title = 'CI-testpagina ' . bin2hex(random_bytes(3));
@@ -113,8 +126,8 @@ test('pagina aanmaken, publiek bekijken en verwijderen', function () {
     $r = http_get('admin/pagina_form.php');
     $r = http_post('admin/pagina_form.php', [
         'csrf_token' => http_csrf_token($r), 'titel' => $title, 'slug' => '',
-        'inhoud' => '<p>Inhoud van de <strong>testpagina</strong></p>', 'meta_omschrijving' => 'Test',
-        'actief' => '1', 'volgorde' => '0',
+        'inhoud' => '<p>Inhoud van de <strong>testpagina</strong></p><p><img src="x.jpg" alt=""></p>', 'meta_omschrijving' => 'Test',
+        'og_afbeelding' => 'assets/uploads/ci-deelafbeelding.jpg', 'actief' => '1', 'volgorde' => '0',
     ]);
     assert_status(302, $r, 'pagina opslaan');
 
@@ -123,7 +136,18 @@ test('pagina aanmaken, publiek bekijken en verwijderen', function () {
         assert_status(200, $r, '/' . $slug);
         assert_contains('<h1>' . $title . '</h1>', $r['body']);
         assert_contains('<p>Inhoud van de <strong>testpagina</strong></p>', $r['body']);
+        assert_contains('<img loading="lazy" src="x.jpg" alt="">', $r['body'], 'afbeeldingen in de inhoud laden lazy');
+        assert_matches('#<meta property="og:image" content="https?://[^"]+/assets/uploads/ci-deelafbeelding\.jpg">#', $r['body'], 'eigen deelafbeelding');
         assert_no_php_errors($r, '/' . $slug);
+
+        preg_match_all('#<script type="application/ld\+json">(.*?)</script>#s', $r['body'], $m);
+        $crumbs = array_values(array_filter(array_map(fn($json) => json_decode($json, true), $m[1]),
+            fn($data) => ($data['@type'] ?? '') === 'BreadcrumbList'));
+        assert_same(1, count($crumbs), 'één kruimelpad');
+        $items = $crumbs[0]['itemListElement'];
+        assert_same([1, 2], array_column($items, 'position'));
+        assert_same($title, $items[1]['name']);
+        assert_matches('#/' . preg_quote($slug, '#') . '$#', $items[1]['item']);
 
         $r = http_get('sitemap.xml');
         assert_contains('/' . $slug . '</loc>', $r['body'], 'pagina staat in de sitemap');

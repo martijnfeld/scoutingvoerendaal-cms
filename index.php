@@ -65,7 +65,7 @@ include __DIR__ . '/includes/site_layout_top.php';
           <p class="prog-loading">Programma wordt geladen&hellip;</p>
         </div>
       <?php elseif (!empty($sp['toelichting'])): ?>
-        <p class="speltak-meta"><?= $sp['toelichting'] /* HTML toegestaan */ ?></p>
+        <p class="speltak-meta"><?= add_lazy_loading($sp['toelichting']) /* HTML toegestaan */ ?></p>
       <?php endif; ?>
     </div>
     <?php endforeach; ?>
@@ -98,10 +98,10 @@ include __DIR__ . '/includes/site_layout_top.php';
       <?php foreach ($lidworden_cards as $card): $doc = get_document($card['document_id']); ?>
       <div class="info-card"<?= $card['anchor'] ? ' id="' . e($card['anchor']) . '"' : '' ?>>
         <?php if (!empty($card['afbeelding'])): ?>
-        <img src="<?= e($card['afbeelding']) ?>" alt="<?= e($card['titel']) ?>">
+        <img src="<?= e($card['afbeelding']) ?>" loading="lazy" alt="<?= e($card['titel']) ?>">
         <?php endif; ?>
         <h3><?= $card['titel'] /* mag eenvoudige HTML zoals &amp; bevatten */ ?></h3>
-        <?= $card['tekst'] /* HTML toegestaan, beheerd via CMS */ ?>
+        <?= add_lazy_loading($card['tekst']) /* HTML toegestaan, beheerd via CMS */ ?>
         <?php if ($doc): ?>
         <a class="btn-download" href="<?= e(doc_url($doc)) ?>" target="_blank" rel="noopener"><i class="fa-solid fa-file-pdf"></i> <?= e($card['knop_tekst'] ?: $doc['naam']) ?></a>
         <?php endif; ?>
@@ -120,7 +120,7 @@ include __DIR__ . '/includes/site_layout_top.php';
     <div class="verhuur-grid">
       <div>
         <?php if (get_setting('verhuur_photo')): ?>
-        <img class="verhuur-photo" src="<?= e(get_setting('verhuur_photo')) ?>" alt="Clubgebouw van <?= e(get_setting('org_naam')) ?>">
+        <img class="verhuur-photo" loading="lazy" src="<?= e(get_setting('verhuur_photo')) ?>" alt="Clubgebouw van <?= e(get_setting('org_naam')) ?>">
         <?php endif; ?>
         <h3>Voorzieningen</h3>
         <?= get_setting('verhuur_voorzieningen') /* HTML toegestaan, beheerd via CMS */ ?>

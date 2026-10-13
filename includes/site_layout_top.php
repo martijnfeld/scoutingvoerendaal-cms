@@ -3,7 +3,8 @@
  * Bovenkant van elke publieke pagina (index.php, pagina.php): <head>,
  * meldingsbalk, header/nav en de openende <main>. Verwacht (optioneel)
  * vooraf gedefinieerd: $pageTitle, $metaDescription, $canonicalUrl,
- * $ogImage, $isHome (bool), $currentPageSlug.
+ * $ogImage, $isHome (bool), $currentPageSlug, $jsonLd (lijst van
+ * structured-data-arrays, zie json_ld_script()).
  */
 $pageTitle = $pageTitle ?? get_setting('site_title');
 $metaDescription = $metaDescription ?? get_setting('meta_description');
@@ -11,7 +12,13 @@ $canonicalUrl = $canonicalUrl ?? get_setting('site_url');
 $ogImage = $ogImage ?? get_setting('og_image');
 $isHome = $isHome ?? false;
 $currentPageSlug = $currentPageSlug ?? null;
-$homeHref = $isHome ? '' : 'index.php';
+$jsonLd = $jsonLd ?? [];
+if ($isHome) {
+    array_unshift($jsonLd, organization_json_ld());
+}
+// Naar de homepage linken als "./" (de websitemap), niet als "index.php":
+// zo is er maar één URL voor de homepage (ook bij installatie in een submap).
+$homeHref = $isHome ? '' : './';
 // Leeg als Google Analytics uit staat; dan ook geen cookiebanner.
 $gaId = ga_measurement_id();
 
@@ -55,47 +62,24 @@ if (!headers_sent()) {
 <meta property="og:title" content="<?= e($pageTitle) ?>">
 <meta property="og:description" content="<?= e($metaDescription) ?>">
 <?php if ($ogImage): ?>
-<meta property="og:image" content="<?= e(rtrim(get_setting('site_url'), '/') . '/' . ltrim($ogImage, '/')) ?>">
+<meta property="og:image" content="<?= e(absolute_url($ogImage)) ?>">
 <?php endif; ?>
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="<?= e(get_setting('org_naam')) ?>">
 <meta name="twitter:description" content="<?= e($metaDescription) ?>">
 <?php if ($ogImage): ?>
-<meta name="twitter:image" content="<?= e(rtrim(get_setting('site_url'), '/') . '/' . ltrim($ogImage, '/')) ?>">
+<meta name="twitter:image" content="<?= e(absolute_url($ogImage)) ?>">
+<?php endif; ?>
+<?php if (google_site_verification() !== ''): ?>
+<meta name="google-site-verification" content="<?= e(google_site_verification()) ?>">
 <?php endif; ?>
 <?php if (get_setting('logo_image')): ?>
 <link rel="icon" type="image/png" href="<?= e(get_setting('logo_image')) ?>">
 <?php endif; ?>
-<?php if ($isHome): ?>
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "SportsOrganization",
-  "name": "<?= addslashes(get_setting('org_naam')) ?>",
-  "url": "<?= addslashes(get_setting('site_url')) ?>",
-<?php if (get_setting('logo_image')): ?>
-  "logo": "<?= addslashes(rtrim(get_setting('site_url'), '/') . '/' . ltrim(get_setting('logo_image'), '/')) ?>",
-<?php endif; ?>
-<?php if (get_setting('og_image')): ?>
-  "image": "<?= addslashes(rtrim(get_setting('site_url'), '/') . '/' . ltrim(get_setting('og_image'), '/')) ?>",
-<?php endif; ?>
-  "email": "<?= addslashes(get_setting('org_email')) ?>",
-  "telephone": "<?= addslashes(get_setting('org_telefoon')) ?>",
-  "address": {
-    "@type": "PostalAddress",
-    "streetAddress": "<?= addslashes(get_setting('org_straat')) ?>",
-    "postalCode": "<?= addslashes(get_setting('org_postcode')) ?>",
-    "addressLocality": "<?= addslashes(get_setting('org_plaats')) ?>",
-    "addressCountry": "<?= addslashes(get_setting('org_land')) ?>"
-  },
-  "sameAs": [
-    "<?= addslashes(get_setting('social_facebook')) ?>",
-    "<?= addslashes(get_setting('social_instagram')) ?>",
-    "<?= addslashes(get_setting('social_youtube')) ?>"
-  ]
-}
-</script>
-<?php endif; ?>
+<?php foreach ($jsonLd as $block): ?>
+<?= json_ld_script($block) ?>
+
+<?php endforeach; ?>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 <?php if ($gaId): ?>

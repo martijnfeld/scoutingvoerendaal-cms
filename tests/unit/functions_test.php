@@ -138,3 +138,59 @@ test('cookie_privacy_link_normalize() weigert andere schema\'s en HTML', functio
         assert_true(is_string($error), 'geweigerd: ' . $value);
     }
 });
+
+test('google_site_verification_normalize() accepteert de code, de hele meta-tag en leeg', function () {
+    $code = 'AbC-123_xyzABCdefGHIjklMNOpqrSTUvwx0123456';
+    assert_same($code, google_site_verification_normalize($code));
+    assert_same($code, google_site_verification_normalize('  ' . $code . ' '), 'spaties');
+    assert_same($code, google_site_verification_normalize('<meta name="google-site-verification" content="' . $code . '" />'), 'hele tag');
+    assert_same($code, google_site_verification_normalize("<meta name='google-site-verification' content='{$code}'>"), 'enkele aanhalingstekens');
+    assert_same('', google_site_verification_normalize('  '), 'leeg = geen tag');
+});
+
+test('google_site_verification_normalize() weigert onzin', function () {
+    foreach (['kort', 'code met spaties erin', 'abc"><script>alert(1)</script>', 'https://example.org/'] as $value) {
+        $error = null;
+        try {
+            google_site_verification_normalize($value);
+        } catch (RuntimeException $e) {
+            $error = $e->getMessage();
+        }
+        assert_true(is_string($error), 'geweigerd: ' . $value);
+    }
+});
+
+test('json_ld_script() geeft geldige JSON die het script-blok niet kan afsluiten', function () {
+    $name = "Scouting 't \"Dorp\" </script><script>alert(1)</script> \u{e9}\n";
+    $html = json_ld_script(['@type' => 'NGO', 'name' => $name, 'url' => 'https://example.org/a']);
+    assert_true(strpos($html, '<script type="application/ld+json">') === 0, 'begint met het JSON-LD-blok');
+    assert_same(1, substr_count($html, '</script>'), 'alleen de eigen afsluitende tag');
+    assert_contains('https://example.org/a', $html, 'slashes niet ge-escapet');
+    $json = substr($html, strlen('<script type="application/ld+json">'), -strlen('</script>'));
+    $decoded = json_decode($json, true);
+    assert_true(is_array($decoded), 'geldige JSON: ' . $json);
+    assert_same($name, $decoded['name'], 'waarde komt ongeschonden terug');
+});
+
+test('json_ld_script() overleeft ongeldige UTF-8', function () {
+    $html = json_ld_script(['name' => "Fout \xC3\x28 teken"]);
+    $json = substr($html, strlen('<script type="application/ld+json">'), -strlen('</script>'));
+    assert_true(is_array(json_decode($json, true)), 'geldige JSON: ' . $json);
+});
+
+test('breadcrumb_json_ld() nummert de onderdelen vanaf 1', function () {
+    $data = breadcrumb_json_ld([['Home', 'https://example.org/'], ['Ledeninfo', 'https://example.org/ledeninfo']]);
+    assert_same('BreadcrumbList', $data['@type']);
+    assert_same([
+        ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => 'https://example.org/'],
+        ['@type' => 'ListItem', 'position' => 2, 'name' => 'Ledeninfo', 'item' => 'https://example.org/ledeninfo'],
+    ], $data['itemListElement']);
+});
+
+test('add_lazy_loading() voegt loading="lazy" toe, behalve waar al een loading staat', function () {
+    assert_same('<p><img loading="lazy" src="a.jpg" alt=""></p>', add_lazy_loading('<p><img src="a.jpg" alt=""></p>'));
+    assert_same('<IMG loading="lazy" src="a.jpg"><img loading="lazy" src="b.jpg">', add_lazy_loading('<IMG src="a.jpg"><img src="b.jpg">'));
+    assert_same('<img src="a.jpg" loading="eager">', add_lazy_loading('<img src="a.jpg" loading="eager">'), 'bestaand loading blijft');
+    assert_same('<imgx src="a"><p>geen img</p>', add_lazy_loading('<imgx src="a"><p>geen img</p>'));
+    assert_same('', add_lazy_loading(null), 'null (lege kolom) mag');
+});

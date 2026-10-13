@@ -336,6 +336,123 @@ function unique_page_slug(string $base, ?int $excludeId = null): string
 }
 
 /* ------------------------------------------------------------------ *
+ * SEO: structured data, Search Console, afbeeldingen
+ * ------------------------------------------------------------------ */
+
+/**
+ * Volledige URL voor een pad op de eigen site (bv. "assets/uploads/x.jpg"),
+ * op basis van site_url. Een volledige http(s)-URL blijft ongewijzigd.
+ */
+function absolute_url(string $path): string
+{
+    if (preg_match('#^https?://#i', $path)) {
+        return $path;
+    }
+    return rtrim(get_setting('site_url'), '/') . '/' . ltrim($path, '/');
+}
+
+/** Geldige verificatiecode van Google Search Console (de content van de meta-tag). */
+const GOOGLE_SITE_VERIFICATION_PATTERN = '/^[A-Za-z0-9_-]{10,100}$/';
+
+/**
+ * Normaliseert de verificatiecode van Google Search Console. Je mag ook de
+ * hele <meta>-tag plakken; dan wordt alleen de waarde van content="…"
+ * bewaard. Leeg mag (= geen verificatie-tag).
+ *
+ * @throws RuntimeException met een Nederlandse foutmelding
+ */
+function google_site_verification_normalize(string $value): string
+{
+    $value = trim($value);
+    if (preg_match('/\bcontent\s*=\s*["\']([^"\']*)["\']/i', $value, $m)) {
+        $value = trim($m[1]);
+    }
+    if ($value === '' || preg_match(GOOGLE_SITE_VERIFICATION_PATTERN, $value)) {
+        return $value;
+    }
+    throw new RuntimeException('Ongeldige verificatiecode voor Google Search Console. Plak de HTML-tag die Google geeft, of alleen de waarde van content="…".');
+}
+
+/** De ingestelde Search Console-code, of '' als die leeg of ongeldig is. */
+function google_site_verification(): string
+{
+    $code = trim(get_setting('google_site_verification'));
+    return preg_match(GOOGLE_SITE_VERIFICATION_PATTERN, $code) ? $code : '';
+}
+
+/**
+ * Structured data (schema.org) voor de organisatie, op de homepage. Type
+ * NGO: een scoutinggroep is een vereniging/stichting zonder winstoogmerk,
+ * geen sportclub. Lege velden en ongeldige social-links worden weggelaten.
+ */
+function organization_json_ld(): array
+{
+    $data = [
+        '@context' => 'https://schema.org',
+        '@type' => 'NGO',
+        'name' => get_setting('org_naam'),
+        'url' => get_setting('site_url'),
+        'logo' => get_setting('logo_image') !== '' ? absolute_url(get_setting('logo_image')) : '',
+        'image' => get_setting('og_image') !== '' ? absolute_url(get_setting('og_image')) : '',
+        'email' => get_setting('org_email'),
+        'telephone' => get_setting('org_telefoon'),
+    ];
+    $address = array_filter([
+        'streetAddress' => get_setting('org_straat'),
+        'postalCode' => get_setting('org_postcode'),
+        'addressLocality' => get_setting('org_plaats'),
+        'addressCountry' => get_setting('org_land'),
+    ], fn($v) => $v !== '');
+    if ($address) {
+        $data['address'] = ['@type' => 'PostalAddress'] + $address;
+    }
+    $sameAs = [];
+    foreach (['social_facebook', 'social_instagram', 'social_youtube'] as $key) {
+        $url = trim(get_setting($key));
+        if (preg_match('#^https?://[^/\s]+\.[^/\s]+/\S+#i', $url)) {
+            $sameAs[] = $url;
+        }
+    }
+    $data['sameAs'] = $sameAs;
+    return array_filter($data, fn($v) => $v !== '' && $v !== []);
+}
+
+/**
+ * Structured data voor een kruimelpad. $items: lijst van [naam, absolute URL],
+ * van de homepage naar de huidige pagina.
+ */
+function breadcrumb_json_ld(array $items): array
+{
+    $list = [];
+    foreach (array_values($items) as $i => [$name, $url]) {
+        $list[] = ['@type' => 'ListItem', 'position' => $i + 1, 'name' => $name, 'item' => $url];
+    }
+    return ['@context' => 'https://schema.org', '@type' => 'BreadcrumbList', 'itemListElement' => $list];
+}
+
+/**
+ * <script type="application/ld+json">-blok. json_encode() zorgt voor geldige
+ * JSON (aanhalingstekens, regeleinden, ongeldige UTF-8); JSON_HEX_TAG zet
+ * < en > om, zodat een waarde met "</script>" het blok niet kan afsluiten.
+ */
+function json_ld_script(array $data): string
+{
+    $json = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_INVALID_UTF8_SUBSTITUTE);
+    return '<script type="application/ld+json">' . $json . '</script>';
+}
+
+/**
+ * Voegt loading="lazy" toe aan elke <img> in CMS-HTML die nog geen
+ * loading-attribuut heeft, zodat afbeeldingen onder de vouw pas laden als
+ * de bezoeker ernaartoe scrollt.
+ */
+function add_lazy_loading(?string $html): string
+{
+    $html = (string) $html;
+    return preg_replace('/<(img)\b(?![^>]*\bloading\s*=)/i', '<$1 loading="lazy"', $html) ?? $html;
+}
+
+/* ------------------------------------------------------------------ *
  * Bestand-uploads (foto's / PDF's)
  * ------------------------------------------------------------------ */
 
@@ -446,8 +563,8 @@ function find_upload_usage(string $filename): array
         $used[] = 'Speltak: ' . $row['naam'];
     }
 
-    $stmt = db()->prepare('SELECT titel FROM pages WHERE inhoud LIKE :p');
-    $stmt->execute(['p' => $likePattern]);
+    $stmt = db()->prepare('SELECT titel FROM pages WHERE inhoud LIKE :p1 OR og_afbeelding LIKE :p2');
+    $stmt->execute(['p1' => $likePattern, 'p2' => $likePattern]);
     foreach ($stmt->fetchAll() as $row) {
         $used[] = 'Pagina: ' . $row['titel'];
     }

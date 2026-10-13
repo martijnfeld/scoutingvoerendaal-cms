@@ -49,6 +49,43 @@ test('sitemap.xml en robots.txt', function () {
     assert_status(200, $r, 'robots.txt');
 });
 
+/** Alle JSON-LD-blokken uit een pagina, gedecodeerd (faalt bij ongeldige JSON). */
+function http_json_ld_blocks(string $body): array
+{
+    preg_match_all('#<script type="application/ld\+json">(.*?)</script>#s', $body, $m);
+    $blocks = [];
+    foreach ($m[1] as $json) {
+        $data = json_decode($json, true);
+        assert_true(is_array($data), 'geldige JSON-LD: ' . test_export($json));
+        $blocks[] = $data;
+    }
+    return $blocks;
+}
+
+test('homepage heeft geldige JSON-LD van de organisatie', function () {
+    $blocks = http_json_ld_blocks(http_get('')['body']);
+    assert_same(['NGO'], array_column($blocks, '@type'));
+    assert_same('https://schema.org', $blocks[0]['@context']);
+    assert_true(($blocks[0]['name'] ?? '') !== '', 'naam ingevuld');
+});
+
+test('links naar de homepage gaan naar ./, niet naar index.php', function () {
+    $r = http_get('deze-pagina-bestaat-echt-niet');
+    assert_not_contains('href="index.php', $r['body']);
+    assert_contains('href="./#programma"', $r['body']);
+    assert_same([], http_json_ld_blocks($r['body']), 'geen structured data op de 404-pagina');
+});
+
+test('HTML, CSS en JS worden gecomprimeerd verstuurd', function () {
+    foreach (['', 'assets/css/style.css', 'assets/js/main.js'] as $path) {
+        $r = http_request('GET', $path, null, ['Accept-Encoding' => 'gzip']);
+        assert_status(200, $r, '/' . $path);
+        assert_same('gzip', http_header($r, 'Content-Encoding'), '/' . $path);
+    }
+    $r = http_request('GET', '', null);
+    assert_same('', http_header($r, 'Content-Encoding'), 'zonder Accept-Encoding ongecomprimeerd');
+});
+
 test('api/opkomsten.php geeft JSON', function () {
     $r = http_get('api/opkomsten.php');
     assert_status(200, $r, 'api/opkomsten.php');

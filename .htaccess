@@ -98,6 +98,21 @@ ServerSignature Off
 </IfModule>
 
 # ------------------------------------------------------------------
+# Compressie
+# ------------------------------------------------------------------
+# Tekstbestanden gecomprimeerd (gzip) versturen: snellere pagina's, wat
+# ook meetelt voor zoekmachines. Afbeeldingen, PDF's en zips zijn al
+# gecomprimeerd en staan er bewust niet tussen. AddOutputFilterByType komt
+# op Apache 2.4 uit mod_filter; zonder dat blok zou een ontbrekende
+# mod_filter een 500-fout geven. Comprimeert de host (of PHP via
+# zlib.output_compression) al zelf, dan slaat mod_deflate het over.
+<IfModule mod_deflate.c>
+    <IfModule mod_filter.c>
+        AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml text/javascript application/javascript application/json application/xml image/svg+xml
+    </IfModule>
+</IfModule>
+
+# ------------------------------------------------------------------
 # Security-headers
 # ------------------------------------------------------------------
 # "always" zodat ze ook op foutpagina's (403/404) staan. De

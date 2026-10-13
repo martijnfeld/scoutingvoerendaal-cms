@@ -219,13 +219,17 @@ $GLOBALS['__cookies'] = [];
 
 /**
  * Doet een HTTP-verzoek naar TEST_BASE_URL . '/' . $path, zonder redirects
- * te volgen, met een eenvoudige cookie-jar (voor de sessiecookie).
+ * te volgen, met een eenvoudige cookie-jar (voor de sessiecookie) en
+ * optioneel extra request-headers (naam => waarde).
  *
  * @return array{status: int, headers: array<string, string[]>, body: string}
  */
-function http_request(string $method, string $path, ?array $form = null): array
+function http_request(string $method, string $path, ?array $form = null, array $extraHeaders = []): array
 {
     $headers = "User-Agent: ScoutingVoerendaal-Tests/1.0\r\n";
+    foreach ($extraHeaders as $name => $value) {
+        $headers .= $name . ': ' . $value . "\r\n";
+    }
     if ($GLOBALS['__cookies']) {
         $pairs = [];
         foreach ($GLOBALS['__cookies'] as $name => $value) {

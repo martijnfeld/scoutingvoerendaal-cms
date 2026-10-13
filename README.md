@@ -13,7 +13,9 @@ geen Composer of npm. Het draait op vrijwel elke gewone shared hosting.
 - Programma per speltak automatisch uit Scoutdash (opkomsten-feed): de server haalt de feeds op,
   bewaart ze 10 minuten in een cache en schoont de inhoud op, zodat de site gewoon blijft werken als
   Scoutdash even plat ligt.
-- `sitemap.xml`, `robots.txt` en gestructureerde gegevens (JSON-LD) voor zoekmachines.
+- `sitemap.xml`, `robots.txt`, gestructureerde gegevens (JSON-LD: organisatie en kruimelpad), een
+  eigen deelafbeelding per pagina en verificatie voor Google Search Console, zie
+  [INSTALL.md → Google Search Console](INSTALL.md#google-search-console-vindbaarheid).
 - Optioneel Google Analytics 4 met een cookiebanner en Consent Mode v2: zonder toestemming geen
   analytische cookies. Aan te zetten vanuit het beheerpaneel, zie
   [INSTALL.md → Google Analytics](INSTALL.md#google-analytics-bezoekersstatistieken).
