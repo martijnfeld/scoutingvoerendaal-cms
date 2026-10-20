@@ -11,6 +11,7 @@ function doc_url(?array $doc): string
 }
 
 include __DIR__ . '/includes/site_layout_top.php';
+
 ?>
 <section class="hero" id="top">
   <div class="container">
