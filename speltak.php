@@ -20,6 +20,10 @@ $orgNaam = get_setting('org_naam');
 $pageTitle = $sp['naam'] . ($sp['leeftijd'] ? ' (' . $sp['leeftijd'] . ')' : '') . ' — ' . $orgNaam;
 $metaDescription = speltak_meta_description($sp);
 $canonicalUrl = speltak_url($sp['slug'], true);
+// Logo van de speltak als deelafbeelding; anders de algemene (zie site_layout_top.php).
+if (!empty($sp['logo'])) {
+    $ogImage = $sp['logo'];
+}
 $activeNav = 'speltakken';
 $useBaseHref = true;
 $gaPage = ['page_type' => 'speltak', 'page_slug' => $sp['slug']];
