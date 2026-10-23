@@ -7,8 +7,9 @@ if (!empty($_SESSION['admin_id'])) {
     exit;
 }
 
-purge_old_login_attempts();
-purge_old_admin_logins();
+// Terugval voor sites zonder (werkende) cronjob: opruimen hooguit eens per dag.
+require_once __DIR__ . '/../includes/cron.php';
+cron_run_cleanup_fallback();
 
 $ip = client_ip();
 $error = '';

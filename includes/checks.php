@@ -21,6 +21,7 @@
 
 require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/backup.php';
+require_once __DIR__ . '/cron.php';
 require_once __DIR__ . '/updater.php';
 require_once __DIR__ . '/scoutdash.php';
 require_once __DIR__ . '/geoip.php';
@@ -126,6 +127,7 @@ function run_system_checks(): array
         'PHP en webserver' => checks_php(),
         'Database' => checks_database(),
         'Configuratie en beveiliging' => checks_config(),
+        'Geplande taken (cron)' => checks_cron(),
         'Back-ups' => checks_backups(),
         'Updates' => checks_updates(),
         'Bestanden en schrijfrechten' => checks_files(),
@@ -335,7 +337,7 @@ function checks_config(): array
 
     if (BACKUP_CRON_KEY === 'wijzig_deze_geheime_sleutel') {
         $r[] = check_result('Sleutel voor back-up-cronjob', 'warn',
-            'Nog de standaardwaarde: een wekelijkse back-up via een cron-URL weigert dan te draaien. Stel een lange, willekeurige BACKUP_CRON_KEY in config.local.php in (niet nodig als je cronjob PHP-CLI gebruikt).');
+            'Nog de standaardwaarde: de cron-URL (geplande taken) weigert dan te draaien. Stel een lange, willekeurige BACKUP_CRON_KEY in config.local.php in (niet nodig als je cronjob PHP-CLI gebruikt).');
     } elseif (strlen(BACKUP_CRON_KEY) < 32) {
         $r[] = check_result('Sleutel voor back-up-cronjob', 'warn',
             'Korter dan 32 tekens; gebruik een langere, willekeurige BACKUP_CRON_KEY in config.local.php.');
@@ -433,6 +435,56 @@ function checks_config(): array
 }
 
 /* ------------------------------------------------------------------ *
+ * Geplande taken (cron)
+ * ------------------------------------------------------------------ */
+
+/**
+ * Of de dagelijkse cronjob wordt aangeroepen, op basis van de heartbeat
+ * cron_last_call (gezet door cron/cron.php) en de laatste run per taak.
+ */
+function checks_cron(): array
+{
+    $r = [];
+    $backupsLink = ['href' => 'backups.php', 'text' => 'Naar Back-ups'];
+    $howTo = ' Stel een dagelijkse cronjob in op cron/cron.php — zie INSTALL.md, hoofdstuk "Geplande taken".';
+
+    $lastCall = ctype_digit(get_setting('cron_last_call')) ? (int) get_setting('cron_last_call') : 0;
+    if ($lastCall === 0) {
+        $r[] = check_result('Cronjob', 'warn',
+            'Is nog nooit aangeroepen. Zonder cronjob worden er geen automatische back-ups gemaakt en gebeurt het opruimen alleen als iemand de inlogpagina bezoekt.' . $howTo, $backupsLink);
+    } else {
+        $ago = time() - $lastCall;
+        $when = date('d-m-Y H:i', $lastCall) . ' (' . ($ago < 3600 ? 'minder dan een uur' : ($ago < 86400 * 2 ? (int) floor($ago / 3600) . ' uur' : (int) floor($ago / 86400) . ' dagen')) . ' geleden)';
+        if ($ago <= 36 * 3600) {
+            $r[] = check_result('Cronjob', 'ok', 'Actief; laatst aangeroepen op ' . $when . '.');
+        } elseif ($ago <= 8 * 86400) {
+            $r[] = check_result('Cronjob', 'warn',
+                'Laatst aangeroepen op ' . $when . ': minder vaak dan dagelijks, of de cronjob is gestopt.' . $howTo, $backupsLink);
+        } else {
+            $r[] = check_result('Cronjob', 'error',
+                'Laatst aangeroepen op ' . $when . ': de cronjob lijkt niet meer te draaien.' . $howTo, $backupsLink);
+        }
+    }
+
+    foreach (cron_jobs() as $name => $job) {
+        $last = cron_last_run($name);
+        $status = cron_last_status($name);
+        $label = 'Taak: ' . mb_strtolower($job['label'], 'UTF-8');
+        if ($job['interval'] <= 0) {
+            $r[] = check_result($label, 'info', 'Staat uit.', $backupsLink);
+        } elseif (strpos($status, 'fout:') === 0) {
+            $r[] = check_result($label, 'error', 'De laatste poging mislukte — ' . $status, $backupsLink);
+        } elseif ($last === null) {
+            $r[] = check_result($label, 'info', 'Nog niet uitgevoerd.');
+        } else {
+            $r[] = check_result($label, 'ok', 'Laatst geslaagd op ' . date('d-m-Y H:i', $last) . '.');
+        }
+    }
+
+    return $r;
+}
+
+/* ------------------------------------------------------------------ *
  * Back-ups
  * ------------------------------------------------------------------ */
 
@@ -483,22 +535,26 @@ function checks_backups(): array
             . ($days === 0 ? 'vandaag' : $days . ' dag(en) geleden') . '.';
         if ($days > 14) {
             $r[] = check_result('Laatste back-up', 'error', $detail . ' Dat is te lang geleden.', $backupsLink);
-        } elseif ($days > 8) {
-            $r[] = check_result('Laatste back-up', 'warn', $detail . ' De wekelijkse back-up lijkt te zijn overgeslagen.', $backupsLink);
+        } elseif ($days > max(8, backup_interval_days() + 1) && backup_interval_days() > 0) {
+            $r[] = check_result('Laatste back-up', 'warn', $detail . ' De geplande back-up lijkt te zijn overgeslagen.', $backupsLink);
         } else {
             $r[] = check_result('Laatste back-up', 'ok', $detail);
         }
     }
 
-    // Heuristiek: of de cronjob echt draait kunnen we niet zien, maar met een
-    // wekelijkse cronjob zijn er in vijf weken minstens vier back-ups.
-    $recent = count(array_filter($backups, fn($b) => $b['created_at'] >= strtotime('-35 days')));
-    if ($recent >= 4) {
+    // De geplande back-uptaak legt zelf vast wanneer hij voor het laatst slaagde
+    // (handmatige back-ups tellen dus niet mee).
+    $cronLast = (int) cron_last_run('backup');
+    $interval = backup_interval_days();
+    if ($interval === 0) {
+        $r[] = check_result('Automatische back-ups', 'info', 'Staan uit (instelling bij Back-ups).', $backupsLink);
+    } elseif ($cronLast > 0 && time() - $cronLast < 2 * max(1, $interval) * 86400 + 86400) {
         $r[] = check_result('Automatische back-ups', 'ok',
-            $recent . ' back-ups in de afgelopen 5 weken; de wekelijkse cronjob lijkt te werken.');
+            'Cronjob laatst geslaagd op ' . date('d-m-Y H:i', $cronLast) . '; interval: ' . mb_strtolower(BACKUP_INTERVAL_OPTIONS[$interval], 'UTF-8') . '.');
     } else {
         $r[] = check_result('Automatische back-ups', 'warn',
-            'Maar ' . $recent . ' back-up(s) in de afgelopen 5 weken (handmatige meegeteld). Controleer of de wekelijkse cronjob in je hostingpaneel is ingesteld — zie INSTALL.md, hoofdstuk "Back-ups".');
+            ($cronLast > 0 ? 'De cronjob slaagde voor het laatst op ' . date('d-m-Y H:i', $cronLast) . '.' : 'De cronjob is nog nooit geslaagd.')
+            . ' Controleer of de dagelijkse cronjob in je hostingpaneel is ingesteld — zie INSTALL.md, hoofdstuk "Geplande taken".', $backupsLink);
     }
 
     if ($backups) {

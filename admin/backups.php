@@ -2,6 +2,7 @@
 require_once __DIR__ . '/includes/auth.php';
 require_login();
 require_once __DIR__ . '/../includes/backup.php';
+require_once __DIR__ . '/../includes/cron.php';
 
 $pageTitle = 'Back-ups';
 
@@ -19,6 +20,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_verify()) {
             flash_set('success', $message);
         } catch (Throwable $e) {
             flash_set('error', 'Back-up maken is mislukt: ' . $e->getMessage());
+        }
+    } elseif ($action === 'interval') {
+        $days = (int) ($_POST['backup_interval_days'] ?? 7);
+        if (array_key_exists($days, BACKUP_INTERVAL_OPTIONS)) {
+            set_setting('backup_interval_days', (string) $days);
+            audit_log('update', 'backup', null, 'Back-upinterval ingesteld op: ' . BACKUP_INTERVAL_OPTIONS[$days]);
+            flash_set('success', 'Back-upinterval opgeslagen: ' . mb_strtolower(BACKUP_INTERVAL_OPTIONS[$days], 'UTF-8') . '.');
+        } else {
+            flash_set('error', 'Ongeldig interval.');
         }
     } elseif ($action === 'delete') {
         // Alleen .zip-bestanden uit de bekende back-upmappen (zie backup_known_dirs()).
@@ -54,11 +64,22 @@ if ($cronBase === '') {
     $cronBase = (request_is_https() ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'jouw-domein.nl')
         . rtrim(str_replace('\\', '/', dirname(dirname($_SERVER['SCRIPT_NAME'] ?? '/admin/backups.php'))), '/');
 }
-$cronUrl = $cronBase . '/cron/backup_cron.php?key=' . ($cronKeySet ? rawurlencode(BACKUP_CRON_KEY) : 'JOUW_BACKUP_CRON_KEY');
-$cronScriptPath = realpath(__DIR__ . '/../cron/backup_cron.php') ?: dirname(__DIR__) . '/cron/backup_cron.php';
-// Wekelijks op zondag om 03:15. In een crontab-regel betekent % een nieuwe
-// regel, dus die moet daar als \% geschreven worden.
-$cronSchedule = '15 3 * * 0';
+$cronUrl = $cronBase . '/cron/cron.php?key=' . ($cronKeySet ? rawurlencode(BACKUP_CRON_KEY) : 'JOUW_BACKUP_CRON_KEY');
+$cronScriptPath = realpath(__DIR__ . '/../cron/cron.php') ?: dirname(__DIR__) . '/cron/cron.php';
+// Dagelijks om 03:15; cron.php bepaalt zelf welke taken aan de beurt zijn.
+// In een crontab-regel betekent % een nieuwe regel, dus die moet daar als \%
+// geschreven worden.
+$cronSchedule = '15 3 * * *';
+$backupIntervalDays = backup_interval_days();
+$cronJobs = [];
+foreach (cron_jobs() as $name => $job) {
+    $last = cron_last_run($name);
+    $cronJobs[] = [
+        'label' => $job['label'],
+        'last' => $last !== null ? date('d-m-Y H:i', $last) : 'nog nooit',
+        'status' => cron_last_status($name),
+    ];
+}
 $cronUrlTab = str_replace('%', '\\%', $cronUrl);
 $cronLines = [
     'cli'  => $cronSchedule . ' /usr/local/bin/php ' . $cronScriptPath . ' >/dev/null 2>&1',
@@ -71,12 +92,12 @@ include __DIR__ . '/includes/layout_top.php';
 <p>
   Een back-up is één zipbestand met een volledige databasedump (<code>database.sql</code>) en alle
   sitebestanden (inclusief geüploade foto's en PDF's). Back-ups ouder dan <?= (int) BACKUP_RETENTION_MONTHS ?>
-  maanden worden automatisch verwijderd, ook bij de wekelijkse geplande back-up.
+  maanden worden automatisch verwijderd.
 </p>
 <p class="muted">
-  Naast handmatig back-uppen hieronder kan er wekelijks automatisch een back-up worden gemaakt via een
-  cronjob in je hosting-controlepaneel of via een externe dienst zoals cron-job.org — zie
-  "Automatische wekelijkse back-up" onderaan deze pagina.
+  Naast handmatig back-uppen hieronder kan er automatisch een back-up worden gemaakt via een
+  dagelijkse cronjob in je hosting-controlepaneel of via een externe dienst zoals cron-job.org — zie
+  "Geplande taken (cronjob)" onderaan deze pagina.
 </p>
 
 <div class="admin-card">
@@ -150,7 +171,36 @@ include __DIR__ . '/includes/layout_top.php';
 </div>
 
 <div class="admin-card">
-  <h2>Automatische wekelijkse back-up</h2>
+  <h2>Automatische back-up: interval</h2>
+  <form method="post">
+    <?= csrf_field() ?>
+    <input type="hidden" name="action" value="interval">
+    <label for="backup_interval_days">Maak automatisch een back-up</label>
+    <select name="backup_interval_days" id="backup_interval_days">
+      <?php foreach (BACKUP_INTERVAL_OPTIONS as $days => $label): ?>
+        <option value="<?= (int) $days ?>"<?= $days === $backupIntervalDays ? ' selected' : '' ?>><?= e($label) ?></option>
+      <?php endforeach; ?>
+    </select>
+    <button type="submit" class="btn btn-small">Opslaan</button>
+  </form>
+  <p class="muted">
+    Dit werkt alleen als de dagelijkse cronjob hieronder is ingesteld. Het interval wordt bij elke cronrun gecontroleerd,
+    dus wijzigen hoeft je cronjob niet aan te passen.
+  </p>
+  <table class="admin-table">
+    <tr><th>Taak</th><th>Laatst geslaagd</th><th>Laatste melding</th></tr>
+    <?php foreach ($cronJobs as $job): ?>
+    <tr>
+      <td><?= e($job['label']) ?></td>
+      <td><?= e($job['last']) ?></td>
+      <td><?= $job['status'] !== '' ? e($job['status']) : '<span class="muted">—</span>' ?></td>
+    </tr>
+    <?php endforeach; ?>
+  </table>
+</div>
+
+<div class="admin-card">
+  <h2>Geplande taken (cronjob)</h2>
   <?php if (!$cronKeySet): ?>
     <p class="admin-flash admin-flash-error">
       <strong>Let op:</strong> <code>BACKUP_CRON_KEY</code> staat nog op de standaardwaarde, dus het cronscript weigert via
@@ -160,9 +210,15 @@ include __DIR__ . '/includes/layout_top.php';
     </p>
   <?php endif; ?>
   <p>
-    Kies één van de onderstaande manieren. Elke run maakt een nieuwe back-up en ruimt back-ups ouder dan
-    <?= (int) BACKUP_RETENTION_MONTHS ?> maanden op. Het voorbeeldschema <code><?= e($cronSchedule) ?></code> betekent
-    <em>elke zondag om 03:15</em> (servertijd).
+    Stel <strong>één cronjob in die dagelijks</strong> wordt uitgevoerd, op één van de onderstaande manieren. Het
+    script bepaalt zelf welke taken aan de beurt zijn: opruimen (oude inlogpogingen, inloggeschiedenis, auditlog en
+    back-ups ouder dan <?= (int) BACKUP_RETENTION_MONTHS ?> maanden) draait dagelijks, een back-up volgens het interval
+    hierboven. Vaker aanroepen kan geen kwaad. Het voorbeeldschema <code><?= e($cronSchedule) ?></code> betekent
+    <em>elke dag om 03:15</em> (servertijd).
+  </p>
+  <p class="muted">
+    Had je al een cronjob die <code>cron/backup_cron.php</code> aanroept? Die blijft werken, maar wijs hem bij
+    gelegenheid naar <code>cron/cron.php</code> en laat hem dagelijks lopen.
   </p>
 
   <h3>1. Cronjob in je hostingpaneel met PHP-CLI (voorkeur)</h3>
@@ -172,7 +228,7 @@ include __DIR__ . '/includes/layout_top.php';
   </p>
   <table class="admin-table">
     <tr><th>Minuut</th><th>Uur</th><th>Dag v/d maand</th><th>Maand</th><th>Dag v/d week</th></tr>
-    <tr><td><code>15</code></td><td><code>3</code></td><td><code>*</code></td><td><code>*</code></td><td><code>0</code> (zondag)</td></tr>
+    <tr><td><code>15</code></td><td><code>3</code></td><td><code>*</code></td><td><code>*</code></td><td><code>*</code></td></tr>
   </table>
   <p>Opdracht:</p>
   <pre class="cron-code"><?= e('/usr/local/bin/php ' . $cronScriptPath) ?></pre>
@@ -184,7 +240,7 @@ include __DIR__ . '/includes/layout_top.php';
   </p>
 
   <h3>2. Cronjob in je hostingpaneel die de URL ophaalt</h3>
-  <p>Als je host geen PHP-CLI in cronjobs aanbiedt, laat de cronjob dan de back-up-URL ophalen met wget of curl:</p>
+  <p>Als je host geen PHP-CLI in cronjobs aanbiedt, laat de cronjob dan de cron-URL ophalen met wget of curl:</p>
   <pre class="cron-code"><?= e($cronLines['wget']) ?></pre>
   <pre class="cron-code"><?= e($cronLines['curl']) ?></pre>
   <p class="muted">
@@ -199,24 +255,25 @@ include __DIR__ . '/includes/layout_top.php';
   </p>
   <ol>
     <li>Maak een (gratis) account aan op cron-job.org en klik op <strong>Create cronjob</strong>.</li>
-    <li>Titel: bv. "Back-up <?= e(parse_url($cronBase, PHP_URL_HOST) ?: 'website') ?>".</li>
+    <li>Titel: bv. "Cron <?= e(parse_url($cronBase, PHP_URL_HOST) ?: 'website') ?>".</li>
     <li>URL:
       <pre class="cron-code"><?= e($cronUrl) ?></pre>
     </li>
-    <li>Schema (Execution schedule): <strong>Every week</strong>, op zondag om 03:15 — of via
+    <li>Schema (Execution schedule): <strong>Every day</strong>, om 03:15 — of via
       <em>Custom</em> de crontab-notatie <code><?= e($cronSchedule) ?></code>.</li>
-    <li>Zet onder <em>Notifications</em> "Notify me when the execution fails" aan, dan krijg je een mail als de
-      back-up mislukt.</li>
-    <li>Sla op en gebruik <strong>Test run</strong> om te controleren dat er een back-up verschijnt in de lijst hierboven.</li>
+    <li>Zet onder <em>Notifications</em> "Notify me when the execution fails" aan, dan krijg je een mail als een
+      taak mislukt (het script antwoordt dan met HTTP-status 500).</li>
+    <li>Sla op en gebruik <strong>Test run</strong>; in het overzicht hierboven verschijnt bij "Laatst geslaagd" dan een tijdstip.</li>
   </ol>
   <p class="muted">
-    cron-job.org wacht maximaal 30 seconden op antwoord. Duurt de back-up langer, dan meldt cron-job.org een time-out,
-    maar de back-up loopt op de server gewoon door — controleer in de lijst hierboven of hij is aangemaakt. Zet in dat
-    geval de foutmelding-notificatie eventueel uit om valse alarmen te voorkomen.
+    Webcron-diensten wachten meestal maximaal 30 seconden op antwoord. Duurt een back-up langer, dan meldt de dienst een
+    time-out, maar de taak loopt op de server gewoon door (en een tweede, gelijktijdige aanroep wordt genegeerd) —
+    controleer in het overzicht hierboven of hij is geslaagd. Zet in dat geval de foutmelding-notificatie eventueel uit
+    om valse alarmen te voorkomen.
   </p>
 
   <p class="muted">
-    <strong>Houd de URL geheim:</strong> iedereen met deze URL kan back-ups laten maken (niet downloaden). Lekt hij
+    <strong>Houd de URL geheim:</strong> iedereen met deze URL kan de geplande taken laten draaien (en dus back-ups laten maken, niet downloaden). Lekt hij
     uit, verander dan <code>BACKUP_CRON_KEY</code> in <code>config.local.php</code> en pas je cronjob aan.
   </p>
 </div>

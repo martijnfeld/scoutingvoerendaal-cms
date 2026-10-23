@@ -14,7 +14,6 @@ if (!isset($logTabs[$activeTab])) {
     $activeTab = 'audit';
 }
 
-purge_old_audit_log();
 
 $perPage = 50;
 $page = max(1, (int) ($_GET['p'] ?? 1));

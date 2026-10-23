@@ -255,7 +255,8 @@ assets/js/main.js           programma-feed + menu/scroll-gedrag
 assets/uploads/             door het CMS geüploade foto's en PDF's
 admin/                      het beheerpaneel (login vereist)
 backups/                    oude locatie/terugvalmap voor back-ups (niet direct benaderbaar, zie "Back-ups")
-cron/backup_cron.php        startpunt voor de wekelijkse automatische back-up
+cron/cron.php               startpunt voor alle geplande taken (dagelijks aanroepen, zie "Geplande taken")
+cron/backup_cron.php        verouderde naam; start gewoon cron/cron.php
 ```
 
 Back-ups zelf staan standaard **niet** in deze map, maar ernaast (zie
@@ -266,8 +267,9 @@ Back-ups zelf staan standaard **niet** in deze map, maar ernaast (zie
 Via **Beheerpaneel → Back-ups** maak je een back-up: één zipbestand met een
 volledige databasedump (`database.sql`) én alle sitebestanden, inclusief
 geüploade foto's en PDF's. Back-ups ouder dan 12 maanden (`BACKUP_RETENTION_MONTHS`
-in `config.php`) worden automatisch verwijderd, zowel bij een handmatige als
-bij een geplande back-up. Back-ups terugzetten vanuit het beheerpaneel kan
+in `config.php`) worden automatisch verwijderd, zowel bij een handmatige back-up
+als door de dagelijkse opruimtaak (zie [Geplande taken](#geplande-taken-cronjob)).
+Back-ups terugzetten vanuit het beheerpaneel kan
 nog niet — dat volgt in een latere versie. Tot die tijd: importeer
 `database.sql` via phpMyAdmin en upload de inhoud van `files/` naar de server.
 
@@ -315,33 +317,59 @@ worden in het beheerpaneel getoond (gemarkeerd als "oude locatie"), zodat
 je ze nog kunt downloaden of verwijderen. Ze worden na 12 maanden vanzelf
 opgeruimd.
 
-### Wekelijkse automatische back-up instellen
+## Geplande taken (cronjob)
+
+Alle terugkerende taken lopen via **één** script, `cron/cron.php`, dat je
+**dagelijks** laat aanroepen. Bij elke aanroep bepaalt het zelf welke taken aan
+de beurt zijn (per taak staat opgeslagen wanneer die voor het laatst slaagde):
+
+| Taak | Frequentie |
+| --- | --- |
+| Opruimen: oude inlogpogingen, inloggeschiedenis, auditlog (`AUDIT_LOG_RETENTION_MONTHS`) en back-ups ouder dan 12 maanden (`BACKUP_RETENTION_MONTHS`) | dagelijks |
+| Back-up maken | instelbaar onder **Beheerpaneel → Back-ups** (dagelijks, wekelijks, elke twee weken, maandelijks of uit; standaard wekelijks) |
+
+Vaker aanroepen dan dagelijks kan geen kwaad. Zonder cronjob wordt alleen het
+opruimen nog (hooguit eens per dag) uitgevoerd bij een bezoek aan de
+inlogpagina; automatische back-ups gebeuren dan niet. Er draait nooit meer dan
+één cronrun tegelijk: een tweede aanroep (bv. een webcron-dienst die na een
+time-out opnieuw probeert) wordt genegeerd.
+
+### Cronjob instellen
 
 1. Open `config.local.php` en verzin een lange, unieke waarde voor
    `BACKUP_CRON_KEY` (zolang die op de standaardwaarde staat, weigert het
-   cronscript te draaien).
+   cronscript via een URL te draaien).
 2. Maak in je hosting-controlepaneel (bv. DirectAdmin/cPanel/Plesk) onder
-   "Cron Jobs" een nieuwe wekelijkse taak aan. De meeste shared hosts voeren
+   "Cron Jobs" een nieuwe **dagelijkse** taak aan. De meeste shared hosts voeren
    een cronjob uit als "URL ophalen" (wget/curl); gebruik dan als opdracht:
 
    ```
-   wget -q -O /dev/null "https://jouw-domein.nl/cron/backup_cron.php?key=JOUW_BACKUP_CRON_KEY"
+   wget -q -O /dev/null "https://jouw-domein.nl/cron/cron.php?key=JOUW_BACKUP_CRON_KEY"
    ```
 
    (of het curl-equivalent, afhankelijk van wat je controlepaneel aanbiedt).
 3. Heeft je host wel PHP-CLI beschikbaar als cron-opdracht, dan kan de
-   cronjob `cron/backup_cron.php` ook direct aanroepen zonder sleutel, bv.
-   `php /home/jouwaccount/domains/jouw-domein.nl/public_html/cron/backup_cron.php`.
-4. Heeft je hostingpakket helemaal geen cronjobs, gebruik dan de gratis
-   dienst [cron-job.org](https://cron-job.org) om de URL uit stap 2 wekelijks
-   op te halen.
+   cronjob `cron/cron.php` ook direct aanroepen zonder sleutel, bv.
+   `php /home/jouwaccount/domains/jouw-domein.nl/public_html/cron/cron.php`.
+4. Heeft je hostingpakket helemaal geen cronjobs, gebruik dan een webcron-dienst
+   zoals [cron-job.org](https://cron-job.org) om de URL uit stap 2 dagelijks op
+   te halen. Het antwoord is platte tekst met een regel per taak, en de
+   HTTP-status is 500 als een taak mislukt — handig voor foutmeldingen van de
+   dienst. Duurt een back-up langer dan de time-out van de dienst (meestal 30
+   seconden), dan loopt hij op de server gewoon door.
 
-**Beheerpaneel → Back-ups** toont voor alle drie de varianten de kant-en-klare
-instellingen voor jouw site (pad, crontab-regel en URL met sleutel).
+**Beheerpaneel → Back-ups** toont voor alle varianten de kant-en-klare
+instellingen voor jouw site (pad, crontab-regel en URL met sleutel), het
+interval en wanneer elke taak voor het laatst slaagde.
 
-Elke keer dat `cron/backup_cron.php` draait, wordt er een nieuwe back-up
-gemaakt én worden back-ups ouder dan 12 maanden meteen opgeruimd — een losse
-opschoontaak is niet nodig.
+Een bestaande cronjob die nog `cron/backup_cron.php` aanroept blijft werken
+(dat bestand start nu `cron/cron.php`); wijs hem bij gelegenheid om naar
+`cron/cron.php` en laat hem dagelijks lopen. Een wekelijkse cronjob werkt
+ook, maar dan wordt er hooguit wekelijks opgeruimd en kan de back-up niet
+vaker dan wekelijks.
+
+Optioneel: `?job=backup` (CLI: `php cron.php backup`) draait alleen die taak, en
+`&force=1` (CLI: `--force`) slaat de controle of de taak aan de beurt is over.
 
 ## Updates
 
