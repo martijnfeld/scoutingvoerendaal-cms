@@ -182,6 +182,13 @@ for the fixed, decorative admin-navigation icons; it maps known internal names t
   `ADMIN_LOGIN_RETENTION_MONTHS` (2) are purged on every visit to `admin/login.php`
   (`purge_old_admin_logins()`). These helpers swallow a missing table so logging in still works before
   migration 0003 has run.
+- `audit_log` — audit trail of admin actions (who/what/when/IP), shown in **Beheerpaneel → Logs**
+  (`admin/logs.php`, tabbed so other logs can be added later). Written via `audit_log($actie, $entiteit,
+  $id, $omschrijving[, $actor])` in `includes/functions.php`; it swallows a missing table (migration 0008)
+  and the actor defaults to the session user (`systeem` for cron). **Every new admin action that changes
+  data (or downloads a back-up) must call `audit_log()`** right after the successful write; never put
+  passwords or setting values in the description. Rows older than `AUDIT_LOG_RETENTION_MONTHS` (default 12, overridable in `config.local.php`) are
+  purged when `admin/logs.php` is opened.
 - `admin_users` — CMS login accounts (`password_hash`), created via `install.php` (self-disables after
   first admin exists) or `admin/accounts.php`.
 - `schema_migrations` — bookkeeping for the update mechanism: one row per applied filename from
@@ -189,8 +196,13 @@ for the fixed, decorative admin-navigation icons; it maps known internal names t
 
 **Admin CRUD pattern** — every entity list/form pair follows the same shape: GET loads existing row (or
 defaults for "new"), POST checks `csrf_verify()`, validates/normalizes `$_POST`, writes via a prepared
-statement, sets a flash message with `flash_set()`, then redirects (POST/redirect/GET). Forms render
+statement, **records the action in the audit log with `audit_log()`** (see `audit_log` under **Data model**),
+sets a flash message with `flash_set()`, then redirects (POST/redirect/GET). Forms render
 inline in the same file below the logic, wrapped by `admin/includes/layout_top.php` /`layout_bottom.php`.
+Every admin action that changes data must be logged this way — create/update/delete, reorder/toggle,
+uploads, settings, back-up create/delete/download, updates/migrations — including new ones, and also
+endpoints without a flash message (e.g. `admin/upload_image.php`). Fetch the name/title *before* a delete so
+the description is readable, and never log passwords or setting values.
 
 **Content trust model**: most `settings`/`info_cards`/`speltakken` text fields are stored and echoed as
 raw HTML (commented inline as `/* HTML toegestaan */`) since they're only editable by trusted logged-in

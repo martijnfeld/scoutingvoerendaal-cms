@@ -17,6 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_verify()) {
                 @unlink($path);
             }
         }
+        audit_log('delete', 'document', $id, 'Document "' . ($doc['naam'] ?? '') . '" verwijderd');
         flash_set('success', 'Document verwijderd.');
     }
     header('Location: documents.php');

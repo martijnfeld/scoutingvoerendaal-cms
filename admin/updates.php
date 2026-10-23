@@ -10,6 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_verify()) {
 
     if ($action === 'check') {
         fetch_latest_release(true);
+        audit_log('update_check', 'systeem', null, 'Updatecheck uitgevoerd');
         flash_set('success', 'Updatecheck uitgevoerd.');
     } elseif ($action === 'update') {
         $info = fetch_latest_release();
@@ -20,6 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_verify()) {
         } else {
             try {
                 $result = perform_full_update($info['release']);
+                audit_log('update', 'systeem', null, 'Bijgewerkt naar versie ' . $result['version']
+                    . ($result['migrations']['applied'] ? ' (migraties: ' . implode(', ', $result['migrations']['applied']) . ')' : ''));
                 $message = 'Bijgewerkt naar versie ' . $result['version'] . '. Back-up: ' . $result['backup']['created'] . '. '
                     . $result['files_copied'] . ' bestand(en) bijgewerkt.';
                 if ($result['migrations']['applied']) {
@@ -40,6 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_verify()) {
             if ($result['error']) {
                 flash_set('error', 'Migratie mislukt: ' . $result['error']);
             } elseif ($result['applied']) {
+                audit_log('migrate', 'systeem', null, 'Migraties uitgevoerd: ' . implode(', ', $result['applied']));
                 flash_set('success', 'Migraties uitgevoerd: ' . implode(', ', $result['applied']) . '.');
             } else {
                 flash_set('success', 'Geen openstaande migraties.');

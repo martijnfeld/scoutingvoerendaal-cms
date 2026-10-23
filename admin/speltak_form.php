@@ -80,6 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'meta_omschrijving' => $values['meta_omschrijving'] ?: null,
                     'actief' => $values['actief'], 'volgorde' => $values['volgorde'], 'id' => $id,
                 ]);
+                audit_log('update', 'speltak', (int) $id, 'Speltak "' . $values['naam'] . '" bijgewerkt');
                 flash_set('success', 'Speltak bijgewerkt.');
             } else {
                 if (!$values['volgorde']) {
@@ -100,6 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'meta_omschrijving' => $values['meta_omschrijving'] ?: null,
                     'actief' => $values['actief'], 'volgorde' => $values['volgorde'],
                 ]);
+                audit_log('create', 'speltak', (int) db()->lastInsertId(), 'Speltak "' . $values['naam'] . '" toegevoegd');
                 flash_set('success', 'Speltak toegevoegd.');
             }
             header('Location: speltakken.php');

@@ -35,6 +35,7 @@ if (PHP_SAPI !== 'cli') {
 
 try {
     $result = run_backup();
+    audit_log('backup', 'backup', null, 'Back-up "' . $result['created'] . '" aangemaakt via cron', ['id' => null, 'username' => 'systeem']);
     echo "Back-up aangemaakt: {$result['created']}\n";
     // Alleen in CLI het volledige pad tonen; via de URL geen serverpaden prijsgeven.
     $dirStatus = backup_dir_status();

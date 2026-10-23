@@ -58,6 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'knop_tekst' => $values['knop_tekst'] ?: null, 'anchor' => $values['anchor'] ?: null,
                         'volgorde' => $values['volgorde'], 'id' => $id,
                     ]);
+                    audit_log('update', 'info_card', (int) $id, 'Info-vakje "' . $values['titel'] . '" bijgewerkt');
                     flash_set('success', 'Info-vakje bijgewerkt.');
                 } else {
                     if (!$values['volgorde']) {
@@ -74,6 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'knop_tekst' => $values['knop_tekst'] ?: null, 'anchor' => $values['anchor'] ?: null,
                         'volgorde' => $values['volgorde'],
                     ]);
+                    audit_log('create', 'info_card', (int) db()->lastInsertId(), 'Info-vakje "' . $values['titel'] . '" toegevoegd');
                     flash_set('success', 'Info-vakje toegevoegd.');
                 }
                 header('Location: info_cards.php');

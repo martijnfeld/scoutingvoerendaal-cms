@@ -11,12 +11,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_verify()) {
 
     if ($action === 'clear_cache') {
         opkomsten_clear_cache();
+        audit_log('clear_cache', 'speltak', null, 'Opkomsten-cache geleegd');
         flash_set('success', 'Opkomsten-cache geleegd. Bij het volgende bezoek wordt alles opnieuw bij Scoutdash opgehaald.');
         header('Location: speltakken.php');
         exit;
     } elseif ($action === 'delete' && $id) {
+        $old = get_speltak($id);
         $stmt = db()->prepare('DELETE FROM speltakken WHERE id = :id');
         $stmt->execute(['id' => $id]);
+        audit_log('delete', 'speltak', $id, 'Speltak "' . ($old['naam'] ?? '') . '" verwijderd');
         flash_set('success', 'Speltak verwijderd.');
     } elseif ($action === 'move' && $id) {
         $dir = $_POST['dir'] ?? '';
@@ -32,10 +35,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_verify()) {
                 $upd = db()->prepare('UPDATE speltakken SET volgorde = :v WHERE id = :id');
                 $upd->execute(['v' => $neighbor['volgorde'], 'id' => $sp['id']]);
                 $upd->execute(['v' => $sp['volgorde'], 'id' => $neighbor['id']]);
+                audit_log('move', 'speltak', (int) $sp['id'], 'Speltak "' . $sp['naam'] . '" ' . ($dir === 'up' ? 'omhoog' : 'omlaag') . ' verplaatst');
             }
         }
     } elseif ($action === 'toggle' && $id) {
         db()->prepare('UPDATE speltakken SET actief = 1 - actief WHERE id = :id')->execute(['id' => $id]);
+        $sp = get_speltak($id);
+        if ($sp) {
+            audit_log('toggle', 'speltak', $id, 'Speltak "' . $sp['naam'] . '" ' . ($sp['actief'] ? 'geactiveerd' : 'gedeactiveerd'));
+        }
     }
     header('Location: speltakken.php');
     exit;

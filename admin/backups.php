@@ -15,6 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_verify()) {
             if ($result['deleted'] > 0) {
                 $message .= ' ' . $result['deleted'] . ' verlopen back-up(s) verwijderd.';
             }
+            audit_log('backup', 'backup', null, 'Back-up "' . $result['created'] . '" aangemaakt');
             flash_set('success', $message);
         } catch (Throwable $e) {
             flash_set('error', 'Back-up maken is mislukt: ' . $e->getMessage());
@@ -24,6 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_verify()) {
         $path = find_backup_path((string) ($_POST['name'] ?? ''));
         if ($path !== null) {
             if (@unlink($path)) {
+                audit_log('delete', 'backup', null, 'Back-up "' . basename($path) . '" verwijderd');
                 flash_set('success', 'Back-up verwijderd.');
             } else {
                 flash_set('error', 'Kon de back-up niet verwijderen (controleer de schrijfrechten).');

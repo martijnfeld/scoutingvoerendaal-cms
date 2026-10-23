@@ -9,8 +9,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_verify()) {
     $id = (int) ($_POST['id'] ?? 0);
 
     if ($action === 'delete' && $id) {
+        $old = get_page($id);
         $stmt = db()->prepare('DELETE FROM pages WHERE id = :id');
         $stmt->execute(['id' => $id]);
+        audit_log('delete', 'pagina', $id, 'Pagina "' . ($old['titel'] ?? '') . '" verwijderd');
         flash_set('success', 'Pagina verwijderd.');
     } elseif ($action === 'move' && $id) {
         $dir = $_POST['dir'] ?? '';
@@ -26,6 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_verify()) {
                 $upd = db()->prepare('UPDATE pages SET volgorde = :v WHERE id = :id');
                 $upd->execute(['v' => $neighbor['volgorde'], 'id' => $page['id']]);
                 $upd->execute(['v' => $page['volgorde'], 'id' => $neighbor['id']]);
+                audit_log('move', 'pagina', (int) $page['id'], 'Pagina "' . $page['titel'] . '" ' . ($dir === 'up' ? 'omhoog' : 'omlaag') . ' verplaatst');
             }
         }
     }

@@ -40,6 +40,7 @@ if (!admin_login_allowed_from_ip($ip)) {
             clear_login_attempts($username);
             admin_session_login($user);
             admin_record_login($user, $ip, $_SERVER['HTTP_USER_AGENT'] ?? '');
+            audit_log('login', 'account', (int) $user['id'], 'Ingelogd');
             header('Location: index.php');
             exit;
         }

@@ -12,6 +12,8 @@ if ($path === null) {
     exit('Back-up niet gevonden.');
 }
 
+audit_log('download', 'backup', null, 'Back-up "' . $name . '" gedownload');
+
 header('Content-Type: application/zip');
 header('Content-Disposition: attachment; filename="' . $name . '"');
 header('Content-Length: ' . filesize($path));
