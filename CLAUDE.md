@@ -179,9 +179,16 @@ for the fixed, decorative admin-navigation icons; it maps known internal names t
 - `admin_logins` — login history: one row per successful admin login (user id + username, IP,
   user agent, time), written by `admin_record_login()` in `admin/login.php` and shown (paged, plus last
   login per account) on `admin/accounts.php`. Like `login_attempts`, rows older than
-  `ADMIN_LOGIN_RETENTION_MONTHS` (2) are purged on every visit to `admin/login.php`
-  (`purge_old_admin_logins()`). These helpers swallow a missing table so logging in still works before
+  `ADMIN_LOGIN_RETENTION_MONTHS` (2) are purged by the daily cleanup job (`purge_old_admin_logins()`,
+  see **Scheduled jobs**). These helpers swallow a missing table so logging in still works before
   migration 0003 has run.
+- `audit_log` — audit trail of admin actions (who/what/when/IP), shown in **Beheerpaneel → Logs**
+  (`admin/logs.php`, tabbed so other logs can be added later). Written via `audit_log($actie, $entiteit,
+  $id, $omschrijving[, $actor])` in `includes/functions.php`; it swallows a missing table (migration 0008)
+  and the actor defaults to the session user (`systeem` for cron). **Every new admin action that changes
+  data (or downloads a back-up) must call `audit_log()`** right after the successful write; never put
+  passwords or setting values in the description. Rows older than `AUDIT_LOG_RETENTION_MONTHS` (default 12, overridable in `config.local.php`) are
+  purged by the daily cleanup job (see **Scheduled jobs**).
 - `admin_users` — CMS login accounts (`password_hash`), created via `install.php` (self-disables after
   first admin exists) or `admin/accounts.php`.
 - `schema_migrations` — bookkeeping for the update mechanism: one row per applied filename from
@@ -189,8 +196,13 @@ for the fixed, decorative admin-navigation icons; it maps known internal names t
 
 **Admin CRUD pattern** — every entity list/form pair follows the same shape: GET loads existing row (or
 defaults for "new"), POST checks `csrf_verify()`, validates/normalizes `$_POST`, writes via a prepared
-statement, sets a flash message with `flash_set()`, then redirects (POST/redirect/GET). Forms render
+statement, **records the action in the audit log with `audit_log()`** (see `audit_log` under **Data model**),
+sets a flash message with `flash_set()`, then redirects (POST/redirect/GET). Forms render
 inline in the same file below the logic, wrapped by `admin/includes/layout_top.php` /`layout_bottom.php`.
+Every admin action that changes data must be logged this way — create/update/delete, reorder/toggle,
+uploads, settings, back-up create/delete/download, updates/migrations — including new ones, and also
+endpoints without a flash message (e.g. `admin/upload_image.php`). Fetch the name/title *before* a delete so
+the description is readable, and never log passwords or setting values.
 
 **Content trust model**: most `settings`/`info_cards`/`speltakken` text fields are stored and echoed as
 raw HTML (commented inline as `/* HTML toegestaan */`) since they're only editable by trusted logged-in
@@ -324,7 +336,24 @@ admin URL field that's fetched server-side or rendered as a public link. There's
 private-IP/DNS-rebinding check (not robustly doable without curl); https + certificate validation is the
 mitigation.
 
-**Back-ups** (`includes/backup.php`, `admin/backups.php`, `cron/backup_cron.php`): a back-up is a single
+**Scheduled jobs** (`includes/cron.php`, `cron/cron.php`): one cronjob, called **daily**, runs everything
+periodic — hosting-panel cron (PHP-CLI, no key) or a web cron such as cron-job.org (`?key=BACKUP_CRON_KEY`,
+plain-text reply, HTTP 500 if a job failed). `run_cron()` walks `cron_jobs()` and runs only the jobs that
+are due, based on `cron_last_run_<job>` in the `settings` table (set on success only, so failures retry on
+the next call; `CRON_DUE_TOLERANCE` of 12 h keeps a daily cron from pushing a weekly job back a day). A
+non-blocking `flock()` on `includes/cache/cron.lock` stops overlapping runs (web crons retry after
+time-outs). Jobs: `cleanup` (daily: `purge_old_login_attempts()`, `purge_old_admin_logins()`,
+`purge_old_audit_log()`, `purge_old_backups()` — **a new table/file with a retention period gets its purge
+added to `run_cleanup()`**, not to a page load) and `backup` (interval from setting `backup_interval_days`,
+default 7, 0 = off; options in `BACKUP_INTERVAL_OPTIONS`, set on **Back-ups**). **A new scheduled job is one
+new entry in `cron_jobs()`.** Because many hosts have no cron at all, `admin/login.php` calls
+`cron_run_cleanup_fallback()` (cleanup only, at most once a day) so retention (IP addresses!) is still
+enforced. `cron/backup_cron.php` is a shim that just includes `cron/cron.php`, so cronjobs set up before
+this existed keep working. `cron/cron.php` also stamps setting `cron_last_call` (heartbeat; the login
+fallback doesn't), which `checks_cron()` in Systeemcontrole uses: ok ≤ 36 h, warn ≤ 8 days, else error. Note `get_setting()` is cached per request, so tests read `cron_last_run_*`
+straight from the DB.
+
+**Back-ups** (`includes/backup.php`, `admin/backups.php`, scheduled via `cron/cron.php`): a back-up is a single
 zip `backup-<datetime>-<8 hex>.zip` (random suffix so names can't be guessed) containing a pure-PHP
 database dump (`database.sql`, built via `SHOW CREATE TABLE`/`SELECT *` — no `mysqldump` CLI, per the
 no-shell-access constraint above) plus the entire project directory except `BACKUP_EXCLUDES` in
@@ -338,9 +367,8 @@ created/written (permissions, `open_basedir`) they fall back to the in-project `
 download, delete and purge go through `backup_known_dirs()` (active dir + configured `BACKUP_DIR` +
 legacy `backups/`), and downloads/deletes must resolve paths via `find_backup_path()`. The zip is built
 from `backup_project_root()` — never from `dirname(BACKUP_DIR)`. Triggered manually from **Beheerpaneel →
-Back-ups**, or weekly via a hosting-panel cronjob hitting `cron/backup_cron.php` (URL + `BACKUP_CRON_KEY`
-from `config.php`, or direct PHP-CLI if the host offers that in cron). Every run also deletes backups
-older than `BACKUP_RETENTION_MONTHS` (12). Restore is not implemented yet (deliberately — see the file
+Back-ups**, or automatically by the `backup` scheduled job (see **Scheduled jobs**). Every run — and the
+daily cleanup job — deletes backups older than `BACKUP_RETENTION_MONTHS` (12). Restore is not implemented yet (deliberately — see the file
 for how to manually restore in the meantime).
 
 **When adding a new feature that introduces persistent state**, check whether it's already covered by the

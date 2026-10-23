@@ -231,9 +231,11 @@ test('uitloggen via GET doet niets', function () {
     assert_status(302, $r, 'GET admin/logout.php');
 });
 
-test('back-up-cronjob weigert zonder geldige sleutel', function () {
-    $r = http_get('cron/backup_cron.php');
-    assert_status(403, $r, 'zonder sleutel');
-    $r = http_get('cron/backup_cron.php?key=wijzig_deze_geheime_sleutel');
-    assert_status(403, $r, 'met de standaardsleutel');
+test('cronjob weigert zonder geldige sleutel', function () {
+    foreach (['cron/cron.php', 'cron/backup_cron.php'] as $script) {
+        $r = http_get($script);
+        assert_status(403, $r, $script . ' zonder sleutel');
+        $r = http_get($script . '?key=wijzig_deze_geheime_sleutel');
+        assert_status(403, $r, $script . ' met de standaardsleutel');
+    }
 });

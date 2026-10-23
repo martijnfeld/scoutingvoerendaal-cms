@@ -67,6 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'in_menu' => $values['in_menu'], 'actief' => $values['actief'],
                     'volgorde' => $values['volgorde'], 'id' => $id,
                 ]);
+                audit_log('update', 'pagina', (int) $id, 'Pagina "' . $values['titel'] . '" bijgewerkt');
                 flash_set('success', 'Pagina bijgewerkt.');
             } else {
                 if (!$values['volgorde']) {
@@ -83,6 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'in_menu' => $values['in_menu'], 'actief' => $values['actief'],
                     'volgorde' => $values['volgorde'],
                 ]);
+                audit_log('create', 'pagina', (int) db()->lastInsertId(), 'Pagina "' . $values['titel'] . '" toegevoegd');
                 flash_set('success', 'Pagina toegevoegd.');
             }
             header('Location: paginas.php');

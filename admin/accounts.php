@@ -16,7 +16,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_verify()) {
         } elseif ($total <= 1) {
             flash_set('error', 'Je kunt het laatste beheerdersaccount niet verwijderen.');
         } else {
+            $nameStmt = db()->prepare('SELECT username FROM admin_users WHERE id = :id');
+            $nameStmt->execute(['id' => $id]);
+            $deletedName = (string) $nameStmt->fetchColumn();
             db()->prepare('DELETE FROM admin_users WHERE id = :id')->execute(['id' => $id]);
+            audit_log('delete', 'account', $id, 'Account "' . $deletedName . '" verwijderd');
             flash_set('success', 'Account verwijderd.');
         }
         header('Location: accounts.php');
@@ -43,6 +47,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_verify()) {
                 ]);
                 $_SESSION['admin_login_at'] = $loginAt; // maximale sessieduur niet verlengen
             }
+            $nameStmt = db()->prepare('SELECT username FROM admin_users WHERE id = :id');
+            $nameStmt->execute(['id' => $id]);
+            audit_log('password_reset', 'account', $id, 'Wachtwoord van "' . $nameStmt->fetchColumn() . '" gewijzigd door beheerder');
             flash_set('success', 'Wachtwoord van dit account is gewijzigd. Eventuele andere sessies van dit account zijn uitgelogd.');
         }
         header('Location: accounts.php');
@@ -68,6 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_verify()) {
             } else {
                 $stmt = db()->prepare('INSERT INTO admin_users (username, password_hash) VALUES (:u, :p)');
                 $stmt->execute(['u' => $username, 'p' => password_hash($password, PASSWORD_DEFAULT)]);
+                audit_log('create', 'account', (int) db()->lastInsertId(), 'Account "' . $username . '" aangemaakt');
                 flash_set('success', 'Account aangemaakt.');
                 header('Location: accounts.php');
                 exit;

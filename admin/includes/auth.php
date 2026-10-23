@@ -68,21 +68,6 @@ function admin_record_login(array $user, string $ip, string $userAgent): void
 }
 
 /**
- * Ruimt de inloggeschiedenis op, net als purge_old_login_attempts() (bij
- * elk bezoek aan login.php, met MySQL's NOW()): IP-adressen zijn
- * persoonsgegevens, dus niet langer bewaren dan nodig.
- */
-function purge_old_admin_logins(): void
-{
-    $months = ADMIN_LOGIN_RETENTION_MONTHS;
-    try {
-        db()->exec("DELETE FROM admin_logins WHERE ingelogd_op < DATE_SUB(NOW(), INTERVAL {$months} MONTH)");
-    } catch (PDOException $e) {
-        // Tabel ontbreekt nog (migratie 0003 niet gedraaid); niets op te ruimen.
-    }
-}
-
-/**
  * Inloggeschiedenis, nieuwste eerst: ['total' => int, 'rows' => [...],
  * 'last' => [user_id => laatste ingelogd_op]]. Geeft een lege
  * geschiedenis als migratie 0003 nog niet gedraaid is.

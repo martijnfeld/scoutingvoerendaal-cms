@@ -27,7 +27,7 @@ geen Composer of npm. Het draait op vrijwel elke gewone shared hosting.
 - Speltakken, "Doe mee!"-vakjes, PDF-documenten, informatiepagina's en uploads.
 - Uitgebreide teksteditor (CKEditor 5) met afbeeldingen, tabellen en YouTube-video's.
 - Beheerdersaccounts en wachtwoord wijzigen.
-- **Back-ups** — database plus alle bestanden in één zip, handmatig of wekelijks via een cronjob.
+- **Back-ups** — database plus alle bestanden in één zip, handmatig of automatisch (instelbaar interval, standaard wekelijks) via een dagelijkse cronjob.
 - **Updates** — nieuwe versies met één klik installeren vanaf GitHub (met automatische back-up
   vooraf en databasemigraties achteraf).
 - **Systeemcontrole** — één pagina die laat zien of de server, configuratie en beveiliging in orde
@@ -97,7 +97,7 @@ includes/               gedeelde PHP-code (niet via de browser bereikbaar)
 assets/                 CSS, JavaScript en geüploade bestanden (assets/uploads/)
 sql/install.sql         volledig databaseschema voor een nieuwe installatie
 sql/migrations/         genummerde migraties voor bestaande installaties
-cron/backup_cron.php    startpunt voor de automatische back-up
+cron/cron.php           startpunt voor geplande taken (opruimen, back-ups); dagelijks aanroepen
 tools/                  ontwikkelscripts (bv. het bijwerken van de geo-IP-data)
 tests/                  automatische tests (tests/run.php), niet in de release-zip
 ```

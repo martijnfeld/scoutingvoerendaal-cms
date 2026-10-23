@@ -122,6 +122,26 @@ CREATE TABLE IF NOT EXISTS admin_logins (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ------------------------------------------------------------
+-- Auditlog: wie heeft wanneer welke wijziging gedaan in het beheerpaneel
+-- (Beheerpaneel → Logs). Gebruikersnaam wordt mee opgeslagen zodat de
+-- log leesbaar blijft als een account verwijderd is.
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS audit_log (
+    id            INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    aangemaakt_op DATETIME NOT NULL,
+    user_id       INT UNSIGNED NULL,
+    username      VARCHAR(100) NOT NULL,
+    actie         VARCHAR(50)  NOT NULL,
+    entiteit      VARCHAR(50)  NOT NULL,
+    entiteit_id   INT UNSIGNED NULL,
+    omschrijving  VARCHAR(255) NOT NULL DEFAULT '',
+    ip_address    VARCHAR(45)  NOT NULL DEFAULT '',
+    PRIMARY KEY (id),
+    KEY idx_tijd (aangemaakt_op),
+    KEY idx_entiteit_actie (entiteit, actie)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ------------------------------------------------------------
 -- Mislukte inlogpogingen (brute-force bescherming admin-login)
 -- LET OP: op een bestaande installatie voer je deze CREATE TABLE
 -- handmatig uit via phpMyAdmin, want dit bestand wordt alleen bij
