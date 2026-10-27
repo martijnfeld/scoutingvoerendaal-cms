@@ -1,6 +1,6 @@
 <?php
 /** Centrale navigatie: alleen ophalen en resolveren, nooit seeden tijdens een paginaverzoek. */
-const HEADER_LINK_TYPES = ['section' => 'Homepage-sectie', 'page' => 'Pagina', 'speltakken' => 'Speltakkenoverzicht', 'url' => 'Eigen URL'];
+const HEADER_LINK_TYPES = ['section' => 'Homepage-sectie', 'page' => 'Pagina', 'programma' => 'Programmapagina', 'speltakken' => 'Speltakkenoverzicht', 'url' => 'Eigen URL'];
 const HEADER_DROPDOWN_TYPES = ['none' => 'Geen dropdown', 'manual' => 'Handmatig submenu', 'programme' => 'Automatisch programma per speltak', 'speltakken' => 'Automatisch speltakpagina’s'];
 const HEADER_SECTIONS = ['top' => 'Home', 'programma' => 'Programma', 'lidworden' => 'Lid worden', 'verhuur' => 'Verhuur', 'contact' => 'Contact'];
 
@@ -81,7 +81,11 @@ function header_menu_safe_url(string $url): bool
 function header_menu_url(array $item, string $homeHref): ?string
 {
     switch ($item['link_type']) {
+        case 'programma':
+            return programma_url();
         case 'section':
+            // Oude menukoppelingen blijven ook tijdens een update bruikbaar.
+            if ($item['link_value'] === 'programma') { return programma_url(); }
             return isset(HEADER_SECTIONS[$item['link_value']]) ? $homeHref . '#' . $item['link_value'] : null;
         case 'page':
             return !empty($item['page_active']) && !empty($item['page_slug']) ? page_url($item['page_slug']) : null;
@@ -132,7 +136,9 @@ function header_menu_tree(string $homeHref, string $currentPageSlug = '', string
         }
         $row['url'] = $url;
         $row['active'] = ($row['link_type'] === 'page' && $currentPageSlug !== '' && $currentPageSlug === ($row['page_slug'] ?? ''))
-            || ($row['link_type'] === 'speltakken' && $activeNav === 'speltakken');
+            || ($row['link_type'] === 'speltakken' && $activeNav === 'speltakken')
+            || ($activeNav === 'programma' && ($row['link_type'] === 'programma'
+                || ($row['link_type'] === 'section' && $row['link_value'] === 'programma')));
         $row['children'] = [];
         if ($row['dropdown_type'] === 'manual') {
             foreach ($rows as $child) {
@@ -153,7 +159,7 @@ function header_menu_tree(string $homeHref, string $currentPageSlug = '', string
             }
             foreach ($speltakken as $speltak) {
                 $row['children'][] = ['label' => $speltak['naam'], 'url' => $row['dropdown_type'] === 'programme'
-                    ? $homeHref . '#sk-' . $speltak['slug'] : speltak_url($speltak['slug'])];
+                    ? programma_url($speltak['slug']) : speltak_url($speltak['slug'])];
             }
         }
         $tree[] = $row;
@@ -217,7 +223,7 @@ function header_menu_validate(array $input, array $rows, int $id): array
         if ($item['link_type'] === 'url' && !header_menu_safe_url($item['link_value'])) {
             throw new RuntimeException('Gebruik een veilige http(s)-, mailto- of tel-URL, of een relatief pad binnen deze website.');
         }
-        if ($item['link_type'] === 'speltakken') {
+        if (in_array($item['link_type'], ['programma', 'speltakken'], true)) {
             $item['link_value'] = '';
         }
     }

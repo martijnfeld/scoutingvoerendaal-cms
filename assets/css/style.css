@@ -176,7 +176,8 @@ section.alt{background:var(--light);}
 .breadcrumbs .breadcrumb-item.active{color:#666;}
 
 /* ---- speltakken: overzicht en eigen pagina ---- */
-.speltakken-intro{color:#555; font-size:1.05rem; max-width:720px; margin:-12px 0 28px;}
+.speltakken-intro,
+.programma-intro{color:#555; font-size:1.05rem; max-width:720px; margin:-12px 0 28px;}
 .speltak-cards{
   list-style:none; margin:0; padding:0;
   display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:20px;
@@ -219,7 +220,7 @@ section.alt{background:var(--light);}
 .speltak-andere a{display:inline-block; padding:8px 16px; border-radius:20px; color:#fff; font-weight:600; font-size:0.92rem;}
 .speltak-andere a:hover{opacity:0.88; text-decoration:none;}
 .speltak-andere small{font-weight:400; opacity:0.9;}
-.speltak-head h3 a{color:inherit;}
+.speltak-head :is(h2,h3) a{color:inherit;}
 .speltak-more{margin:0 0 16px 26px; font-size:0.9rem;}
 .pagina-body table{border-collapse:collapse; width:100%; margin:0 0 16px;}
 .pagina-body table td, .pagina-body table th{border:1px solid #ddd; padding:8px 10px;}
@@ -304,7 +305,7 @@ hr{border:0; border-top:1px solid #ddd; margin:24px 0;}
   background: #fff;
 }
 .speltak-dot{width:14px; height:14px; border-radius:50%; flex-shrink:0;}
-.speltak-head h3{margin:0; font-size:1.4rem;}
+.speltak-head :is(h2,h3){margin:0; font-size:1.4rem;}
 .speltak-meta{color:#666; font-size:0.92rem; margin:0 0 6px 26px;}
 .speltak-afmelden{margin:0 0 16px 26px; font-size:0.9rem;}
 

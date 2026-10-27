@@ -283,6 +283,13 @@ function get_speltak_by_slug(string $slug): ?array
  */
 const SPELTAKKEN_PATH = 'speltakken';
 
+/** Programmapagina, eventueel met een directe verwijzing naar een speltak. */
+function programma_url(string $slug = '', bool $absolute = false): string
+{
+    $path = 'programma' . ($slug !== '' ? '#sk-' . rawurlencode($slug) : '');
+    return $absolute ? absolute_url($path) : $path;
+}
+
 /** URL van de overzichtspagina: relatief t.o.v. de websitemap, of met $absolute volledig. */
 function speltakken_url(bool $absolute = false): string
 {
@@ -402,7 +409,7 @@ function get_page_by_slug(string $slug): ?array
  * map met die naam in de websitemap staat (die gaat in .htaccess voor), of
  * een eigen rewrite-regel (de speltakpagina's, SPELTAKKEN_PATH).
  */
-const PAGE_RESERVED_SLUGS = ['admin', 'api', 'assets', 'backups', 'cron', 'docker', 'docs', 'includes', 'speltakken', 'sql', 'tests', 'tools'];
+const PAGE_RESERVED_SLUGS = ['admin', 'api', 'assets', 'backups', 'cron', 'docker', 'docs', 'includes', 'programma', 'speltakken', 'sql', 'tests', 'tools'];
 
 /**
  * URL van een losse pagina: "<slug>" (relatief t.o.v. de websitemap, via

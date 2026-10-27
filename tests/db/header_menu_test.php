@@ -25,9 +25,9 @@ function menu_by_label(string $label): array
 test('verse installatie heeft zes hoofditems en actuele automatische dropdowns', function () {
     $tree = header_menu_tree('');
     assert_same(['Home', 'Programma', 'Speltakken', 'Lid worden', 'Verhuur', 'Contact'], array_column($tree, 'label'));
-    assert_same(['#top', '#programma', 'speltakken', '#lidworden', '#verhuur', '#contact'], array_column($tree, 'url'));
+    assert_same(['#top', 'programma', 'speltakken', '#lidworden', '#verhuur', '#contact'], array_column($tree, 'url'));
     assert_same(array_column(get_speltakken(true), 'naam'), array_column($tree[1]['children'], 'label'));
-    assert_same(array_map(function ($sp) { return '#sk-' . $sp['slug']; }, get_speltakken(true)), array_column($tree[1]['children'], 'url'));
+    assert_same(array_map(function ($sp) { return 'programma#sk-' . $sp['slug']; }, get_speltakken(true)), array_column($tree[1]['children'], 'url'));
     assert_same(array_map(function ($sp) { return speltak_url($sp['slug']); }, get_speltakken(true)), array_column($tree[2]['children'], 'url'));
     assert_same(6, count(header_menu_rows()));
 });
@@ -39,7 +39,7 @@ test('speltakken deactiveren, heractiveren, hernoemen en sorteren werken direct'
     db()->prepare("UPDATE speltakken SET actief=1, naam='Nieuwe naam', slug='nieuwe-slug', volgorde=-10 WHERE id=?")->execute([$sp['id']]);
     $tree = header_menu_tree('./', '', 'speltakken');
     assert_same('Nieuwe naam', $tree[1]['children'][0]['label']);
-    assert_same('./#sk-nieuwe-slug', $tree[1]['children'][0]['url']);
+    assert_same('programma#sk-nieuwe-slug', $tree[1]['children'][0]['url']);
     assert_same('speltakken/nieuwe-slug', $tree[2]['children'][0]['url']);
     assert_true($tree[2]['active']);
 });

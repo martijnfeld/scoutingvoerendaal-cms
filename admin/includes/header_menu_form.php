@@ -36,6 +36,7 @@ foreach ($headerItems as $candidate) {
           <?php foreach (HEADER_SECTIONS as $key => $label): ?><option value="<?= e($key) ?>"<?= $menuValues['link_value'] === $key ? ' selected' : '' ?>><?= e($label) ?></option><?php endforeach; ?>
         </select>
       </div>
+      <div data-header-field="programma" class="form-text mb-3">Dit item opent het programma met alle actieve speltakken.</div>
       <div data-header-field="speltakken" class="form-text mb-3">Dit item opent het overzicht met alle actieve speltakken.</div>
       <div data-header-field="url" class="mb-3">
         <label for="menu-url" class="form-label">Eigen URL</label>
@@ -62,10 +63,10 @@ foreach ($headerItems as $candidate) {
       <div class="header-admin-dropdown-help mt-3" data-header-dropdown="manual"><p class="mb-0">Sla dit hoofditem op. Voeg daarna via <strong>Submenu-item toevoegen</strong> in het overzicht de gewenste links toe.</p></div>
       <?php foreach (['programme', 'speltakken'] as $dropdownType): ?>
       <div class="header-admin-dropdown-help mt-3" data-header-dropdown="<?= e($dropdownType) ?>">
-        <p><?= $dropdownType === 'programme' ? 'Actieve speltakken met links naar hun programma op Home:' : 'Actieve speltakken met links naar hun eigen pagina:' ?></p>
+        <p><?= $dropdownType === 'programme' ? 'Actieve speltakken met links naar hun programma op de programmapagina:' : 'Actieve speltakken met links naar hun eigen pagina:' ?></p>
         <?php if ($headerSpeltakken): ?>
         <ul class="list-unstyled mb-3">
-          <?php foreach ($headerSpeltakken as $speltak): $path = $dropdownType === 'programme' ? '#sk-' . $speltak['slug'] : speltak_url($speltak['slug']); ?>
+          <?php foreach ($headerSpeltakken as $speltak): $path = $dropdownType === 'programme' ? programma_url($speltak['slug']) : speltak_url($speltak['slug']); ?>
           <li><?= header_menu_icon('link') ?><span><?= e($speltak['naam']) ?></span><a href="../<?= e($path) ?>" target="_blank" rel="noopener">/<?= e($path) ?></a></li>
           <?php endforeach; ?>
         </ul>

@@ -8,6 +8,9 @@ function header_menu_admin_destination(array $item, array $pages): array
         $page = $pages[(int) $item['page_id']] ?? null;
         $description = 'Pagina: ' . ($page['titel'] ?? 'Niet gevonden');
         $path = !empty($item['page_slug']) ? '/' . page_url($item['page_slug']) : 'Pagina niet gevonden';
+    } elseif ($item['link_type'] === 'programma' || ($item['link_type'] === 'section' && $item['link_value'] === 'programma')) {
+        $description = 'Programmapagina';
+        $path = '/' . programma_url();
     } elseif ($item['link_type'] === 'section') {
         $description = 'Home → ' . (HEADER_SECTIONS[$item['link_value']] ?? 'Onbekende sectie');
         $path = '/#' . $item['link_value'];

@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS header_menu_items (
 
 INSERT IGNORE INTO header_menu_items (label, link_type, link_value, dropdown_type, volgorde, seed_key) VALUES
 ('Home', 'section', 'top', 'none', 1, 'home'),
-('Programma', 'section', 'programma', 'programme', 2, 'programma'),
+('Programma', 'programma', '', 'programme', 2, 'programma'),
 ('Speltakken', 'speltakken', '', 'speltakken', 3, 'speltakken'),
 ('Lid worden', 'section', 'lidworden', 'none', 4, 'lidworden'),
 ('Verhuur', 'section', 'verhuur', 'none', 5, 'verhuur'),
@@ -304,7 +304,7 @@ INSERT INTO settings (setting_key, setting_value) VALUES
     ('feature3_title', 'Snel naar'),
     ('feature3_text', 'Direct naar het programma, contactgegevens of informatie over verhuur van ons clubgebouw.<br><a href="#programma">Programma</a> &middot; <a href="#contact">Contact</a> &middot; <a href="#verhuur">Verhuur</a>'),
 
-    ('programma_intro', 'Het actuele programma per speltak, rechtstreeks opgehaald uit onze planning.'),
+    ('programma_intro', 'Bekijk het actuele programma per speltak.'),
     ('programma_footer_note', 'Het programma is ook te zien in de Scouting-app.'),
     ('speltakken_page_active', '1'),
     ('speltakken_intro', 'Bij scouting worden de leden ingedeeld in speltakken: groepen op basis van leeftijd. Bekijk per speltak wat we doen, wanneer we opkomst hebben en wat er op het programma staat.'),

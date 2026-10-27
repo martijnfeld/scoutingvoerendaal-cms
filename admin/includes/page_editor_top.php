@@ -28,7 +28,7 @@
         <?php endif; ?>
       </div>
     </nav>
-    <?php if (!empty($editorNavigation['tabs'])): ?>
+    <?php if (count($editorNavigation['tabs'] ?? []) > 1): ?>
     <nav class="tabs mb-0 pb-3" aria-label="Paginaonderdelen">
       <?php foreach ($editorNavigation['tabs'] as $editorTabKey => $editorTab): $editorTabActive = $editorTabKey === ($editorNavigation['active_tab'] ?? null); ?>
       <a class="<?= $editorTabActive ? 'active' : '' ?>" href="<?= e($editorTab['url']) ?>"<?= $editorTabActive ? ' aria-current="page"' : '' ?>><?= e($editorTab['label']) ?></a>

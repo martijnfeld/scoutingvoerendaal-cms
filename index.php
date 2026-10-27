@@ -39,43 +39,6 @@ include __DIR__ . '/includes/site_layout_top.php';
   <?php endfor; ?>
 </div>
 
-<!-- ================= PROGRAMMA ================= -->
-<section id="programma">
-  <div class="container">
-    <h2 class="section-title">Programma</h2>
-    <p class="section-sub"><?= e(get_setting('programma_intro')) ?></p>
-
-    <div class="speltak-jump">
-      <?php foreach ($speltakken as $sp): ?>
-      <a href="#sk-<?= e($sp['slug']) ?>" style="background:<?= e($sp['kleur']) ?>"<?= ga_event_attrs('speltak_select', ['speltak' => $sp['slug']]) ?>><?= e($sp['naam']) ?></a>
-      <?php endforeach; ?>
-    </div>
-
-    <?php foreach ($speltakken as $sp):
-        $heading = $sp['naam'] . ($sp['leeftijd'] ? ' (' . $sp['leeftijd'] . ')' : '');
-        $meta = trim(implode(' · ', array_filter([$sp['dag_tijd'], $sp['leiding']])));
-    ?>
-    <div class="speltak-block" id="sk-<?= e($sp['slug']) ?>">
-      <div class="speltak-head"><span class="speltak-dot" style="background:<?= e($sp['kleur']) ?>"></span><h3><a href="<?= e(speltak_url($sp['slug'])) ?>"><?= e($heading) ?></a></h3></div>
-      <?php if (!empty($sp['feed_url'])): ?>
-        <?php if ($meta !== ''): ?><p class="speltak-meta"><?= e($meta) ?></p><?php endif; ?>
-        <?php if (!empty($sp['afmeld_url'])): ?>
-        <p class="speltak-afmelden">Afmelden voor een opkomst? <a href="<?= e($sp['afmeld_url']) ?>" target="_blank" rel="noopener"<?= ga_event_attrs('afmeld_click', ['speltak' => $sp['slug']]) ?>>Klik hier</a>.</p>
-        <?php endif; ?>
-        <div class="prog-list" data-feed-slug="<?= e($sp['slug']) ?>" id="feed-<?= e($sp['slug']) ?>">
-          <p class="prog-loading">Programma wordt geladen&hellip;</p>
-        </div>
-      <?php elseif (!empty($sp['toelichting'])): ?>
-        <p class="speltak-meta"><?= add_lazy_loading($sp['toelichting']) /* HTML toegestaan */ ?></p>
-      <?php endif; ?>
-      <p class="speltak-more"><a href="<?= e(speltak_url($sp['slug'])) ?>">Meer over de <?= e($sp['naam']) ?> <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></p>
-    </div>
-    <?php endforeach; ?>
-
-    <p style="text-align:center; color:#777; font-size:0.9rem;"><?= e(get_setting('programma_footer_note')) ?></p>
-  </div>
-</section>
-
 <!-- ================= LID WORDEN ================= -->
 <section class="alt" id="lidworden">
   <div class="container">

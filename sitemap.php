@@ -12,6 +12,7 @@ $baseUrl = rtrim(get_setting('site_url'), '/');
 
 $urls = [
     ['loc' => $baseUrl . '/', 'changefreq' => 'weekly', 'priority' => '1.0'],
+    ['loc' => programma_url('', true), 'changefreq' => 'weekly', 'priority' => '0.9'],
 ];
 
 try {

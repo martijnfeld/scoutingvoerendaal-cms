@@ -70,6 +70,9 @@ aangemaakte account. Vanuit het beheerpaneel kun je:
   leiding en de opkomsten-JSON-feed-URL per speltak. Elke actieve speltak
   heeft een eigen pagina op `/speltakken/<naam>` (met leeftijd, tijd,
   leiding, een eigen tekst via de editor en het programma), en
+  `/programma` toont het volledige programma met een sectie per speltak. Via de
+  header en de speltaklinks bovenaan ga je direct naar het juiste programma. De introductie
+  en voetnoot beheer je via **Inhoud → Pagina’s → Programma**.
   `/speltakken` is het overzicht van alle speltakken. Zet een speltak op
   "inactief" om hem (tijdelijk) van de website te halen.
 - **Inhoud → Pagina's → Home → Info-vakjes** — de kaarten bij "Doe mee!" zoals *Gratis kennismaken*,
@@ -178,7 +181,7 @@ Daarbovenop stuurt de website deze eigen gebeurtenissen:
 | `document_download` | Klik op een downloadknop bij een "Doe mee!"-vakje | `document_name`, `card_title` |
 
 Elke gebeurtenis (ook de paginaweergave) krijgt bovendien `page_type`
-(`home`, `pagina`, `speltakken`, `speltak` of `niet_gevonden`) en, bij losse
+(`home`, `programma`, `pagina`, `speltakken`, `speltak` of `niet_gevonden`) en, bij losse
 pagina's en speltakpagina's, `page_slug` mee. Er worden **geen persoonsgegevens** verstuurd: van een e-mailadres of
 telefoonnummer gaat alleen het soort contact mee, niet het adres zelf.
 

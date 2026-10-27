@@ -325,11 +325,13 @@ test('één pagina-editor, vijf systeemtabbladen en oude bookmarks', function ()
         assert_same(legacy_settings_url($tab), http_header($r, 'Location'));
     }
     foreach (['programma', 'lidworden', 'verhuur', 'contact'] as $section) {
-        assert_not_contains('pagina=' . $section . '"', http_get('admin/paginas.php')['body']);
+        if ($section !== 'programma') {
+            assert_not_contains('pagina=' . $section . '"', http_get('admin/paginas.php')['body']);
+        }
         foreach (['', '&tab=' . $section] as $query) {
             $redirect = http_get('admin/vaste_pagina.php?pagina=' . $section . $query);
             assert_status(303, $redirect, 'oude sectie-editor');
-            assert_same(page_editor_url('home', $section), http_header($redirect, 'Location'));
+            assert_same(page_editor_url($section === 'programma' ? 'programma' : 'home', $section === 'programma' && $query === '' ? '' : $section), http_header($redirect, 'Location'));
         }
     }
     foreach (['home', 'speltakken'] as $key) {

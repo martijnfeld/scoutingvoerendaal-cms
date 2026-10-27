@@ -35,6 +35,8 @@ if ($path === '/') {
     $script = '/index.php';
 } elseif ($path === '/sitemap.php') {
     $script = '/sitemap.php';
+} elseif ($path === '/programma') {
+    $script = '/programma.php';
 } elseif ($path === '/speltakken') {
     $script = '/speltakken.php';
 } elseif (preg_match('~^/speltakken/([^/]+)$~', $path, $match)) {
@@ -149,13 +151,20 @@ test('gerenderde navigatie werkt op Home, losse pagina’s, speltakroutes en in 
     db()->exec("INSERT INTO pages (titel,slug) VALUES ('HTTP gewone pagina','http-gewoon')");
     $speltak = get_speltakken(true)[0];
     foreach (['', 'vereniging/'] as $prefix) {
-        foreach (['', 'http-gewoon', 'speltakken', 'speltakken/' . $speltak['slug']] as $path) {
+        foreach (['', 'http-gewoon', 'programma', 'speltakken', 'speltakken/' . $speltak['slug']] as $path) {
             $r = http_get($prefix . $path);
             header_assert_status(200, $r, $prefix . $path);
             header_assert_no_php_errors($r);
-            assert_contains('href="' . ($path === '' ? '' : './') . '#sk-' . $speltak['slug'] . '"', $r['body']);
+            assert_contains('href="programma#sk-' . $speltak['slug'] . '"', $r['body']);
             assert_contains('href="speltakken/' . $speltak['slug'] . '"', $r['body']);
             assert_contains('aria-expanded="false" aria-controls="header-submenu-', $r['body']);
+            if ($path === 'programma') {
+                assert_contains('<base href="/' . $prefix . '">', $r['body']);
+                assert_contains('class="header-main-link active" href="programma"', $r['body']);
+                assert_contains('<section class="speltak-block py-0" id="sk-' . $speltak['slug'] . '">', $r['body']);
+                assert_contains('aria-label="Programma per speltak"', $r['body']);
+                assert_contains('href="programma#sk-' . $speltak['slug'] . '"', $r['body']);
+            }
             if (strpos($path, 'speltakken') === 0) {
                 assert_contains('<base href="/' . $prefix . '">', $r['body']);
                 assert_contains('class="header-main-link active" href="speltakken"', $r['body']);

@@ -7,8 +7,8 @@ require_once TEST_ROOT . '/admin/includes/settings_editor.php';
 test('paginaschema verdeelt instellingen uniek en selecteert alleen bekende opslaghandlers', function () {
     assert_same(['algemeen', 'analytics', 'organisatie', 'footer'], array_keys(system_settings_schema()));
     $definitions = page_editor_definitions();
-    assert_same(['home', 'speltakken', 'content'], array_keys($definitions));
-    assert_same(['hero', 'kennismaken', 'programma', 'lidworden', 'info_cards', 'verhuur', 'contact'], array_keys($definitions['home']['tabs']));
+    assert_same(['home', 'programma', 'speltakken', 'content'], array_keys($definitions));
+    assert_same(['hero', 'kennismaken', 'lidworden', 'info_cards', 'verhuur', 'contact'], array_keys($definitions['home']['tabs']));
     $schema = settings_schema();
     $groups = array_keys(system_settings_schema());
     foreach ($definitions as $definition) {
@@ -36,12 +36,12 @@ test('paginaschema verdeelt instellingen uniek en selecteert alleen bekende opsl
 test('overzicht en editor delen hetzelfde paginamodel en dezelfde mogelijkheden', function () {
     $record = ['id' => 23, 'titel' => 'Leden', 'slug' => 'leden', 'in_menu' => 0, 'actief' => 0, 'volgorde' => 4];
     $entries = page_overview_entries([$record]);
-    assert_same(['Home', 'Speltakken', 'Leden'], array_column($entries, 'titel'));
-    assert_same([false, false, true], array_column($entries, 'can_delete'));
-    assert_same([false, true, true], array_column($entries, 'can_toggle'));
-    assert_same([null, null, 23], array_column($entries, 'id'));
-    assert_same(['../', '../speltakken', '../leden'], array_column($entries, 'public_url'));
-    assert_same(page_editor_definition('content', $record), $entries[2]);
+    assert_same(['Home', 'Programma', 'Speltakken', 'Leden'], array_column($entries, 'titel'));
+    assert_same([false, false, false, true], array_column($entries, 'can_delete'));
+    assert_same([false, false, true, true], array_column($entries, 'can_toggle'));
+    assert_same([null, null, null, 23], array_column($entries, 'id'));
+    assert_same(['../', '../programma', '../speltakken', '../leden'], array_column($entries, 'public_url'));
+    assert_same(page_editor_definition('content', $record), $entries[3]);
     foreach ($entries as $entry) {
         assert_contains('pagina_form.php', $entry['edit_url']);
         $tab = array_key_first($entry['tabs']);
@@ -62,14 +62,14 @@ test('overzicht en editor delen hetzelfde paginamodel en dezelfde mogelijkheden'
 
 test('oude instellingen en sectie-editors verwijzen naar de centrale editor', function () {
     foreach (['hero', 'kennismaken', 'programma', 'lidworden', 'verhuur', 'contact'] as $tab) {
-        assert_same(page_editor_url('home', $tab), legacy_settings_url($tab));
+        assert_same(page_editor_url($tab === 'programma' ? 'programma' : 'home', $tab), legacy_settings_url($tab));
     }
     assert_same(null, legacy_settings_url('algemeen'));
     assert_same(null, legacy_settings_url('inhoud'));
     assert_same(null, legacy_settings_url('../onbekend'));
     foreach (['programma', 'lidworden', 'verhuur', 'contact'] as $section) {
-        assert_same(page_editor_url('home', $section), legacy_page_editor_url($section));
-        assert_same(page_editor_url('home', $section), legacy_page_editor_url($section, $section));
+        assert_same(page_editor_url($section === 'programma' ? 'programma' : 'home', $section === 'programma' ? '' : $section), legacy_page_editor_url($section));
+        assert_same(page_editor_url($section === 'programma' ? 'programma' : 'home', $section), legacy_page_editor_url($section, $section));
         assert_same(null, legacy_page_editor_url($section, 'organisatie'));
         assert_same(null, legacy_page_editor_url($section, ['hero']));
     }

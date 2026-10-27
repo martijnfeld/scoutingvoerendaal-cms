@@ -106,7 +106,12 @@ clobbers site-specific secrets:
 
 **Public front controllers plus the admin panel, no router/framework:**
 - `index.php` — the public one-page site. Pulls all content from the DB via helper functions and renders
-  a single long HTML page (hero → programma → lidworden → verhuur → contact).
+  a single long HTML page (hero → lidworden → verhuur → contact).
+- `programma.php` — eigen programmapagina op `/programma`, met alle actieve speltakken
+  als secties (`#sk-<slug>`) en sprongnavigatie bovenaan. `includes/programma_list.php` bevat
+  de lijst en feedmarkup voor deze pagina; `programma_url()` bouwt links. De headerdropdown `programme`
+  verwijst vanaf elke pagina naar deze ankers. Migratie 0011 zet bestaande programmakoppelingen
+  om zonder labels, zichtbaarheid, dropdowns of volgorde te veranderen.
 - `pagina.php` — standalone informational pages (e.g. member info) that don't belong on the one-pager,
   looked up by `?slug=` against the `pages` table (see **Data model**). Public URLs are `/<slug>` via a
   `mod_rewrite` rule in the root `.htaccess` (old `pagina.php?slug=` links get a 301); build links with
@@ -128,7 +133,7 @@ clobbers site-specific secrets:
   an `Organization` whose `parentOrganization` points at the homepage NGO via the shared
   `organization_json_ld_id()`, with `PeopleAudience` ages parsed by `speltak_age_range()`), set `$activeNav`/`$gaPage`, and are listed
   in `sitemap.php`. The speltak page shows logo, leeftijd/dag_tijd/leiding, the CKEditor `inhoud`, and
-  the programme (same `.prog-list[data-feed-slug]` markup as the homepage, else `toelichting`).
+  the programme (same `.prog-list[data-feed-slug]` markup as the programme page, else `toelichting`).
 - `404.php` — the shared "niet gevonden" page (404 status, big "Terug naar Home" button, always
   `$useBaseHref`). Reached via a catch-all rewrite (last rule; skips existing files/dirs and `assets/`),
   and `pagina.php`/`speltak.php` `require` it + `exit` for unknown/inactive slugs (optional
@@ -166,7 +171,7 @@ for the fixed, decorative admin-navigation icons; it maps known internal names t
   JSON "opkomsten" feed URL (Scoutdash), `logo` upload, `inhoud` HTML for its own page (CKEditor),
   optional `meta_omschrijving` (else `speltak_meta_description()` builds one), active flag, sort order,
   `bijgewerkt` for the sitemap). The slug follows the name (`unique_speltak_slug()`) and is also the
-  public URL and the opkomsten-cache key. Public homepage renders one block per
+  public URL and the opkomsten-cache key. Public programme page renders one block per
   active speltak; if `feed_url` is set the block is populated client-side via AJAX against our own
   `api/opkomsten.php` (see below), otherwise it falls back to the static `toelichting` HTML field.
 - `documents` — uploaded PDFs (registration forms etc.), referenced by filename in `UPLOAD_DIR`.
@@ -432,15 +437,17 @@ add it to `CHECK_BLOCKED_FILES`/`CHECK_HTACCESS_FILES` or a check function there
 
 **Inhoud → Pagina's** heeft één overzicht (`admin/paginas.php`) en één editor
 (`admin/pagina_form.php`). Er zijn geen afzonderlijke editors of lijsten voor vaste en vrije pagina's.
-Home bevat Hero, Kennismaken-strip, Programma, Doe mee!, Info-vakjes, Verhuur en Contact.
+Home bevat Hero, Kennismaken-strip, Doe mee!, Info-vakjes, Verhuur en Contact.
+Programma beheert de introductie en voetnoot voor `/programma`. De intro heeft dezelfde opmaak als
+op Speltakken, zonder fade. Migratie 0012 vervangt uitsluitend de oude standaardintro.
 Speltakken beheert de introductie van `/speltakken`; de afzonderlijke groepen blijven bereikbaar via
 het bestaande menu Speltakken. Alleen kaarten met sectie `lidworden` verschijnen op de homepage bij
 Doe mee!; andere secties blijven bewaard en beheerbaar.
 
 `admin/includes/page_definitions.php` is de centrale whitelist voor pagina's, tabbladen en hun
 opslaghandlers. `page_editor_definition()` levert hetzelfde model aan overzicht en editor, inclusief
-publieke URL, editlink en mogelijkheden zoals verwijderen en uitschakelen. Home en Speltakken hebben
-geen `pages`-record en kunnen niet worden verwijderd. Home blijft altijd actief;
+publieke URL, editlink en mogelijkheden zoals verwijderen en uitschakelen. Home, Programma en Speltakken hebben
+geen `pages`-record en kunnen niet worden verwijderd. Home en Programma blijven altijd actief;
 Speltakken gebruikt de setting `speltakken_page_active` (migratie 0010). Records uit `pages` gebruiken dezelfde editor
 met hun eigen inhoud, SEO, slug en publicatievelden.
 
@@ -509,7 +516,7 @@ met dezelfde afmetingen als hover/focus. De server zet deze status bij paginalin
 `page_id`, `link_value`, `dropdown_type`, `volgorde`, `actief` en een unieke nullable `seed_key`.
 Sortering is `volgorde, id`, afzonderlijk per hoofdmenu/submenu. De pagina-editor beheert geen menuvelden
 meer: de legacykolom `pages.in_menu` blijft intact; `pages.volgorde` blijft alleen behouden voor de legacy-fallback en historische migraties.
-Het paginaoverzicht toont eerst Home en Speltakken, daarna eigen pagina’s alfabetisch.
+Het paginaoverzicht toont eerst Home, Programma en Speltakken, daarna eigen pagina’s alfabetisch.
 Het overzicht deelt de headerlijststijl en biedt publicatieschakelaars zonder sorteervelden.
 `admin/includes/page_actions.php` blokkeert uitschakelen en verwijderen zolang een headerkoppeling
 bestaat, ook bij verborgen items, submenu’s en eigen URL’s naar die pagina. De pagina-editor
@@ -524,6 +531,8 @@ nooit een pagina. Hoofditems met kinderen moeten eerst hun submenu-items laten v
 Linktypen:
 - `section`: een homepage-sectie uit `HEADER_SECTIONS` (`top`, `programma`, `lidworden`, `verhuur`, `contact`).
 - `page`: een bestaand `pages.id`; de URL komt uit `page_url()`.
+- `programma`: de programmapagina via `programma_url()`. Oude `section`-koppelingen naar
+  `programma` blijven als compatibiliteitsalias werken.
 - `speltakken`: de overzichtspagina via `speltakken_url()`.
 - `url`: een gevalideerde http(s)-, mailto- of tel-URL, of een installatie-relatief pad/anker.
   `/leden` wordt bewust `./leden`, zodat een installatie in een submap blijft werken. Gebruik
@@ -535,7 +544,7 @@ Dropdowntypen zijn `none`, `manual`, `programme` en `speltakken`. Alleen een hoo
 mutatie gecontroleerd tegen de binnen de transactie vergrendelde records; cycli en verdere
 nesting worden geweigerd. Automatische dropdowns slaan geen speltakkopieën op: één aanroep van
 `get_speltakken(true)` levert de actuele namen, slugs en volgorde voor alle automatische menu's.
-`programme` linkt naar Home `#sk-<slug>`, `speltakken` naar `speltak_url(<slug>)`. De hoofdlink
+`programme` linkt naar `/programma#sk-<slug>`, `speltakken` naar `speltak_url(<slug>)`. De hoofdlink
 blijft naast de afzonderlijke dropdownknop beschikbaar. De bestaande mobiele menuknop blijft in gebruik.
 `main.js` verzorgt muis/touch, Tab/Enter/Spatie, pijltje omlaag, Escape, focus en buitenklik;
 scrollmarkering gebruikt uitsluitend hoofdlinks en sorteert de secties op hun positie in het document.

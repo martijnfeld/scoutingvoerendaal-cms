@@ -6,6 +6,12 @@ require_once __DIR__ . '/includes/page_actions.php';
 require_once __DIR__ . '/includes/settings_schema.php';
 require_once __DIR__ . '/includes/settings_editor.php';
 
+// Oude bladwijzers naar het programmatabblad van Home blijven werken.
+if (($_GET['pagina'] ?? '') === 'home' && ($_GET['tab'] ?? '') === 'programma') {
+    header('Location: ' . page_editor_url('programma'), true, 303);
+    exit;
+}
+
 $definitions = page_editor_definitions();
 $pageKey = $_GET['pagina'] ?? 'content';
 $error = '';

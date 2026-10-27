@@ -27,10 +27,10 @@
         <details class="header-admin-generated">
           <summary><?= header_menu_icon('chevron-down') ?><span>Automatisch submenu <span class="text-body-secondary">· <?= count($headerSpeltakken) ?> speltakken</span></span></summary>
           <div class="header-admin-generated-content">
-            <p><?= $group['dropdown_type'] === 'programme' ? 'Elke speltak linkt naar het eigen programma op Home.' : 'Elke speltak linkt naar de eigen speltakpagina.' ?> Namen, zichtbaarheid en volgorde beheer je bij <a href="speltakken.php">Speltakken</a>.</p>
+            <p><?= $group['dropdown_type'] === 'programme' ? 'Elke speltak linkt naar het eigen programma op de programmapagina.' : 'Elke speltak linkt naar de eigen speltakpagina.' ?> Namen, zichtbaarheid en volgorde beheer je bij <a href="speltakken.php">Speltakken</a>.</p>
             <?php if ($headerSpeltakken): ?>
             <ul class="list-unstyled mb-0">
-              <?php foreach ($headerSpeltakken as $speltak): $path = $group['dropdown_type'] === 'programme' ? '#sk-' . $speltak['slug'] : speltak_url($speltak['slug']); ?>
+              <?php foreach ($headerSpeltakken as $speltak): $path = $group['dropdown_type'] === 'programme' ? programma_url($speltak['slug']) : speltak_url($speltak['slug']); ?>
               <li><?= header_menu_icon('link') ?><a href="../<?= e($path) ?>" target="_blank" rel="noopener"><?= e($speltak['naam']) ?></a><span class="text-body-secondary">/<?= e($path) ?></span></li>
               <?php endforeach; ?>
             </ul>

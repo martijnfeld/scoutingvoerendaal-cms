@@ -13,8 +13,8 @@ test('header-URLs weigeren onveilige schema’s en browsernormalisatie', functio
 
 test('centrale URL-resolutie respecteert homepage, onderliggende routes en subdirectory', function () {
     $item = ['link_type' => 'section', 'link_value' => 'programma'];
-    assert_same('#programma', header_menu_url($item, ''));
-    assert_same('./#programma', header_menu_url($item, './'));
+    assert_same('programma', header_menu_url($item, ''));
+    assert_same('programma', header_menu_url($item, './'));
     assert_same('leden-nieuw', header_menu_url(['link_type' => 'page', 'page_slug' => 'leden-nieuw', 'page_active' => 1], './'));
     assert_same(null, header_menu_url(['link_type' => 'page', 'page_slug' => 'leden', 'page_active' => 0], './'));
     assert_same('./leden', header_menu_url(['link_type' => 'url', 'link_value' => '/leden'], './'));
@@ -22,4 +22,13 @@ test('centrale URL-resolutie respecteert homepage, onderliggende routes en subdi
     $layout = file_get_contents(TEST_ROOT . '/includes/site_layout_top.php');
     assert_contains('<base href=', $layout);
     assert_contains('header_menu_tree($homeHref', $layout);
+});
+
+test('programmalinks verwijzen naar de pagina en behouden het speltakanker', function () {
+    assert_same('programma', header_menu_url(['link_type' => 'programma'], './'));
+    assert_same('programma#sk-welpen', programma_url('welpen'));
+    assert_true(in_array('programma', PAGE_RESERVED_SLUGS, true));
+    $item = header_menu_validate(['label' => 'Programma', 'link_type' => 'programma', 'dropdown_type' => 'programme', 'link_value' => 'oud'], [], 0);
+    assert_same('', $item['link_value']);
+    assert_same(null, $item['page_id']);
 });

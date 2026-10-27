@@ -9,12 +9,16 @@ function page_editor_definitions(): array
             'tabs' => [
                 'hero' => ['label' => 'Hero', 'handler' => 'settings'],
                 'kennismaken' => ['label' => 'Kennismaken-strip', 'handler' => 'settings'],
-                'programma' => ['label' => 'Programma', 'handler' => 'settings'],
                 'lidworden' => ['label' => 'Doe mee!', 'handler' => 'settings'],
                 'info_cards' => ['label' => 'Info-vakjes', 'handler' => 'info_cards'],
                 'verhuur' => ['label' => 'Verhuur', 'handler' => 'settings'],
                 'contact' => ['label' => 'Contact', 'handler' => 'settings'],
             ],
+        ],
+        'programma' => [
+            'titel' => 'Programma', 'slug' => 'programma', 'actief' => 1,
+            'public_url' => '../programma', 'can_delete' => false, 'can_toggle' => false,
+            'tabs' => ['programma' => ['label' => 'Programma', 'handler' => 'settings']],
         ],
         'speltakken' => [
             'titel' => 'Speltakken', 'slug' => 'speltakken', 'actief' => 1,
@@ -107,7 +111,7 @@ function legacy_settings_url(string $tab): ?string
 /** Alleen gebruikt door de oude URL; secties horen voortaan bij Home. */
 function legacy_page_editor_url(string $page, $tab = null): ?string
 {
-    if (in_array($page, ['programma', 'lidworden', 'verhuur', 'contact'], true)) {
+    if (in_array($page, ['lidworden', 'verhuur', 'contact'], true)) {
         return $tab === null || $tab === $page ? page_editor_url('home', $page) : null;
     }
     $definitions = page_editor_definitions();
