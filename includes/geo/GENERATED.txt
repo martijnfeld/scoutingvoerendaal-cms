@@ -1,1 +1,1 @@
-Gegenereerd door tools/build_geo_europe.php op 2026-10-20 15:00 UTC.
+Gegenereerd door tools/build_geo_europe.php op 2026-10-27 12:49 UTC.
