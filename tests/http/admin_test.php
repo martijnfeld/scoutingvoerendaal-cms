@@ -289,18 +289,27 @@ test('één pagina-editor, vijf systeemtabbladen en oude bookmarks', function ()
     require_once TEST_ROOT . '/admin/includes/page_definitions.php';
     require_once TEST_ROOT . '/admin/includes/settings_schema.php';
     $r = http_get('admin/paginas.php');
-    $button = strpos($r['body'], '+ Nieuwe pagina');
+    $button = strpos($r['body'], 'Nieuwe pagina</a>');
+    assert_true($button !== false, 'knop om een pagina toe te voegen');
     assert_not_contains("<h2>Vaste pagina's</h2>", $r['body']);
     assert_not_contains("<h2>Zelf aangemaakte pagina's</h2>", $r['body']);
-    assert_same(1, substr_count($r['body'], '<table'));
+    assert_same(0, substr_count($r['body'], '<table'));
     $dom = new DOMDocument();
-    @$dom->loadHTML($r['body']);
+    @$dom->loadHTML('<?xml encoding="UTF-8">' . $r['body']);
     $xpath = new DOMXPath($dom);
-    foreach (['Home', 'Speltakken'] as $title) {
-        $rows = $xpath->query('//tr[td/strong[text()="' . $title . '"]]');
-        assert_same(1, $rows->length);
-        assert_same(0, $xpath->query('.//form', $rows->item(0))->length);
-        assert_same(1, $xpath->query('.//i[contains(@class, "fa-lock")]', $rows->item(0))->length);
+    $lists = $xpath->query('//ul[@aria-label="Pagina’s"]');
+    assert_same(1, $lists->length, 'één gezamenlijk paginaoverzicht');
+    foreach (['Home', 'Programma', 'Speltakken'] as $title) {
+        $rows = $xpath->query('.//li[.//a[@class="header-admin-item-title" and text()="' . $title . '"]]', $lists->item(0));
+        assert_same(1, $rows->length, $title);
+        assert_same(1, $xpath->query('.//button[@aria-label="Verwijderen: ' . $title . '" and @disabled]', $rows->item(0))->length,
+            'standaardpagina kan niet worden verwijderd');
+        assert_same(1, $xpath->query('.//button[@role="switch" and @aria-checked="true"]', $rows->item(0))->length,
+            'publicatiestatus is zichtbaar');
+        if ($title !== 'Speltakken') {
+            assert_same(1, $xpath->query('.//button[@role="switch" and @disabled]', $rows->item(0))->length,
+                'Home en Programma blijven altijd actief');
+        }
     }
     $previous = 0;
     foreach (page_overview_entries([]) as $page) {
