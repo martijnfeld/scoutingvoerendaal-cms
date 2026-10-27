@@ -2,6 +2,7 @@
 require_once __DIR__ . '/includes/auth.php';
 require_login();
 require_once __DIR__ . '/includes/page_definitions.php';
+require_once __DIR__ . '/includes/page_actions.php';
 require_once __DIR__ . '/includes/settings_schema.php';
 require_once __DIR__ . '/includes/settings_editor.php';
 

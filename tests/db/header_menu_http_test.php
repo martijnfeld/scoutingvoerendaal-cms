@@ -33,6 +33,8 @@ $prefix = strpos($path, '/vereniging/') === 0 ? '/vereniging' : '';
 $path = substr($path, strlen($prefix));
 if ($path === '/') {
     $script = '/index.php';
+} elseif ($path === '/sitemap.php') {
+    $script = '/sitemap.php';
 } elseif ($path === '/speltakken') {
     $script = '/speltakken.php';
 } elseif (preg_match('~^/speltakken/([^/]+)$~', $path, $match)) {
@@ -121,7 +123,7 @@ test('HTTP-menuopslag gebruikt PRG, onafhankelijke labels en dynamische paginasl
     header_assert_status(303, $r);
     assert_true(get_page($id) !== null, 'menu verwijderen bewaart pagina');
     $list = http_get('admin/paginas.php');
-    header_assert_status(302, http_post('admin/paginas.php', ['csrf_token' => http_csrf_token($list), 'action' => 'delete', 'id' => (string) $id]));
+    header_assert_status(303, http_post('admin/paginas.php', ['csrf_token' => http_csrf_token($list), 'action' => 'delete', 'id' => (string) $id]));
 });
 
 test('een pagina via de editor toevoegen maakt geen headeritem en negeert de oude menuvlag', function () {
@@ -239,6 +241,81 @@ test('de editor beheert geen volgorde of parent en de zichtbaarheidsschakelaar b
     header_assert_status(303, http_post('admin/settings.php?tab=header', ['csrf_token' => http_csrf_token($hidden),
         'action' => 'toggle', 'id' => (string) $root['id']]));
     assert_contains('>Altijd hoofditem</a>', http_get('')['body']);
+});
+
+function page_http_action(string $key, int $id, string $action, bool $csrf = true): array
+{
+    $overview = http_get('admin/paginas.php');
+    return http_post('admin/paginas.php', ['csrf_token' => $csrf ? http_csrf_token($overview) : 'fout',
+        'pagina' => $key, 'id' => (string) $id, 'action' => $action]);
+}
+
+test('paginaoverzicht deelt headerstijl en beschermt standaardpaginas en publicatie', function () {
+    $overview = http_get('admin/paginas.php');
+    header_assert_no_php_errors($overview);
+    assert_contains('header-admin-list', $overview['body']);
+    assert_contains('pages-admin-row', $overview['body']);
+    assert_not_contains('name="dir"', $overview['body']);
+    foreach (['home', 'speltakken'] as $key) {
+        $denied = page_http_action($key, 0, 'delete');
+        assert_contains('Deze actie is niet beschikbaar', $denied['body']);
+    }
+    assert_contains('Deze actie is niet beschikbaar', page_http_action('home', 0, 'toggle')['body']);
+    assert_contains('Ongeldige aanvraag', page_http_action('speltakken', 0, 'toggle', false)['body']);
+    // De standaardkoppeling naar Speltakken verhindert uitschakelen.
+    assert_contains('Verwijder eerst de navigatiekoppelingen', page_http_action('speltakken', 0, 'toggle')['body']);
+    header_assert_status(200, http_get('speltakken'));
+    db()->exec("DELETE FROM header_menu_items WHERE parent_id IS NOT NULL");
+    db()->exec("DELETE FROM header_menu_items WHERE link_type='speltakken'");
+    header_assert_status(303, page_http_action('speltakken', 0, 'toggle'));
+    header_assert_status(404, http_get('speltakken'));
+    header_assert_status(404, http_get('vereniging/speltakken'));
+    assert_not_contains('/speltakken</loc>', http_get('sitemap.php')['body']);
+    $sp = get_speltakken(true)[0];
+    $detail = http_get('speltakken/' . $sp['slug']);
+    header_assert_status(200, $detail);
+    header_assert_no_php_errors($detail);
+    assert_not_contains('href="speltakken"', $detail['body']);
+    assert_contains('Uitgeschakeld', http_get('admin/paginas.php')['body']);
+    header_assert_status(303, page_http_action('speltakken', 0, 'toggle'));
+    header_assert_status(200, http_get('speltakken'));
+});
+
+test('paginas uitschakelen controleert ook verborgen submenuitems en eigen URLs in de editor', function () {
+    db()->exec("INSERT INTO pages (titel,slug,volgorde) VALUES ('Publicatietest','publicatietest',87)");
+    $id = (int) db()->lastInsertId();
+    $editorUrl = 'admin/pagina_form.php?id=' . $id;
+    $editor = http_get($editorUrl);
+    assert_not_contains('name="volgorde"', $editor['body']);
+    assert_contains('Deze actie is niet beschikbaar', page_http_action('content', $id, 'move')['body']);
+    header_assert_status(303, header_http_save(['label' => 'Publicatiemenu', 'link_type' => 'url', 'url_value' => '/contact', 'dropdown_type' => 'manual']));
+    $parentId = (int) db()->query("SELECT id FROM header_menu_items WHERE label='Publicatiemenu'")->fetchColumn();
+    header_assert_status(303, header_http_save(['label' => 'Verborgen publicatielink', 'link_type' => 'page', 'page_id' => (string) $id, 'actief' => ''], $parentId));
+    assert_contains('Verwijder eerst de navigatiekoppelingen', page_http_action('content', $id, 'toggle')['body']);
+    $editor = http_get($editorUrl);
+    $denied = http_post($editorUrl, ['csrf_token' => http_csrf_token($editor), 'titel' => 'Mag niet opslaan', 'slug' => 'ander-adres', 'inhoud' => '']);
+    assert_contains('Verwijder eerst de navigatiekoppelingen', $denied['body']);
+    assert_same('Publicatietest', get_page($id)['titel']);
+    assert_same(1, (int) get_page($id)['actief']);
+    db()->prepare('DELETE FROM header_menu_items WHERE page_id=?')->execute([$id]);
+    foreach (['/publicatietest#inhoud', './publicatietest?test=1', 'pagina.php?slug=publicatietest', rtrim(get_setting('site_url'), '/') . '/publicatietest'] as $url) {
+        header_assert_status(303, header_http_save(['label' => 'Eigen publicatielink', 'link_type' => 'url', 'url_value' => $url]));
+        assert_contains('Verwijder eerst de navigatiekoppelingen', page_http_action('content', $id, 'toggle')['body']);
+        db()->exec("DELETE FROM header_menu_items WHERE label='Eigen publicatielink'");
+    }
+    header_assert_status(303, page_http_action('content', $id, 'toggle'));
+    header_assert_status(404, http_get('publicatietest'));
+    assert_not_contains('/publicatietest</loc>', http_get('sitemap.php')['body']);
+    header_assert_status(303, page_http_action('content', $id, 'toggle'));
+    header_assert_status(200, http_get('publicatietest'));
+    assert_contains('/publicatietest</loc>', http_get('sitemap.php')['body']);
+    // Oude sorteervelden worden ook bij editoropslag genegeerd.
+    $editor = http_get($editorUrl);
+    header_assert_status(302, http_post($editorUrl, ['csrf_token' => http_csrf_token($editor), 'titel' => 'Publicatietest', 'slug' => 'publicatietest', 'actief' => '1', 'volgorde' => '999']));
+    assert_same(87, (int) get_page($id)['volgorde']);
+    header_assert_status(303, page_http_action('content', $id, 'delete'));
+    assert_same(null, get_page($id));
+    assert_true((int) db()->query("SELECT COUNT(*) FROM audit_log WHERE entiteit='pagina' AND actie='toggle'")->fetchColumn() >= 4);
 });
 
 test('HTTP-fallback vóór migratie veroorzaakt geen fout en wijzigt geen gegevens', function () {

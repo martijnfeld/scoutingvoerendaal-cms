@@ -3,7 +3,7 @@
 function move_content_record(string $table, int $id, string $direction): void
 {
     // Tabel- en kolomnamen komen uitsluitend uit deze interne whitelist.
-    $entities = ['pages' => 'pagina', 'info_cards' => 'info_card'];
+    $entities = ['info_cards' => 'info_card'];
     if (!isset($entities[$table]) || !in_array($direction, ['up', 'down'], true)) {
         return;
     }

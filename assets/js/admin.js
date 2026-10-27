@@ -1,10 +1,28 @@
 (function () {
   document.addEventListener('DOMContentLoaded', function () {
+    initTooltips();
     initRichTextEditors();
     initFilePickers();
     initConfirmForms();
     initServerProbes();
   });
+
+  /** Duidelijke uitleg zonder de wachttijd van een browser-title. */
+  function initTooltips() {
+    if (!window.bootstrap || !window.bootstrap.Tooltip) return;
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (element) {
+      var tooltip = new window.bootstrap.Tooltip(element, {
+        container: document.body,
+        placement: 'top',
+        trigger: 'hover focus',
+        delay: 0,
+        animation: false
+      });
+      element.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') tooltip.hide();
+      });
+    });
+  }
 
   /**
    * Webservertests op Beheerpaneel → Systeemcontrole (admin/controle.php):

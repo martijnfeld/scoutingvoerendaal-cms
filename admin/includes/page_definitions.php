@@ -5,7 +5,7 @@ function page_editor_definitions(): array
     return [
         'home' => [
             'titel' => 'Home', 'slug' => '', 'actief' => 1,
-            'public_url' => '../', 'can_delete' => false, 'can_reorder' => false,
+            'public_url' => '../', 'can_delete' => false, 'can_toggle' => false,
             'tabs' => [
                 'hero' => ['label' => 'Hero', 'handler' => 'settings'],
                 'kennismaken' => ['label' => 'Kennismaken-strip', 'handler' => 'settings'],
@@ -18,12 +18,12 @@ function page_editor_definitions(): array
         ],
         'speltakken' => [
             'titel' => 'Speltakken', 'slug' => 'speltakken', 'actief' => 1,
-            'public_url' => '../speltakken', 'can_delete' => false, 'can_reorder' => false,
+            'public_url' => '../speltakken', 'can_delete' => false, 'can_toggle' => true,
             'tabs' => ['speltakken' => ['label' => 'Speltakken', 'handler' => 'settings']],
         ],
         'content' => [
             'titel' => 'Nieuwe pagina', 'slug' => '', 'actief' => 1,
-            'public_url' => null, 'can_delete' => true, 'can_reorder' => true,
+            'public_url' => null, 'can_delete' => true, 'can_toggle' => true,
             'tabs' => ['inhoud' => ['label' => 'Inhoud', 'handler' => 'page_record']],
         ],
     ];
@@ -51,10 +51,13 @@ function page_editor_definition(string $key, array $record = []): array
     if ($key === 'content' && $record) {
         // Alleen opgeslagen paginagegevens, nooit mogelijkheden of handlers overnemen.
         $definition = array_replace($definition, array_intersect_key($record, array_flip([
-            'titel', 'slug', 'actief', 'volgorde',
+            'titel', 'slug', 'actief',
         ])));
         $definition['id'] = (int) $record['id'];
         $definition['public_url'] = '../' . page_url($record['slug']);
+    }
+    if ($key === 'speltakken') {
+        $definition['actief'] = speltakken_page_active() ? 1 : 0;
     }
     $definition['edit_url'] = page_editor_url($key, '', $definition['id'] ?? 0);
     return $definition;

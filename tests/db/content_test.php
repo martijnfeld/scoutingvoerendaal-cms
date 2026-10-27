@@ -57,7 +57,7 @@ test('pagina-functies filteren op actief en menu', function () {
     db()->exec('DELETE FROM pages');
     db()->exec("INSERT INTO pages (titel, slug, in_menu, actief, volgorde) VALUES
         ('B zichtbaar', 'b', 1, 1, 2), ('A zichtbaar', 'a', 1, 1, 1), ('Niet in menu', 'c', 0, 1, 3), ('Inactief', 'd', 1, 0, 4)");
-    assert_same(['a', 'b', 'c', 'd'], array_column(get_pages(), 'slug'));
+    assert_same(['a', 'b', 'd', 'c'], array_column(get_pages(), 'slug'));
     assert_same(['a', 'b', 'c'], array_column(get_pages(true), 'slug'));
     assert_same(['a', 'b'], array_column(get_pages_in_menu(), 'slug'));
     assert_same('Inactief', get_page_by_slug('d')['titel']);

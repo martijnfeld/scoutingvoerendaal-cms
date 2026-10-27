@@ -86,7 +86,7 @@ function header_menu_url(array $item, string $homeHref): ?string
         case 'page':
             return !empty($item['page_active']) && !empty($item['page_slug']) ? page_url($item['page_slug']) : null;
         case 'speltakken':
-            return speltakken_url();
+            return speltakken_page_active() ? speltakken_url() : null;
         case 'url':
             if (!header_menu_safe_url($item['link_value'])) { return null; }
             if (strpos($item['link_value'], '#') === 0) { return $homeHref . $item['link_value']; }

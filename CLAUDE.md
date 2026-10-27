@@ -439,8 +439,9 @@ Doe mee!; andere secties blijven bewaard en beheerbaar.
 
 `admin/includes/page_definitions.php` is de centrale whitelist voor pagina's, tabbladen en hun
 opslaghandlers. `page_editor_definition()` levert hetzelfde model aan overzicht en editor, inclusief
-publieke URL, editlink en mogelijkheden zoals verwijderen en sorteren. Home en Speltakken hebben
-geen `pages`-record en ondersteunen deze acties niet. Records uit `pages` gebruiken dezelfde editor
+publieke URL, editlink en mogelijkheden zoals verwijderen en uitschakelen. Home en Speltakken hebben
+geen `pages`-record en kunnen niet worden verwijderd. Home blijft altijd actief;
+Speltakken gebruikt de setting `speltakken_page_active` (migratie 0010). Records uit `pages` gebruiken dezelfde editor
 met hun eigen inhoud, SEO, slug en publicatievelden.
 
 `pagina_form.php` selecteert de pagina en het tabblad, controleert POST/CSRF en rendert één shell en
@@ -451,7 +452,7 @@ foutmelding. Alleen de configuratie kiest een handler:
   Statistieken & cookies, Organisatie & contact en Footer als key/value-groepen; Header heeft een aparte relationele editor.
 - `page_record`: `page_record_controller.php` en `page_record_view.php` behandelen inhoud in `pages`.
 - `info_cards`: de `info_cards_*`- en `info_card_form_*`-controllers en views verzorgen het kaartbeheer
-  binnen Home. `content_order.php` deelt veilige sortering met pagina's en houdt kaarten binnen de eigen sectie.
+  binnen Home. `content_order.php` sorteert uitsluitend kaarten en houdt deze binnen de eigen sectie.
 
 Controllers worden pas na de centrale aanvraagcontrole ingeladen en gebruiken `$canSave` voor
 mutaties; ze starten geen eigen layout. Views krijgen alleen hun veldwaarden en renderen geen
@@ -495,7 +496,7 @@ pijlen in het overzicht. Een ongeldige submenucontext wordt geweigerd.
 Zichtbaarheid wordt in het overzicht bediend met een toegankelijke POST-schakelaar. Niet zichtbare
 rijen krijgen een warme achtergrond; inactieve gekoppelde pagina's en verborgen hoofditems worden als
 reden vermeld zonder de eigen zichtbaarheidsinstelling van een submenu-item te veranderen. De gedeelde adminlayout
-ondersteunt daarvoor een optionele `$adminMainClass`; uitsluitend het Header-tabblad gebruikt de
+ondersteunt daarvoor een optionele `$adminMainClass`; het Header-tabblad en het paginaoverzicht gebruiken de
 bredere `.header-settings-main`. Formulier-JavaScript toont passende bestemmingsvelden en previews,
 maar de bestaande servervalidatie blijft de autoriteit voor linktypen en relaties.
 
@@ -507,7 +508,14 @@ met dezelfde afmetingen als hover/focus. De server zet deze status bij paginalin
 `header_menu_items` bevat `parent_id` (zelfverwijzing), een onafhankelijk `label`, `link_type`,
 `page_id`, `link_value`, `dropdown_type`, `volgorde`, `actief` en een unieke nullable `seed_key`.
 Sortering is `volgorde, id`, afzonderlijk per hoofdmenu/submenu. De pagina-editor beheert geen menuvelden
-meer: de legacykolom `pages.in_menu` blijft intact; `pages.volgorde` sorteert uitsluitend het paginaoverzicht.
+meer: de legacykolom `pages.in_menu` blijft intact; `pages.volgorde` blijft alleen behouden voor de legacy-fallback en historische migraties.
+Het paginaoverzicht toont eerst Home en Speltakken, daarna eigen pagina’s alfabetisch.
+Het overzicht deelt de headerlijststijl en biedt publicatieschakelaars zonder sorteervelden.
+`admin/includes/page_actions.php` blokkeert uitschakelen en verwijderen zolang een headerkoppeling
+bestaat, ook bij verborgen items, submenu’s en eigen URL’s naar die pagina. De pagina-editor
+controleert dezelfde voorwaarde bij opslaan. Mutaties gebruiken CSRF, transacties en auditlogging.
+Een uitgeschakeld speltakkenoverzicht geeft 404 en verdwijnt uit de sitemap en kruimelpaden;
+de afzonderlijke speltakken behouden hun eigen publicatiestatus.
 Paginakoppelingen verwijzen via ID naar de actuele slug. Inactieve pagina's verbergen de link zonder
 de configuratie te verwijderen. Een foreign key met RESTRICT en een Nederlandse melding in het
 paginaoverzicht voorkomen verwijdering van gekoppelde pagina's. Verwijderen van een menu-item raakt

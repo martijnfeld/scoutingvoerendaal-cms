@@ -43,15 +43,11 @@
       <span class="hint">Getoond als deze pagina wordt gedeeld (WhatsApp, Facebook, …). Bij voorkeur 1200 × 630 pixels. Leeg laten = standaard deelafbeelding van de website.</span>
     </div>
 
-    <div class="field-row">
-      <div class="field">
-        <label class="field-inline-label"><input type="checkbox" name="actief" <?= $values['actief'] ? 'checked' : '' ?>> Actief (bereikbaar op de website)</label>
-      </div>
-      <div class="field">
-        <label for="volgorde">Volgorde</label>
-        <input type="number" id="volgorde" name="volgorde" value="<?= (int) $values['volgorde'] ?>">
-        <span class="hint">Volgorde binnen het paginaoverzicht. De header beheer je via Instellingen → Header. 0 = automatisch achteraan bij een nieuwe pagina.</span>
-      </div>
+    <div class="field">
+      <?php $publicationBlocked = $page && $page['actief'] && page_header_used('content', $page); ?>
+      <?php if ($publicationBlocked): ?><input type="hidden" name="actief" value="1"><?php endif; ?>
+      <label class="field-inline-label"><input type="checkbox" name="actief" <?= $values['actief'] ? 'checked' : '' ?><?= $publicationBlocked ? ' disabled' : '' ?>> Actief (bereikbaar op de website)</label>
+      <?php if ($publicationBlocked): ?><span class="hint">Verwijder eerst de navigatiekoppelingen via <a href="settings.php?tab=header">Instellingen → Header</a> om deze pagina uit te schakelen.</span><?php endif; ?>
     </div>
 
     <button type="submit" class="btn">Opslaan</button>

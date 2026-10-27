@@ -167,10 +167,10 @@ test('pagina aanmaken, publiek bekijken en verwijderen', function () {
 
     try {
         $list = http_get('admin/paginas.php');
-        $position = strpos($list['body'], '<strong>' . $title . '</strong>');
-        preg_match('/href="(pagina_form.php\?id=\d+)"/', $list['body'], $editorMatch, 0, $position);
-        $editorUrl = 'admin/' . $editorMatch[1];
-        assert_same($editorMatch[1], http_header($r, 'Location'), 'opslaan keert terug naar dezelfde editor');
+        assert_contains($title, $list['body']);
+        $savedEditorUrl = http_header($r, 'Location');
+        assert_matches('/^pagina_form\.php\?id=\d+$/', $savedEditorUrl, 'opslaan keert terug naar de pagina-editor');
+        $editorUrl = 'admin/' . $savedEditorUrl;
         $editor = http_get($editorUrl);
         assert_page_editor_shell($editor, '../' . $slug);
         assert_status(400, http_get($editorUrl . '&tab=hero'), 'paginarecord krijgt geen settings-tabblad');
@@ -207,10 +207,10 @@ test('pagina aanmaken, publiek bekijken en verwijderen', function () {
         assert_page_editor_shell(http_get($editorUrl), null);
     } finally {
         $r = http_get('admin/paginas.php');
-        $pos = strpos($r['body'], '<strong>' . $title . '</strong>');
-        if ($pos !== false && preg_match('/name="action" value="delete">\s*<input type="hidden" name="id" value="(\d+)"/', $r['body'], $m, 0, $pos)) {
+        $pos = strpos($r['body'], 'aria-label="Bewerken: ' . $title . '"');
+        if ($pos !== false && preg_match('/name="id" value="(\d+)"><input type="hidden" name="action" value="delete">/', $r['body'], $m, 0, $pos)) {
             $r = http_post('admin/paginas.php', ['csrf_token' => http_csrf_token($r), 'action' => 'delete', 'id' => $m[1]]);
-            assert_status(302, $r, 'pagina verwijderen');
+            assert_status(303, $r, 'pagina verwijderen');
         } else {
             fail('Testpagina niet gevonden in admin/paginas.php');
         }

@@ -38,7 +38,7 @@ test('overzicht en editor delen hetzelfde paginamodel en dezelfde mogelijkheden'
     $entries = page_overview_entries([$record]);
     assert_same(['Home', 'Speltakken', 'Leden'], array_column($entries, 'titel'));
     assert_same([false, false, true], array_column($entries, 'can_delete'));
-    assert_same([false, false, true], array_column($entries, 'can_reorder'));
+    assert_same([false, true, true], array_column($entries, 'can_toggle'));
     assert_same([null, null, 23], array_column($entries, 'id'));
     assert_same(['../', '../speltakken', '../leden'], array_column($entries, 'public_url'));
     assert_same(page_editor_definition('content', $record), $entries[2]);

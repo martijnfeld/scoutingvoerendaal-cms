@@ -306,6 +306,7 @@ INSERT INTO settings (setting_key, setting_value) VALUES
 
     ('programma_intro', 'Het actuele programma per speltak, rechtstreeks opgehaald uit onze planning.'),
     ('programma_footer_note', 'Het programma is ook te zien in de Scouting-app.'),
+    ('speltakken_page_active', '1'),
     ('speltakken_intro', 'Bij scouting worden de leden ingedeeld in speltakken: groepen op basis van leeftijd. Bekijk per speltak wat we doen, wanneer we opkomst hebben en wat er op het programma staat.'),
 
     ('lidworden_intro', 'Nieuwsgierig naar Scouting? Je bent van harte welkom.'),

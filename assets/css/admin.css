@@ -264,3 +264,15 @@ table.check-table td:nth-child(2){width:30%; font-weight:600;}
 @media(max-width:600px){
   .header-admin-visibility{min-height:40px;}
 }
+
+/* Het paginaoverzicht deelt de headerlijst, zonder sorteerkolom. */
+.pages-admin-row{grid-template-columns:minmax(0,1fr) auto;}
+.pages-admin .header-admin-visibility:disabled{pointer-events:none; opacity:.65;}
+.pages-admin [data-bs-toggle="tooltip"]{cursor:not-allowed; border-radius:6px;}
+.pages-admin .header-admin-delete:disabled{pointer-events:none;}
+.page-action-tooltip{--bs-tooltip-max-width:320px; --bs-tooltip-bg:#24372b; --bs-tooltip-opacity:1;}
+.page-action-tooltip .tooltip-inner{padding:12px 16px; font-size:.875rem; line-height:1.5; text-align:left;}
+@media(max-width:600px){
+  .pages-admin-row{grid-template-columns:minmax(0,1fr);}
+  .pages-admin .header-admin-item-actions{grid-column:1;}
+}

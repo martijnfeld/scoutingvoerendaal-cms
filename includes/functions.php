@@ -357,13 +357,19 @@ function get_info_card(int $id): ?array
  * Losse pagina's
  * ------------------------------------------------------------------ */
 
+/** De vaste overzichtspagina kan onafhankelijk van de groepen worden uitgeschakeld. */
+function speltakken_page_active(): bool
+{
+    return get_setting('speltakken_page_active', '1') === '1';
+}
+
 function get_pages(bool $only_active = false): array
 {
     $sql = 'SELECT * FROM pages';
     if ($only_active) {
         $sql .= ' WHERE actief = 1';
     }
-    $sql .= ' ORDER BY volgorde ASC, titel ASC';
+    $sql .= ' ORDER BY titel ASC, id ASC';
     return db()->query($sql)->fetchAll();
 }
 

@@ -28,14 +28,16 @@ $activeNav = 'speltakken';
 $useBaseHref = true;
 $gaPage = ['page_type' => 'speltak', 'page_slug' => $sp['slug']];
 
-$crumbs = [['Home', './'], ['Speltakken', speltakken_url()], [$sp['naam'], speltak_url($sp['slug'])]];
+$crumbs = [['Home', './']];
+if (speltakken_page_active()) {
+    $crumbs[] = ['Speltakken', speltakken_url()];
+}
+$crumbs[] = [$sp['naam'], speltak_url($sp['slug'])];
 $jsonLd = [
     speltak_json_ld($sp),
-    breadcrumb_json_ld([
-        ['Home', absolute_url('')],
-        ['Speltakken', speltakken_url(true)],
-        [$sp['naam'], $canonicalUrl],
-    ]),
+    breadcrumb_json_ld(array_map(function ($crumb) {
+        return [$crumb[0], absolute_url($crumb[1] === './' ? '' : $crumb[1])];
+    }, $crumbs)),
 ];
 $andere = array_values(array_filter(get_speltakken(true), fn($o) => (int) $o['id'] !== (int) $sp['id']));
 
