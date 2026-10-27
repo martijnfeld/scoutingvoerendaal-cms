@@ -4,7 +4,7 @@ function page_editor_definitions(): array
 {
     return [
         'home' => [
-            'titel' => 'Home', 'slug' => '', 'in_menu' => 1, 'actief' => 1,
+            'titel' => 'Home', 'slug' => '', 'actief' => 1,
             'public_url' => '../', 'can_delete' => false, 'can_reorder' => false,
             'tabs' => [
                 'hero' => ['label' => 'Hero', 'handler' => 'settings'],
@@ -17,12 +17,12 @@ function page_editor_definitions(): array
             ],
         ],
         'speltakken' => [
-            'titel' => 'Speltakken', 'slug' => 'speltakken', 'in_menu' => 1, 'actief' => 1,
+            'titel' => 'Speltakken', 'slug' => 'speltakken', 'actief' => 1,
             'public_url' => '../speltakken', 'can_delete' => false, 'can_reorder' => false,
             'tabs' => ['speltakken' => ['label' => 'Speltakken', 'handler' => 'settings']],
         ],
         'content' => [
-            'titel' => 'Nieuwe pagina', 'slug' => '', 'in_menu' => 0, 'actief' => 1,
+            'titel' => 'Nieuwe pagina', 'slug' => '', 'actief' => 1,
             'public_url' => null, 'can_delete' => true, 'can_reorder' => true,
             'tabs' => ['inhoud' => ['label' => 'Inhoud', 'handler' => 'page_record']],
         ],
@@ -51,7 +51,7 @@ function page_editor_definition(string $key, array $record = []): array
     if ($key === 'content' && $record) {
         // Alleen opgeslagen paginagegevens, nooit mogelijkheden of handlers overnemen.
         $definition = array_replace($definition, array_intersect_key($record, array_flip([
-            'titel', 'slug', 'in_menu', 'actief', 'volgorde',
+            'titel', 'slug', 'actief', 'volgorde',
         ])));
         $definition['id'] = (int) $record['id'];
         $definition['public_url'] = '../' . page_url($record['slug']);

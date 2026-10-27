@@ -87,7 +87,7 @@ $userNavigation = [
       <?php endforeach; ?>
     </nav>
   </aside>
-  <main class="admin-main">
+  <main class="admin-main<?= !empty($adminMainClass) ? ' ' . e($adminMainClass) : '' ?>">
     <h1><?= e($pageTitle) ?></h1>
     <?php if ($flash): ?>
     <div class="admin-flash admin-flash-<?= e($flash['type']) ?>"><?= e($flash['message']) ?></div>

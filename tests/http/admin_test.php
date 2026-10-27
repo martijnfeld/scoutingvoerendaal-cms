@@ -98,7 +98,7 @@ test('install.php is dicht zodra er een beheerder is', function () {
 test('alle beheerschermen laden zonder PHP-fouten', function () {
     admin_login();
     $pages = ['index.php', 'speltakken.php', 'speltak_form.php', 'pagina_form.php?pagina=home&tab=info_cards', 'pagina_form.php?pagina=home&tab=info_cards&actie=nieuw',
-              'documents.php', 'document_form.php', 'paginas.php', 'pagina_form.php', 'settings.php',
+              'documents.php', 'document_form.php', 'paginas.php', 'pagina_form.php', 'settings.php', 'settings.php?tab=header',
               'uploads.php', 'accounts.php', 'backups.php', 'updates.php', 'controle.php', 'change_password.php', 'logs.php'];
     foreach ($pages as $page) {
         $r = http_get('admin/' . $page);
@@ -284,7 +284,7 @@ function settings_form_values(array $response): array
     return $values;
 }
 
-test('één pagina-editor, vier systeemtabbladen en oude bookmarks', function () {
+test('één pagina-editor, vijf systeemtabbladen en oude bookmarks', function () {
     admin_login();
     require_once TEST_ROOT . '/admin/includes/page_definitions.php';
     require_once TEST_ROOT . '/admin/includes/settings_schema.php';
@@ -318,7 +318,7 @@ test('één pagina-editor, vier systeemtabbladen en oude bookmarks', function ()
     }
     $r = http_get('admin/settings.php');
     preg_match_all('/href="settings.php\?tab=([^"]+)"/', $r['body'], $matches);
-    assert_same(['algemeen', 'analytics', 'organisatie', 'footer'], $matches[1]);
+    assert_same(['algemeen', 'analytics', 'organisatie', 'footer', 'header'], $matches[1]);
     foreach (['hero', 'kennismaken', 'programma', 'lidworden', 'verhuur', 'contact'] as $tab) {
         $r = http_get('admin/settings.php?tab=' . $tab);
         assert_status(303, $r, 'paginabeheer');

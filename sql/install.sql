@@ -92,6 +92,35 @@ CREATE TABLE IF NOT EXISTS pages (
     UNIQUE KEY uniq_slug (slug)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Centrale headernavigatie; paginakoppelingen blokkeren het verwijderen van pagina's.
+CREATE TABLE IF NOT EXISTS header_menu_items (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    parent_id INT UNSIGNED NULL,
+    label VARCHAR(150) NOT NULL,
+    link_type VARCHAR(30) NOT NULL,
+    page_id INT UNSIGNED NULL,
+    link_value VARCHAR(2048) NOT NULL DEFAULT '',
+    dropdown_type VARCHAR(30) NOT NULL DEFAULT 'none',
+    volgorde INT NOT NULL DEFAULT 0,
+    actief TINYINT(1) NOT NULL DEFAULT 1,
+    seed_key VARCHAR(100) NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uniq_header_seed (seed_key),
+    KEY idx_header_order (parent_id, volgorde, id),
+    KEY idx_header_page (page_id),
+    CONSTRAINT fk_header_parent FOREIGN KEY (parent_id) REFERENCES header_menu_items (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_header_page FOREIGN KEY (page_id) REFERENCES pages (id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT IGNORE INTO header_menu_items (label, link_type, link_value, dropdown_type, volgorde, seed_key) VALUES
+('Home', 'section', 'top', 'none', 1, 'home'),
+('Programma', 'section', 'programma', 'programme', 2, 'programma'),
+('Speltakken', 'speltakken', '', 'speltakken', 3, 'speltakken'),
+('Lid worden', 'section', 'lidworden', 'none', 4, 'lidworden'),
+('Verhuur', 'section', 'verhuur', 'none', 5, 'verhuur'),
+('Contact', 'section', 'contact', 'none', 6, 'contact');
+INSERT IGNORE INTO settings (setting_key, setting_value) VALUES ('header_menu_initialized', '1');
+
 -- ------------------------------------------------------------
 -- Beheerders (admin-login voor het CMS)
 -- ------------------------------------------------------------

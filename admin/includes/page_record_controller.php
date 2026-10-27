@@ -2,7 +2,7 @@
 /** Velden en opslag in pages; de centrale editor controleert de aanvraag. */
 $values = $page ?: [
     'titel' => '', 'slug' => '', 'inhoud' => '', 'meta_omschrijving' => '',
-    'og_afbeelding' => '', 'in_menu' => 0, 'actief' => 1, 'volgorde' => 0,
+    'og_afbeelding' => '', 'actief' => 1, 'volgorde' => 0,
 ];
 
 if ($canSave) {
@@ -11,7 +11,6 @@ if ($canSave) {
     $values['inhoud'] = $_POST['inhoud'] ?? '';
     $values['meta_omschrijving'] = trim($_POST['meta_omschrijving'] ?? '');
     $values['og_afbeelding'] = trim($_POST['og_afbeelding'] ?? '');
-    $values['in_menu'] = isset($_POST['in_menu']) ? 1 : 0;
     $values['actief'] = isset($_POST['actief']) ? 1 : 0;
     $values['volgorde'] = (int) ($_POST['volgorde'] ?? 0);
 
@@ -33,18 +32,18 @@ if ($canSave) {
                 'titel' => $values['titel'], 'slug' => $slug, 'inhoud' => $values['inhoud'],
                 'meta_omschrijving' => $values['meta_omschrijving'] ?: null,
                 'og_afbeelding' => $values['og_afbeelding'] ?: null,
-                'in_menu' => $values['in_menu'], 'actief' => $values['actief'], 'volgorde' => $values['volgorde'],
+                'actief' => $values['actief'], 'volgorde' => $values['volgorde'],
             ];
             if ($page) {
                 $params['id'] = $id;
                 $stmt = db()->prepare(
                     'UPDATE pages SET titel=:titel, slug=:slug, inhoud=:inhoud, meta_omschrijving=:meta_omschrijving,
-                     og_afbeelding=:og_afbeelding, in_menu=:in_menu, actief=:actief, volgorde=:volgorde WHERE id=:id'
+                     og_afbeelding=:og_afbeelding, actief=:actief, volgorde=:volgorde WHERE id=:id'
                 );
             } else {
                 $stmt = db()->prepare(
-                    'INSERT INTO pages (titel, slug, inhoud, meta_omschrijving, og_afbeelding, in_menu, actief, volgorde)
-                     VALUES (:titel, :slug, :inhoud, :meta_omschrijving, :og_afbeelding, :in_menu, :actief, :volgorde)'
+                    'INSERT INTO pages (titel, slug, inhoud, meta_omschrijving, og_afbeelding, actief, volgorde)
+                     VALUES (:titel, :slug, :inhoud, :meta_omschrijving, :og_afbeelding, :actief, :volgorde)'
                 );
             }
             $stmt->execute($params);

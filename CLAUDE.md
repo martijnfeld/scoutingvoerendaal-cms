@@ -115,8 +115,8 @@ clobbers site-specific secrets:
   `includes/site_layout_bottom.php` (the public-page analog of the admin's `layout_top.php`
   /`layout_bottom.php`); `index.php` sets `$isHome = true` before including the top layout so nav anchors
   render as same-page `#fragment` links instead of `index.php#fragment`, and so the homepage-only JSON-LD
-  schema block renders. Active pages flagged `in_menu` in the admin are appended to the header nav
-  automatically by the shared top layout.
+  schema block renders. The shared top layout renders the central navigation from `header_menu_items`
+  (managed exclusively in Systeem → Instellingen → Header).
 - `speltakken.php` (overview, `/speltakken`) and `speltak.php` (one speltak, `/speltakken/<slug>`,
   404 for unknown/inactive) — rewrite rules in the root `.htaccess` placed *before* the pages rule
   (`speltakken` is in `PAGE_RESERVED_SLUGS`; old `speltak.php?slug=`/`speltakken.php` URLs 301). Build
@@ -173,7 +173,7 @@ for the fixed, decorative admin-navigation icons; it maps known internal names t
 - `info_cards` — the "Doe mee!" cards (title/text/image/optional linked document), grouped by `sectie`,
   manually orderable.
 - `pages` — standalone informational pages rendered by `pagina.php` (title, unique `slug`, `inhoud`
-  HTML, optional meta description, `in_menu`/`actief` flags, sort order). `inhoud` is authored via the
+  HTML, optional meta description, legacy `in_menu`, `actief` flag, sort order). `inhoud` is authored via the
   same CKEditor as other rich-text fields, extended with image upload and YouTube/media embedding (see
   **Rich-text editing** below).
 - `admin_logins` — login history: one row per successful admin login (user id + username, IP,
@@ -441,14 +441,14 @@ Doe mee!; andere secties blijven bewaard en beheerbaar.
 opslaghandlers. `page_editor_definition()` levert hetzelfde model aan overzicht en editor, inclusief
 publieke URL, editlink en mogelijkheden zoals verwijderen en sorteren. Home en Speltakken hebben
 geen `pages`-record en ondersteunen deze acties niet. Records uit `pages` gebruiken dezelfde editor
-met hun eigen inhoud, SEO, slug, menu- en publicatievelden.
+met hun eigen inhoud, SEO, slug en publicatievelden.
 
 `pagina_form.php` selecteert de pagina en het tabblad, controleert POST/CSRF en rendert één shell en
 foutmelding. Alleen de configuratie kiest een handler:
 
 - `settings`: `settings_schema.php`, `settings_editor.php` en `settings_form.php` delen het veldschema,
   validatie, uploads en opslag met **Systeem → Instellingen**. Die pagina toont uitsluitend Algemeen,
-  Statistieken & cookies, Organisatie & contact en Footer.
+  Statistieken & cookies, Organisatie & contact en Footer als key/value-groepen; Header heeft een aparte relationele editor.
 - `page_record`: `page_record_controller.php` en `page_record_view.php` behandelen inhoud in `pages`.
 - `info_cards`: de `info_cards_*`- en `info_card_form_*`-controllers en views verzorgen het kaartbeheer
   binnen Home. `content_order.php` deelt veilige sortering met pagina's en houdt kaarten binnen de eigen sectie.
@@ -472,3 +472,95 @@ actieve links gebruiken `pagina_form.php`. Oude sectie-editors en inhoudstabblad
 verwijzen naar het juiste Home-tabblad. Oude POST-formulieren moeten daar opnieuw worden geopend.
 De tabellen `settings`, `info_cards` en `pages`, alle bestaande settingskeys en publieke routes blijven
 intact. Voor deze beheerherstructurering is geen migratie nodig.
+
+## Centrale publieke header
+
+**Systeem → Instellingen → Header** (`admin/settings.php?tab=header`) is de enige eigenaar van
+hoofdmenu en handmatige submenu's. `header_menu_controller.php` en `header_menu_view.php` vormen
+het aparte beheer binnen de instellingentabs; de header staat bewust niet in het key/value-veldschema.
+`includes/header_menu.php` bevat de whitelists, servervalidatie, transactionele mutaties, de alleen-lezen
+fallback en URL-resolutie. Mutaties gebruiken authenticatie, CSRF, auditlogging en POST/redirect/GET.
+
+Het Header-tabblad toont standaard een hiërarchisch menuoverzicht met SVG-acties, de bestemming,
+zichtbaarheid en pijlen voor sortering. Handmatige submenu's staan onder hun hoofditem; automatische
+lijsten zijn per item uitklapbaar. `?tab=header&new=1` en `?tab=header&edit=<id>` openen een afzonderlijk
+formulier (`header_menu_form.php`); `&parent=<id>` opent vanuit Submenu-item toevoegen de editor voor een bestaand handmatig hoofditem.
+`header_menu_presentation.php` bouwt het leesbare overzichtmodel en de correcte voorbeeldlinks vanuit
+`/admin/`. `header_menu_row.php` deelt de rijweergave voor beide niveaus. Het formulier heeft geen
+parent- of volgordevelden: een nieuw hoofditem komt achteraan, een nieuw submenu-item komt achteraan
+bij het vanuit het overzicht gekozen hoofditem. Bij bewerken blijven parent en volgorde behouden.
+De controller geeft deze context server-side door aan `header_menu_mutate()`; die bepaalt de plaatsing
+tegen de vergrendelde records en negeert geposte plaatsingsvelden. Sorteren gebeurt uitsluitend met de
+pijlen in het overzicht. Een ongeldige submenucontext wordt geweigerd.
+Zichtbaarheid wordt in het overzicht bediend met een toegankelijke POST-schakelaar. Niet zichtbare
+rijen krijgen een warme achtergrond; inactieve gekoppelde pagina's en verborgen hoofditems worden als
+reden vermeld zonder de eigen zichtbaarheidsinstelling van een submenu-item te veranderen. De gedeelde adminlayout
+ondersteunt daarvoor een optionele `$adminMainClass`; uitsluitend het Header-tabblad gebruikt de
+bredere `.header-settings-main`. Formulier-JavaScript toont passende bestemmingsvelden en previews,
+maar de bestaande servervalidatie blijft de autoriteit voor linktypen en relaties.
+
+`header_menu_icon()` rendert vaste inline SVG's voor de publieke knoppen en het headerbeheer.
+De publieke `.header-menu-link.is-active` kleurt de volledige combinatie van hoofdlink en dropdownknop,
+met dezelfde afmetingen als hover/focus. De server zet deze status bij paginalinks en speltakroutes;
+`main.js` werkt hem bij tijdens het scrollen op Home. Submenulinks beïnvloeden die scrollmarkering niet.
+
+`header_menu_items` bevat `parent_id` (zelfverwijzing), een onafhankelijk `label`, `link_type`,
+`page_id`, `link_value`, `dropdown_type`, `volgorde`, `actief` en een unieke nullable `seed_key`.
+Sortering is `volgorde, id`, afzonderlijk per hoofdmenu/submenu. De pagina-editor beheert geen menuvelden
+meer: de legacykolom `pages.in_menu` blijft intact; `pages.volgorde` sorteert uitsluitend het paginaoverzicht.
+Paginakoppelingen verwijzen via ID naar de actuele slug. Inactieve pagina's verbergen de link zonder
+de configuratie te verwijderen. Een foreign key met RESTRICT en een Nederlandse melding in het
+paginaoverzicht voorkomen verwijdering van gekoppelde pagina's. Verwijderen van een menu-item raakt
+nooit een pagina. Hoofditems met kinderen moeten eerst hun submenu-items laten verwijderen.
+
+Linktypen:
+- `section`: een homepage-sectie uit `HEADER_SECTIONS` (`top`, `programma`, `lidworden`, `verhuur`, `contact`).
+- `page`: een bestaand `pages.id`; de URL komt uit `page_url()`.
+- `speltakken`: de overzichtspagina via `speltakken_url()`.
+- `url`: een gevalideerde http(s)-, mailto- of tel-URL, of een installatie-relatief pad/anker.
+  `/leden` wordt bewust `./leden`, zodat een installatie in een submap blijft werken. Gebruik
+  een volledige http(s)-URL voor een bestemming buiten de installatie. Onveilige schema's,
+  protocolrelatieve URL's, besturingstekens, backslashes en bovenliggende paden worden geweigerd.
+
+Dropdowntypen zijn `none`, `manual`, `programme` en `speltakken`. Alleen een hoofditem met
+`manual` kan kinderen bevatten; kinderen hebben altijd `none`. Alle relaties worden bij iedere
+mutatie gecontroleerd tegen de binnen de transactie vergrendelde records; cycli en verdere
+nesting worden geweigerd. Automatische dropdowns slaan geen speltakkopieën op: één aanroep van
+`get_speltakken(true)` levert de actuele namen, slugs en volgorde voor alle automatische menu's.
+`programme` linkt naar Home `#sk-<slug>`, `speltakken` naar `speltak_url(<slug>)`. De hoofdlink
+blijft naast de afzonderlijke dropdownknop beschikbaar. De bestaande mobiele menuknop blijft in gebruik.
+`main.js` verzorgt muis/touch, Tab/Enter/Spatie, pijltje omlaag, Escape, focus en buitenklik;
+scrollmarkering gebruikt uitsluitend hoofdlinks en sorteert de secties op hun positie in het document.
+
+Migratie **0009_header_menu.php** maakt eerst de tabel aan (MySQL-DDL commit impliciet), en zet
+vervolgens in één transactie de zes hoofditems en alle `pages.in_menu=1`-records over, inclusief
+inactieve pagina's, op `volgorde, titel, id` na de zes vaste items. De twee standaarddropdowns zijn
+Programma (`programme`) en Speltakken (`speltakken`). Er worden geen oude paginawaarden gewijzigd.
+`seed_key` identificeert de oorsprong; de transactionele setting `header_menu_initialized` voorkomt
+herseeding, ook als een beheerder alle items heeft verwijderd. Een reeds gevulde configuratie wordt
+nooit aangevuld of overschreven. Bij een fout rolt de gehele dataoverdracht terug; de lege tabel
+mag blijven bestaan en de migratie kan opnieuw via Updates worden uitgevoerd. `sql/install.sql`
+bevat hetzelfde schema, de zes hoofditems en de initialisatiemarkering voor nieuwe installaties.
+
+Zolang de tabel ontbreekt of de initiële dataoverdracht nog niet voltooid is, toont de publieke header alleen-lezen de zes oude links plus actieve
+legacy-menupagina's. Er vindt nooit publieke seeding plaats. Na migratie wordt `in_menu` uitsluitend
+nog door die tijdelijke fallback gelezen. De gedeelde layout gebruikt `$homeHref` en de bestaande
+`<base href>` bij geneste routes; labels en URL's worden altijd met `e()` ge-escapet.
+
+Nieuwe menu-items worden via het Header-tabblad toegevoegd, niet via PHP of settings-seeds.
+Een nieuw bestemmingstype vereist een uitbreiding van `HEADER_LINK_TYPES`, `header_menu_validate()`,
+`header_menu_url()`, passende beheervelden en tests. Nieuwe homepage-secties horen in `HEADER_SECTIONS`.
+Verander bestaande seeds niet om ingerichte productiemenu's aan te passen. Nieuwe schemawijzigingen
+vereisen zoals altijd zowel install.sql als een volgende genummerde migratie.
+
+Productie: installeer de release via **Systeem → Updates** (automatische back-up vóór bijwerken),
+of upload de bestanden met behoud van de bestaande lokale configuratie en uploads en gebruik daar
+**Alleen migraties uitvoeren**. Controleer dat 0009 als toegepast verschijnt, controleer daarna Home,
+een losse pagina en een speltakpagina, en beheer eventuele wijzigingen via **Instellingen → Header**.
+Handmatige databasebewerking is niet nodig.
+
+Aanvullende headercontrole zonder browserdependencies: `node tests/header_menu_js_test.js` (alleen
+ontwikkeling; Node is geen site- of hostingvereiste). Dit test disclosurebediening, toetsenbord/focus,
+buitenklik, mobiel sluiten en hoofdlinkmarkering bij afwijkende menuvolgorde. De PHP/db-suite bevat
+ook een tijdelijke lokale HTTP-server tegen uitsluitend de wegwerp-testdatabase voor login/CSRF,
+CRUD, paginaverwijdering, slugwijzigingen, fallback en routes in een subdirectory.

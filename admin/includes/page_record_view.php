@@ -45,15 +45,12 @@
 
     <div class="field-row">
       <div class="field">
-        <label class="field-inline-label"><input type="checkbox" name="in_menu" <?= $values['in_menu'] ? 'checked' : '' ?>> Tonen in het hoofdmenu</label>
-      </div>
-      <div class="field">
         <label class="field-inline-label"><input type="checkbox" name="actief" <?= $values['actief'] ? 'checked' : '' ?>> Actief (bereikbaar op de website)</label>
       </div>
       <div class="field">
         <label for="volgorde">Volgorde</label>
         <input type="number" id="volgorde" name="volgorde" value="<?= (int) $values['volgorde'] ?>">
-        <span class="hint">Laag getal = eerder. 0 = automatisch achteraan bij een nieuwe pagina.</span>
+        <span class="hint">Volgorde binnen het paginaoverzicht. De header beheer je via Instellingen → Header. 0 = automatisch achteraan bij een nieuwe pagina.</span>
       </div>
     </div>
 
