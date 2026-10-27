@@ -173,6 +173,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         set_setting($key, trim((string) $_POST[$key]));
                     }
                 }
+                // Alleen de tabnaam, niet de waarden (kunnen gevoelig zijn).
+                audit_log('settings', 'instelling', null, 'Instellingen opgeslagen (tab "' . $activeTab . '")');
                 flash_set('success', 'Instellingen opgeslagen.');
                 header('Location: settings.php?tab=' . urlencode($activeTab));
                 exit;

@@ -72,7 +72,7 @@ test('alle beheerschermen laden zonder PHP-fouten', function () {
     admin_login();
     $pages = ['index.php', 'speltakken.php', 'speltak_form.php', 'info_cards.php', 'info_card_form.php',
               'documents.php', 'document_form.php', 'paginas.php', 'pagina_form.php', 'settings.php',
-              'uploads.php', 'accounts.php', 'backups.php', 'updates.php', 'controle.php', 'change_password.php'];
+              'uploads.php', 'accounts.php', 'backups.php', 'updates.php', 'controle.php', 'change_password.php', 'logs.php'];
     foreach ($pages as $page) {
         $r = http_get('admin/' . $page);
         assert_status(200, $r, 'admin/' . $page);

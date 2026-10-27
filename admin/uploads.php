@@ -24,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_verify()) {
             flash_set('error', 'Bestand "' . $filename . '" is nog in gebruik (' . implode(', ', $usage) . ') en is niet verwijderd. Koppel het eerst los.');
         } elseif (is_file($path)) {
             @unlink($path);
+            audit_log('delete', 'upload', null, 'Bestand "' . $filename . '" verwijderd');
             flash_set('success', 'Bestand verwijderd.');
         }
         header('Location: uploads.php');
@@ -36,6 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_verify()) {
             if ($uploaded === null) {
                 $error = 'Kies een bestand om te uploaden.';
             } else {
+                audit_log('upload', 'upload', null, 'Bestand "' . basename($uploaded) . '" geüpload');
                 flash_set('success', 'Bestand geüpload: ' . basename($uploaded) . '. Je kunt dit pad nu gebruiken bij Teksten & gegevens, Info-vakjes of Documenten.');
                 header('Location: uploads.php');
                 exit;

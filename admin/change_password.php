@@ -31,6 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // ingelogd, andere sessies van dit account worden uitgelogd.
             $user['password_hash'] = $newHash;
             admin_session_login($user);
+            audit_log('password_change', 'account', (int) $user['id'], 'Eigen wachtwoord gewijzigd');
             flash_set('success', 'Je wachtwoord is gewijzigd.');
             header('Location: change_password.php');
             exit;

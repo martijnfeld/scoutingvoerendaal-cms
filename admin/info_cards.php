@@ -9,8 +9,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_verify()) {
     $id = (int) ($_POST['id'] ?? 0);
 
     if ($action === 'delete' && $id) {
+        $old = get_info_card($id);
         $stmt = db()->prepare('DELETE FROM info_cards WHERE id = :id');
         $stmt->execute(['id' => $id]);
+        audit_log('delete', 'info_card', $id, 'Info-vakje "' . ($old['titel'] ?? '') . '" verwijderd');
         flash_set('success', 'Info-vakje verwijderd.');
     } elseif ($action === 'move' && $id) {
         $dir = $_POST['dir'] ?? '';
@@ -26,6 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_verify()) {
                 $upd = db()->prepare('UPDATE info_cards SET volgorde = :v WHERE id = :id');
                 $upd->execute(['v' => $neighbor['volgorde'], 'id' => $card['id']]);
                 $upd->execute(['v' => $card['volgorde'], 'id' => $neighbor['id']]);
+                audit_log('move', 'info_card', (int) $card['id'], 'Info-vakje "' . $card['titel'] . '" ' . ($dir === 'up' ? 'omhoog' : 'omlaag') . ' verplaatst');
             }
         }
     }

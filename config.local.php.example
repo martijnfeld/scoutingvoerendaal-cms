@@ -53,6 +53,10 @@ define('BACKUP_CRON_KEY', 'wijzig_deze_geheime_sleutel');
 // verwijderd. Standaard 12.
 // define('BACKUP_RETENTION_MONTHS', 12);
 
+// Hoeveel maanden de auditlog (Beheerpaneel -> Logs) bewaard blijft voordat
+// oude regels automatisch worden verwijderd. Standaard 12.
+// define('AUDIT_LOG_RETENTION_MONTHS', 12);
+
 // -- Updates ---------------------------------------------------------
 // GitHub-repository (owner/repo) waar updates vandaan komen. Standaard
 // 'martijnfeld/scoutingvoerendaal-cms'; alleen nodig als je een eigen fork

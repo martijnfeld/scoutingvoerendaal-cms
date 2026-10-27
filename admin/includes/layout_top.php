@@ -21,6 +21,7 @@ $navigationGroups = [
         ['label' => 'Back-ups', 'href' => 'backups.php', 'icon' => 'database', 'pages' => ['backups.php', 'backup_download.php']],
         ['label' => 'Updates', 'href' => 'updates.php', 'icon' => 'refresh', 'pages' => ['updates.php']],
         ['label' => 'Accounts', 'href' => 'accounts.php', 'icon' => 'users', 'pages' => ['accounts.php', 'account_form.php']],
+        ['label' => 'Logs', 'href' => 'logs.php', 'icon' => 'history', 'pages' => ['logs.php']],
     ],
 ];
 $userNavigation = [

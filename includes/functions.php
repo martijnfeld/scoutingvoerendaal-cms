@@ -51,6 +51,7 @@ function fa_icon(string $name, string $class = ''): string
         'checklist' => 'list-check',
         'database' => 'database',
         'refresh' => 'arrows-rotate',
+        'history' => 'clock-rotate-left',
         'users' => 'users',
         'key' => 'key',
         'user' => 'user',
@@ -873,19 +874,131 @@ function client_ip(): string
     return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
 }
 
+/* ------------------------------------------------------------------ *
+ * Auditlog (Beheerpaneel → Logs)
+ * ------------------------------------------------------------------ */
+
 /**
- * Ruimt oude pogingen op. Wordt bij elk bezoek aan login.php aangeroepen
- * omdat er op shared hosting geen cron beschikbaar is om dit periodiek
- * te doen.
+ * Legt een beheeractie vast: wie (sessie, of $actor bij login / cron), wat
+ * en wanneer. Mag een actie nooit blokkeren: zolang migratie 0008 nog niet
+ * gedraaid is bestaat de tabel niet. Zet geen wachtwoorden of andere
+ * geheimen in $omschrijving.
+ *
+ * @param array|null $actor ['id' => int|null, 'username' => string]; standaard de ingelogde beheerder
+ */
+function audit_log(string $actie, string $entiteit, ?int $entiteitId, string $omschrijving, ?array $actor = null): void
+{
+    if ($actor === null) {
+        $actor = ['id' => $_SESSION['admin_id'] ?? null, 'username' => $_SESSION['admin_username'] ?? 'systeem'];
+    }
+    $omschrijving = function_exists('mb_substr')
+        ? mb_substr($omschrijving, 0, 255, 'UTF-8')
+        : substr($omschrijving, 0, 255);
+    try {
+        $stmt = db()->prepare('INSERT INTO audit_log (aangemaakt_op, user_id, username, actie, entiteit, entiteit_id, omschrijving, ip_address)
+                               VALUES (NOW(), :uid, :u, :a, :e, :eid, :o, :ip)');
+        $stmt->execute([
+            'uid' => $actor['id'] !== null ? (int) $actor['id'] : null,
+            'u' => substr((string) $actor['username'], 0, 100),
+            'a' => substr($actie, 0, 50),
+            'e' => substr($entiteit, 0, 50),
+            'eid' => $entiteitId,
+            'o' => $omschrijving,
+            'ip' => substr(PHP_SAPI === 'cli' ? 'cli' : client_ip(), 0, 45),
+        ]);
+    } catch (PDOException $e) {
+        // Tabel ontbreekt nog; acties na de migratie worden wel vastgelegd.
+    }
+}
+
+/**
+ * Ruimt de auditlog op (zelfde aanpak als purge_old_admin_logins()). De
+ * bewaartermijn (AUDIT_LOG_RETENTION_MONTHS, config.php/config.local.php)
+ * wordt als geheel getal van minimaal 1 gebruikt, want hij gaat in de query.
+ */
+function purge_old_audit_log(): int
+{
+    $months = max(1, (int) AUDIT_LOG_RETENTION_MONTHS);
+    try {
+        return (int) db()->exec("DELETE FROM audit_log WHERE aangemaakt_op < DATE_SUB(NOW(), INTERVAL {$months} MONTH)");
+    } catch (PDOException $e) {
+        // Tabel ontbreekt nog (migratie 0008 niet gedraaid).
+        return 0;
+    }
+}
+
+/**
+ * Ruimt de inloggeschiedenis op, net als purge_old_login_attempts() (met
+ * MySQL's NOW()): IP-adressen zijn persoonsgegevens, dus niet langer
+ * bewaren dan nodig. Geeft het aantal verwijderde rijen terug.
+ */
+function purge_old_admin_logins(): int
+{
+    $months = ADMIN_LOGIN_RETENTION_MONTHS;
+    try {
+        return (int) db()->exec("DELETE FROM admin_logins WHERE ingelogd_op < DATE_SUB(NOW(), INTERVAL {$months} MONTH)");
+    } catch (PDOException $e) {
+        // Tabel ontbreekt nog (migratie 0003 niet gedraaid); niets op te ruimen.
+        return 0;
+    }
+}
+
+/**
+ * Auditlog, nieuwste eerst: ['total' => int, 'rows' => [...]]. $filters:
+ * 'username' (exact) en 'entiteit' (exact). Leeg als de tabel ontbreekt.
+ */
+function audit_log_list(int $limit, int $offset = 0, array $filters = []): array
+{
+    $where = [];
+    $params = [];
+    foreach (['username', 'entiteit'] as $column) {
+        if (($filters[$column] ?? '') !== '') {
+            $where[] = "$column = :$column";
+            $params[$column] = $filters[$column];
+        }
+    }
+    $sqlWhere = $where ? ' WHERE ' . implode(' AND ', $where) : '';
+    try {
+        $count = db()->prepare('SELECT COUNT(*) FROM audit_log' . $sqlWhere);
+        $count->execute($params);
+        $stmt = db()->prepare('SELECT * FROM audit_log' . $sqlWhere . ' ORDER BY aangemaakt_op DESC, id DESC LIMIT :limit OFFSET :offset');
+        foreach ($params as $k => $v) {
+            $stmt->bindValue($k, $v);
+        }
+        $stmt->bindValue('limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue('offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return ['total' => (int) $count->fetchColumn(), 'rows' => $stmt->fetchAll()];
+    } catch (PDOException $e) {
+        return ['total' => 0, 'rows' => []];
+    }
+}
+
+/** Filterwaarden voor de Logs-pagina: ['users' => [...], 'entiteiten' => [...]]. */
+function audit_log_filter_options(): array
+{
+    try {
+        return [
+            'users' => db()->query('SELECT DISTINCT username FROM audit_log ORDER BY username')->fetchAll(PDO::FETCH_COLUMN),
+            'entiteiten' => db()->query('SELECT DISTINCT entiteit FROM audit_log ORDER BY entiteit')->fetchAll(PDO::FETCH_COLUMN),
+        ];
+    } catch (PDOException $e) {
+        return ['users' => [], 'entiteiten' => []];
+    }
+}
+
+/**
+ * Ruimt oude pogingen op (aangeroepen door de opruimtaak in
+ * includes/cron.php). Geeft het aantal verwijderde rijen terug.
  *
  * Rekent met MySQL's eigen NOW() in plaats van PHP's tijd: op shared
  * hosting staat de PHP-tijdzone niet altijd gelijk aan de MySQL-tijdzone,
  * en attempted_at wordt met NOW() weggeschreven.
  */
-function purge_old_login_attempts(): void
+function purge_old_login_attempts(): int
 {
     $months = LOGIN_ATTEMPT_RETENTION_MONTHS;
-    db()->exec("DELETE FROM login_attempts WHERE attempted_at < DATE_SUB(NOW(), INTERVAL {$months} MONTH)");
+    return (int) db()->exec("DELETE FROM login_attempts WHERE attempted_at < DATE_SUB(NOW(), INTERVAL {$months} MONTH)");
 }
 
 function record_failed_login(string $username, string $ip): void

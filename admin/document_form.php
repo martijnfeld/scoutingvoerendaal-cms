@@ -38,10 +38,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $stmt = db()->prepare('UPDATE documents SET naam=:naam WHERE id=:id');
                         $stmt->execute(['naam' => $naam, 'id' => $id]);
                     }
+                    audit_log('update', 'document', (int) $id, 'Document "' . $naam . '" bijgewerkt');
                     flash_set('success', 'Document bijgewerkt.');
                 } else {
                     $stmt = db()->prepare('INSERT INTO documents (naam, bestand) VALUES (:naam, :bestand)');
                     $stmt->execute(['naam' => $naam, 'bestand' => basename($uploaded)]);
+                    audit_log('create', 'document', (int) db()->lastInsertId(), 'Document "' . $naam . '" toegevoegd');
                     flash_set('success', 'Document toegevoegd.');
                 }
                 header('Location: documents.php');

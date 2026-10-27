@@ -54,6 +54,10 @@ if (!defined('BACKUP_DIR')) define('BACKUP_DIR', dirname(__DIR__) . '/' . basena
 // verwijderd (zowel bij handmatige als geplande back-ups).
 if (!defined('BACKUP_RETENTION_MONTHS')) define('BACKUP_RETENTION_MONTHS', 12);
 
+// Hoeveel maanden de auditlog (Beheerpaneel -> Logs) bewaard blijft voordat
+// oude regels automatisch worden verwijderd.
+if (!defined('AUDIT_LOG_RETENTION_MONTHS')) define('AUDIT_LOG_RETENTION_MONTHS', 12);
+
 // Geheime sleutel om de wekelijkse back-up via een URL te mogen starten
 // vanuit een cronjob in je hosting-controlepaneel, bv.:
 //   https://jouw-domein.nl/cron/backup_cron.php?key=...

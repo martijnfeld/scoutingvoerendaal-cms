@@ -11,6 +11,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !csrf_verify()) {
     exit;
 }
 
+if (!empty($_SESSION['admin_id'])) {
+    audit_log('logout', 'account', (int) $_SESSION['admin_id'], 'Uitgelogd');
+}
 destroy_session();
 header('Location: login.php');
 exit;

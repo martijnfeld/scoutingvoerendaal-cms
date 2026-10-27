@@ -34,6 +34,7 @@ try {
         echo json_encode(['error' => ['message' => 'Geen bestand ontvangen.']]);
         exit;
     }
+    audit_log('upload', 'upload', null, 'Afbeelding "' . basename($relativeUrl) . '" geüpload via de teksteditor');
     $absoluteUrl = rtrim(get_setting('site_url'), '/') . '/' . ltrim($relativeUrl, '/');
     echo json_encode(['url' => $absoluteUrl]);
 } catch (RuntimeException $e) {
