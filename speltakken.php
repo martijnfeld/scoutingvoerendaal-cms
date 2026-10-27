@@ -6,6 +6,11 @@
  */
 require_once __DIR__ . '/includes/functions.php';
 
+if (!speltakken_page_active()) {
+    require __DIR__ . '/404.php';
+    exit;
+}
+
 $speltakken = get_speltakken(true);
 
 $orgNaam = get_setting('org_naam');

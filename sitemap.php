@@ -12,11 +12,14 @@ $baseUrl = rtrim(get_setting('site_url'), '/');
 
 $urls = [
     ['loc' => $baseUrl . '/', 'changefreq' => 'weekly', 'priority' => '1.0'],
+    ['loc' => programma_url('', true), 'changefreq' => 'weekly', 'priority' => '0.9'],
 ];
 
 try {
     $speltakken = get_speltakken(true);
-    $urls[] = ['loc' => speltakken_url(true), 'changefreq' => 'monthly', 'priority' => '0.9'];
+    if (speltakken_page_active()) {
+        $urls[] = ['loc' => speltakken_url(true), 'changefreq' => 'monthly', 'priority' => '0.9'];
+    }
     foreach ($speltakken as $sp) {
         $urls[] = [
             'loc'        => speltak_url($sp['slug'], true),

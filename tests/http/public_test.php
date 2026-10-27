@@ -5,6 +5,8 @@ test('homepage laadt zonder PHP-fouten', function () {
     $r = http_get('');
     assert_status(200, $r, 'homepage');
     assert_contains('<html lang="nl"', $r['body']);
+    assert_not_contains('<section id="programma">', $r['body']);
+    assert_not_contains('data-feed-slug=', $r['body']);
     assert_no_php_errors($r, 'homepage');
 });
 
@@ -77,7 +79,7 @@ test('homepage heeft geldige JSON-LD van de organisatie', function () {
 test('links naar de homepage gaan naar ./, niet naar index.php', function () {
     $r = http_get('deze-pagina-bestaat-echt-niet');
     assert_not_contains('href="index.php', $r['body']);
-    assert_contains('href="./#programma"', $r['body']);
+    assert_contains('href="./#contact"', $r['body']);
     assert_same([], http_json_ld_blocks($r['body']), 'geen structured data op de 404-pagina');
 });
 
@@ -160,7 +162,7 @@ test('pagina van een speltak: gegevens, programma, kruimelpad en SEO', function 
     assert_matches('#<meta name="description" content="[^"]{20,}">#', $r['body']);
     assert_contains('<h2 class="speltak-programma-titel">Programma</h2>', $r['body']);
     assert_contains('<li class="breadcrumb-item"><a href="speltakken">Speltakken</a></li>', $r['body']);
-    assert_contains('href="./#programma"', $r['body'], 'menu linkt naar de homepage');
+    assert_contains('href="programma"', $r['body'], 'menu linkt naar de programmapagina');
 
     $blocks = http_json_ld_blocks($r['body']);
     assert_same(['Organization', 'BreadcrumbList'], array_column($blocks, '@type'));
@@ -238,4 +240,25 @@ test('cronjob weigert zonder geldige sleutel', function () {
         $r = http_get($script . '?key=wijzig_deze_geheime_sleutel');
         assert_status(403, $r, $script . ' met de standaardsleutel');
     }
+});
+
+
+test('programmapagina toont de volledige lijst, ankers en een eigen canonieke URL', function () {
+    $r = http_get('programma');
+    assert_status(200, $r, '/programma');
+    assert_no_php_errors($r, '/programma');
+    assert_contains('<h1>Programma</h1>', $r['body']);
+    assert_not_contains('class="section-sub"', $r['body']);
+    assert_matches('#<link rel="canonical" href="[^"]*/programma">#', $r['body']);
+    assert_contains('class="header-main-link active" href="programma"', $r['body']);
+    assert_contains('aria-label="Programma per speltak"', $r['body']);
+    preg_match_all('/<section class="speltak-block py-0" id="sk-([a-z0-9-]+)">/', $r['body'], $sections);
+    assert_true(count($sections[1]) > 0);
+    foreach ($sections[1] as $slug) {
+        assert_contains('href="programma#sk-' . $slug . '"', $r['body']);
+    }
+    $redirect = http_get('programma.php');
+    assert_status(301, $redirect, 'programma.php');
+    assert_matches('#/programma$#', http_header($redirect, 'Location'));
+    assert_contains('/programma</loc>', http_get('sitemap.php')['body']);
 });

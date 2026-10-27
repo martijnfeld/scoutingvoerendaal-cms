@@ -9,14 +9,13 @@ $adminPage = basename($_SERVER['PHP_SELF']);
 $overviewNavigation = ['label' => 'Overzicht', 'href' => 'index.php', 'icon' => 'layout-dashboard', 'pages' => ['index.php']];
 $navigationGroups = [
     'Inhoud' => [
-        ['label' => 'Website-instellingen', 'href' => 'settings.php', 'icon' => 'settings', 'pages' => ['settings.php']],
         ['label' => "Pagina's", 'href' => 'paginas.php', 'icon' => 'file-text', 'pages' => ['paginas.php', 'pagina_form.php']],
         ['label' => 'Speltakken', 'href' => 'speltakken.php', 'icon' => 'sitemap', 'pages' => ['speltakken.php', 'speltak_form.php']],
-        ['label' => 'Info-vakjes', 'href' => 'info_cards.php', 'icon' => 'layout-cards', 'pages' => ['info_cards.php', 'info_card_form.php']],
         ['label' => 'Documenten', 'href' => 'documents.php', 'icon' => 'files', 'pages' => ['documents.php', 'document_form.php']],
         ['label' => 'Bestanden', 'href' => 'uploads.php', 'icon' => 'cloud-upload', 'pages' => ['uploads.php']],
     ],
     'Systeem' => [
+        ['label' => 'Instellingen', 'href' => 'settings.php', 'icon' => 'settings', 'pages' => ['settings.php']],
         ['label' => 'Systeemcontrole', 'href' => 'controle.php', 'icon' => 'checklist', 'pages' => ['controle.php']],
         ['label' => 'Back-ups', 'href' => 'backups.php', 'icon' => 'database', 'pages' => ['backups.php', 'backup_download.php']],
         ['label' => 'Updates', 'href' => 'updates.php', 'icon' => 'refresh', 'pages' => ['updates.php']],
@@ -88,7 +87,7 @@ $userNavigation = [
       <?php endforeach; ?>
     </nav>
   </aside>
-  <main class="admin-main">
+  <main class="admin-main<?= !empty($adminMainClass) ? ' ' . e($adminMainClass) : '' ?>">
     <h1><?= e($pageTitle) ?></h1>
     <?php if ($flash): ?>
     <div class="admin-flash admin-flash-<?= e($flash['type']) ?>"><?= e($flash['message']) ?></div>

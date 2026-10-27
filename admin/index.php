@@ -21,7 +21,7 @@ include __DIR__ . '/includes/layout_top.php';
   <div class="admin-card" style="flex:1; min-width:200px;">
     <h2><?= $infoCardCount ?></h2>
     <p class="muted">Info-vakjes</p>
-    <a href="info_cards.php" class="btn btn-small">Beheren</a>
+    <a href="pagina_form.php?pagina=home&amp;tab=info_cards" class="btn btn-small">Beheren</a>
   </div>
   <div class="admin-card" style="flex:1; min-width:200px;">
     <h2><?= $documentCount ?></h2>
@@ -37,11 +37,11 @@ include __DIR__ . '/includes/layout_top.php';
 
 <div class="admin-card">
   <h2>Snel naar</h2>
-  <p><a href="settings.php">Teksten &amp; gegevens</a> — pas alle vaste teksten aan (hero, intro's, contactgegevens, verhuurvoorwaarden, footer, etc).</p>
+  <p><a href="settings.php">Instellingen</a> — algemene instellingen, statistieken en cookies, organisatiegegevens en footer.</p>
   <p><a href="speltakken.php">Speltakken</a> — naam, kleur, leeftijden, volgorde, toelichting, leiding en opkomsten-feed per speltak.</p>
-  <p><a href="info_cards.php">Info-vakjes</a> — de kaarten bij "Doe mee!" zoals "Gratis kennismaken"; voeg er zoveel toe als je wilt.</p>
+  <p><a href="pagina_form.php?pagina=home&amp;tab=info_cards">Home → Info-vakjes</a> — de kaarten bij "Doe mee!" zoals "Gratis kennismaken"; voeg er zoveel toe als je wilt.</p>
   <p><a href="documents.php">Documenten</a> — upload en vervang PDF's zoals het inschrijfformulier.</p>
-  <p><a href="paginas.php">Pagina's</a> — losse informatieve pagina's naast de hoofdpagina, bv. voor leden.</p>
+  <p><a href="paginas.php">Pagina's</a> — alle websitepagina's en hun inhoud.</p>
   <p><a href="backups.php">Back-ups</a> — maak handmatig een back-up of bekijk de wekelijkse automatische back-ups.</p>
   <p><a href="updates.php">Updates</a> — controleer op een nieuwe versie en werk de website met één klik bij.</p>
   <p><a href="controle.php">Systeemcontrole</a> — controleer of de server, back-ups, updates en beveiliging goed zijn ingesteld.</p>

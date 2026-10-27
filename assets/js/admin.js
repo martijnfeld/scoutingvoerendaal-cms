@@ -1,10 +1,28 @@
 (function () {
   document.addEventListener('DOMContentLoaded', function () {
+    initTooltips();
     initRichTextEditors();
     initFilePickers();
     initConfirmForms();
     initServerProbes();
   });
+
+  /** Duidelijke uitleg zonder de wachttijd van een browser-title. */
+  function initTooltips() {
+    if (!window.bootstrap || !window.bootstrap.Tooltip) return;
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (element) {
+      var tooltip = new window.bootstrap.Tooltip(element, {
+        container: document.body,
+        placement: 'top',
+        trigger: 'hover focus',
+        delay: 0,
+        animation: false
+      });
+      element.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') tooltip.hide();
+      });
+    });
+  }
 
   /**
    * Webservertests op Beheerpaneel → Systeemcontrole (admin/controle.php):
@@ -375,4 +393,36 @@
       });
     });
   }
+})();
+
+// Bestemming en submenu-instellingen volgen de geselecteerde opties; de server valideert iedere wijziging.
+(function () {
+  var editor = document.querySelector('[data-header-editor]');
+  if (!editor) return;
+  var type = editor.querySelector('[name="link_type"]');
+  var dropdown = editor.querySelector('[name="dropdown_type"]');
+  function updateFields() {
+    editor.querySelectorAll('[data-header-field]').forEach(function (field) {
+      var active = field.getAttribute('data-header-field') === type.value;
+      field.hidden = !active;
+      field.querySelectorAll('input, select').forEach(function (input) {
+        input.disabled = !active;
+        input.required = active;
+      });
+    });
+  }
+  function updateDropdown() {
+    if (!dropdown || dropdown.tagName !== 'SELECT') return;
+    var hasChildren = dropdown.getAttribute('data-has-children') === '1';
+    Array.prototype.forEach.call(dropdown.options, function (option) {
+      option.disabled = hasChildren && option.value !== 'manual';
+    });
+    editor.querySelectorAll('[data-header-dropdown]').forEach(function (panel) {
+      panel.hidden = panel.getAttribute('data-header-dropdown') !== dropdown.value;
+    });
+  }
+  type.addEventListener('change', updateFields);
+  if (dropdown && dropdown.tagName === 'SELECT') dropdown.addEventListener('change', updateDropdown);
+  updateFields();
+  updateDropdown();
 })();

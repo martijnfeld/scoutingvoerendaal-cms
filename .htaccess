@@ -52,6 +52,11 @@ ServerSignature Off
     RewriteRule (^|/)\.(?!well-known(/|$)) - [F]
     RewriteRule ^(includes|admin/includes|sql|backups|tools|docker|tests)(/|$) - [F]
 
+    # Programma: volledige lijst met een anker per speltak.
+    RewriteRule ^programma/?$ programma.php [L,QSA]
+    RewriteCond %{THE_REQUEST} ^[A-Z]+\s(/(?:[^?\s]*/)?)programma\.php[\s?]
+    RewriteRule ^programma\.php$ %1programma [R=301,L]
+
     # Speltakken: /speltakken (overzicht) en /speltakken/<slug> (eigen
     # pagina per speltak). Vóór de regel voor losse pagina's; "speltakken"
     # staat daarom ook in PAGE_RESERVED_SLUGS.

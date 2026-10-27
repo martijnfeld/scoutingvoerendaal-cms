@@ -224,7 +224,7 @@ $GLOBALS['__cookies'] = [];
  *
  * @return array{status: int, headers: array<string, string[]>, body: string}
  */
-function http_request(string $method, string $path, ?array $form = null, array $extraHeaders = []): array
+function http_request(string $method, string $path, ?array $form = null, array $extraHeaders = [], array $files = []): array
 {
     $headers = "User-Agent: ScoutingVoerendaal-Tests/1.0\r\n";
     foreach ($extraHeaders as $name => $value) {
@@ -238,7 +238,19 @@ function http_request(string $method, string $path, ?array $form = null, array $
         $headers .= 'Cookie: ' . implode('; ', $pairs) . "\r\n";
     }
     $content = null;
-    if ($form !== null) {
+    if ($files) {
+        $boundary = 'svtest' . bin2hex(random_bytes(12));
+        $content = '';
+        foreach ($form ?? [] as $name => $value) {
+            $content .= '--' . $boundary . "\r\nContent-Disposition: form-data; name=\"" . $name . "\"\r\n\r\n" . $value . "\r\n";
+        }
+        foreach ($files as $name => $file) {
+            $content .= '--' . $boundary . "\r\nContent-Disposition: form-data; name=\"" . $name
+                . '"; filename="' . $file['name'] . "\"\r\nContent-Type: " . $file['type'] . "\r\n\r\n" . $file['content'] . "\r\n";
+        }
+        $content .= '--' . $boundary . "--\r\n";
+        $headers .= 'Content-Type: multipart/form-data; boundary=' . $boundary . "\r\n";
+    } elseif ($form !== null) {
         $content = http_build_query($form);
         $headers .= "Content-Type: application/x-www-form-urlencoded\r\n";
     }
