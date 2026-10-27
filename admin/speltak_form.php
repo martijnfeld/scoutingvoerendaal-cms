@@ -112,13 +112,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $existingImages = get_uploaded_files(['jpg', 'jpeg', 'png', 'gif', 'webp']);
 
+$editorNavigation = [
+    'public_url' => $sp && $sp['actief'] ? '../' . speltak_url($sp['slug']) : null,
+    'unavailable_text' => $sp ? 'Deze pagina is niet gepubliceerd.' : 'Sla de pagina eerst op om deze te bekijken.',
+    'back_url' => 'speltakken.php',
+    'back_label' => 'Terug naar speltakken',
+];
 include __DIR__ . '/includes/layout_top.php';
+include __DIR__ . '/includes/page_editor_top.php';
 ?>
-<div class="admin-card" style="max-width:900px;">
+<div class="admin-card">
   <?php if ($error): ?><div class="admin-flash admin-flash-error"><?= e($error) ?></div><?php endif; ?>
-  <?php if ($sp && $sp['actief']): ?>
-  <p class="muted">Eigen pagina van deze speltak: <a href="../<?= e(speltak_url($sp['slug'])) ?>" target="_blank" rel="noopener"><code>/<?= e(speltak_url($sp['slug'])) ?></code></a> (het adres volgt de naam).</p>
-  <?php endif; ?>
   <form method="post" enctype="multipart/form-data">
     <?= csrf_field() ?>
     <input type="hidden" name="id" value="<?= (int) $id ?>">
@@ -213,4 +217,5 @@ include __DIR__ . '/includes/layout_top.php';
     <a href="speltakken.php" class="btn btn-secondary">Annuleren</a>
   </form>
 </div>
+<?php include __DIR__ . '/includes/page_editor_bottom.php'; ?>
 <?php include __DIR__ . '/includes/layout_bottom.php'; ?>

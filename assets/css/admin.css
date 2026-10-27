@@ -122,6 +122,16 @@ table.admin-table tr:hover{background:#fafafa;}
   padding:8px 14px; border-radius:20px; background:#e9ece9; color:#333; font-size:0.85rem; font-weight:600; text-decoration:none;
 }
 .tabs a.active{background:#00A551; color:#fff;}
+/* Gedeelde navigatie en inhoudsbreedte van alle pagina-editors. */
+.page-editor{width:100%; min-width:0;}
+.page-editor-content, .page-editor-content > .admin-card{width:100%; min-width:0;}
+.page-editor-navigation{width:100%; margin-bottom:22px;}
+.page-editor-navigation svg{flex-shrink:0;}
+.page-editor-navigation .page-editor-back{background:#fff; color:#17613a; border:1px solid #b6ccbf;}
+.page-editor-navigation .page-editor-back:hover{background:#eef7f1; border-color:#00893f; color:#17613a;}
+.page-editor-navigation a:focus-visible{outline:3px solid #FCDD17; outline-offset:2px; box-shadow:none;}
+.page-editor-navigation .btn:disabled{background:#6c757d; color:#fff; opacity:1;}
+.page-editor-note{max-width:300px; color:#59635d; font-size:0.85rem;}
 .check-summary{display:flex; flex-wrap:wrap; align-items:center; gap:10px;}
 .check-status{display:inline-block; min-width:62px; padding:3px 9px; border-radius:12px; font-size:0.75rem; font-weight:700; text-align:center; white-space:nowrap; color:#fff;}
 .check-ok{background:#00A551;}

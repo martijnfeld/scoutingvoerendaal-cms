@@ -68,6 +68,24 @@ function fa_icon(string $name, string $class = ''): string
         . ($class !== '' ? ' ' . e($class) : '') . '" aria-hidden="true"></i>';
 }
 
+/**
+ * Direct zichtbare knopiconen, zonder op de externe iconfont te wachten.
+ * Font Awesome Free 6.5.2 (CC BY 4.0): https://fontawesome.com/license/free
+ */
+function fa_inline_icon(string $name): string
+{
+    $icons = [
+        'arrow-left' => ['448 512', 'M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 288H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H109.3L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z'],
+        'external-link' => ['512 512', 'M320 0c-17.7 0-32 14.3-32 32s14.3 32 32 32h82.7L201.4 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L448 109.3V192c0 17.7 14.3 32 32 32s32-14.3 32-32V32c0-17.7-14.3-32-32-32H320zM80 32C35.8 32 0 67.8 0 112V432c0 44.2 35.8 80 80 80H400c44.2 0 80-35.8 80-80V320c0-17.7-14.3-32-32-32s-32 14.3-32 32V432c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V112c0-8.8 7.2-16 16-16H192c17.7 0 32-14.3 32-32s-14.3-32-32-32H80z'],
+    ];
+    if (!isset($icons[$name])) {
+        return '';
+    }
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' . $icons[$name][0]
+        . '" width="18" height="18" fill="currentColor" aria-hidden="true" focusable="false">'
+        . '<path d="' . $icons[$name][1] . '"/></svg>';
+}
+
 /* ------------------------------------------------------------------ *
  * Instellingen (settings key/value tabel)
  * ------------------------------------------------------------------ */

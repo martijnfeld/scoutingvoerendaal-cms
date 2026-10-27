@@ -166,3 +166,15 @@ gevonden of een idee? [Open een issue](https://github.com/martijnfeld/scoutingvo
 Wil je zelf iets bouwen? Maak een fork en stuur een pull request. Houd daarbij rekening met de punten
 onder [Goed om te weten](#goed-om-te-weten), en schrijf teksten, commentaar en interface in het
 Nederlands.
+
+## Beheer van pagina's en instellingen
+
+**Inhoud → Pagina's** bevat alle websitepagina's in één overzicht en één editorstructuur.
+Home en Speltakken kunnen niet worden verwijderd of verplaatst. De onderdelen Programma, Doe mee!,
+Verhuur en Contact staan als tabbladen onder Home, samen met Hero, Kennismaken-strip en Info-vakjes.
+Alleen info-vakjes met sectie `lidworden` verschijnen bij Doe mee! op de homepage; andere secties
+blijven bewaard en beheerbaar.
+
+**Systeem → Instellingen** bevat Algemeen, Statistieken & cookies, Organisatie & contact en Footer.
+Bestaande gegevens, instellingenkeys en publieke URL's blijven behouden; er is geen migratie nodig.
+Zie [INSTALL.md](INSTALL.md) voor het gebruik en [CLAUDE.md](CLAUDE.md) voor de technische indeling.

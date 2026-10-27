@@ -134,7 +134,7 @@ clobbers site-specific secrets:
   and `pagina.php`/`speltak.php` `require` it + `exit` for unknown/inactive slugs (optional
   `$notFoundTitle`).
 - `admin/*.php` — one PHP file per admin screen (`speltakken.php` list + `speltak_form.php` create/edit,
-  same pattern for `info_cards`/`info_card_form`, `documents`, `accounts`, `settings`, `uploads`,
+  same pattern for `documents`, `accounts`, `settings`, `uploads`,
   `backups`, `updates`, `controle`, `paginas`/`pagina_form`). Every admin page requires `admin/includes/auth.php` and
   calls `require_login()` first.
 
@@ -296,7 +296,7 @@ Analytics** below). Inline `style`
 attributes are allowed (CKEditor output relies on them). Adding a new external script/font/API host means
 extending the relevant CSP directive.
 
-**Google Analytics**: off unless **Teksten & gegevens → Statistieken & cookies** (`admin/settings.php`, tab
+**Google Analytics**: off unless **Systeem → Instellingen → Statistieken & cookies** (`admin/settings.php`, tab
 `analytics`) has a GA4 measurement ID. Input goes through `ga_measurement_id_normalize()` (settings fields can
 declare a `'normalize'` callback that throws `RuntimeException`; the whole tab is validated before anything is
 saved); the public layout only uses `ga_measurement_id()`, which returns `''` for empty/invalid values. When set,
@@ -427,3 +427,48 @@ connections (GitHub, each Scoutdash feed — `checks_external()`) only on a POST
 `<tr data-probe-url data-probe-expect>` rows handled in `assets/js/admin.js` — not by PHP loopback requests,
 which are unreliable on shared hosts. When adding a new sensitive file/directory or a new hard requirement,
 add it to `CHECK_BLOCKED_FILES`/`CHECK_HTACCESS_FILES` or a check function there.
+
+## Beheer van pagina's en instellingen
+
+**Inhoud → Pagina's** heeft één overzicht (`admin/paginas.php`) en één editor
+(`admin/pagina_form.php`). Er zijn geen afzonderlijke editors of lijsten voor vaste en vrije pagina's.
+Home bevat Hero, Kennismaken-strip, Programma, Doe mee!, Info-vakjes, Verhuur en Contact.
+Speltakken beheert de introductie van `/speltakken`; de afzonderlijke groepen blijven bereikbaar via
+het bestaande menu Speltakken. Alleen kaarten met sectie `lidworden` verschijnen op de homepage bij
+Doe mee!; andere secties blijven bewaard en beheerbaar.
+
+`admin/includes/page_definitions.php` is de centrale whitelist voor pagina's, tabbladen en hun
+opslaghandlers. `page_editor_definition()` levert hetzelfde model aan overzicht en editor, inclusief
+publieke URL, editlink en mogelijkheden zoals verwijderen en sorteren. Home en Speltakken hebben
+geen `pages`-record en ondersteunen deze acties niet. Records uit `pages` gebruiken dezelfde editor
+met hun eigen inhoud, SEO, slug, menu- en publicatievelden.
+
+`pagina_form.php` selecteert de pagina en het tabblad, controleert POST/CSRF en rendert één shell en
+foutmelding. Alleen de configuratie kiest een handler:
+
+- `settings`: `settings_schema.php`, `settings_editor.php` en `settings_form.php` delen het veldschema,
+  validatie, uploads en opslag met **Systeem → Instellingen**. Die pagina toont uitsluitend Algemeen,
+  Statistieken & cookies, Organisatie & contact en Footer.
+- `page_record`: `page_record_controller.php` en `page_record_view.php` behandelen inhoud in `pages`.
+- `info_cards`: de `info_cards_*`- en `info_card_form_*`-controllers en views verzorgen het kaartbeheer
+  binnen Home. `content_order.php` deelt veilige sortering met pagina's en houdt kaarten binnen de eigen sectie.
+
+Controllers worden pas na de centrale aanvraagcontrole ingeladen en gebruiken `$canSave` voor
+mutaties; ze starten geen eigen layout. Views krijgen alleen hun veldwaarden en renderen geen
+navigatieshell of algemene foutmelding. Het opgeslagen kaart-ID hoort uitsluitend bij de
+kaartbewerker; een pagina-ID wordt alleen voor de `page_record`-handler gebruikt. Na opslaan volgt
+POST/redirect/GET; paginainhoud keert terug naar de editor, kaartbeheer naar het actieve tabblad.
+Elke mutatie blijft via `audit_log()` geregistreerd.
+
+`page_editor_top.php` / `page_editor_bottom.php` delen de shell met `speltak_form.php`.
+`$editorNavigation` bepaalt de teruglink, publieke URL en pills. Voor nieuwe of ongepubliceerde
+pagina's is de publieke knop uitgeschakeld met een toelichting. De knop gebruikt altijd de
+opgeslagen slug. `.page-editor` in `assets/css/admin.css` bepaalt de gezamenlijke breedte; deelviews
+voegen geen eigen maximumbreedte toe. `fa_inline_icon()` rendert de navigatieknopiconen direct als
+SVG in de HTML, zonder op de CDN-iconfont te wachten.
+
+`vaste_pagina.php`, `info_cards.php` en `info_card_form.php` zijn uitsluitend compatibiliteitsredirects;
+actieve links gebruiken `pagina_form.php`. Oude sectie-editors en inhoudstabbladen van `settings.php`
+verwijzen naar het juiste Home-tabblad. Oude POST-formulieren moeten daar opnieuw worden geopend.
+De tabellen `settings`, `info_cards` en `pages`, alle bestaande settingskeys en publieke routes blijven
+intact. Voor deze beheerherstructurering is geen migratie nodig.

@@ -374,7 +374,7 @@ function checks_config(): array
     }
 
     $siteUrl = trim(get_setting('site_url'));
-    $settingsLink = ['href' => 'settings.php', 'text' => 'Naar Teksten & gegevens'];
+    $settingsLink = ['href' => 'settings.php', 'text' => 'Naar Instellingen'];
     if ($siteUrl === '') {
         $r[] = check_result('Website-adres (site_url)', 'error',
             'Niet ingesteld. De sitemap, links in zoekmachines en afbeeldingen in pagina\'s gebruiken dit adres.', $settingsLink);

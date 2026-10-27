@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_verify()) {
                 $error = 'Kies een bestand om te uploaden.';
             } else {
                 audit_log('upload', 'upload', null, 'Bestand "' . basename($uploaded) . '" geüpload');
-                flash_set('success', 'Bestand geüpload: ' . basename($uploaded) . '. Je kunt dit pad nu gebruiken bij Teksten & gegevens, Info-vakjes of Documenten.');
+                flash_set('success', 'Bestand geüpload: ' . basename($uploaded) . '. Je kunt dit pad nu gebruiken bij Instellingen, Pagina\'s (ook Home → Info-vakjes) of Documenten.');
                 header('Location: uploads.php');
                 exit;
             }
