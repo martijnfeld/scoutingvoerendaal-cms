@@ -9,7 +9,7 @@ geen Composer of npm. Het draait op vrijwel elke gewone shared hosting.
 **Publieke website**
 - Een one-pager met hero, programma per speltak, lid worden, verhuur en contact.
 - Losse informatiepagina's (bv. ledeninformatie) op nette adressen zoals `/ledeninfo`, eventueel in
-  het menu.
+  het centrale headermenu via Instellingen → Header.
 - Een eigen pagina per speltak (`/speltakken/welpen`) met logo, leeftijd, opkomsttijd, eigen tekst en
   het programma, plus een overzichtspagina (`/speltakken`), met kruimelpad en structured data.
 - Programma per speltak automatisch uit Scoutdash (opkomsten-feed): de server haalt de feeds op,
@@ -166,3 +166,34 @@ gevonden of een idee? [Open een issue](https://github.com/martijnfeld/scoutingvo
 Wil je zelf iets bouwen? Maak een fork en stuur een pull request. Houd daarbij rekening met de punten
 onder [Goed om te weten](#goed-om-te-weten), en schrijf teksten, commentaar en interface in het
 Nederlands.
+
+## Beheer van pagina's en instellingen
+
+**Inhoud → Pagina's** bevat alle websitepagina's in één overzicht en één editorstructuur.
+Home en Speltakken kunnen niet worden verwijderd of verplaatst. De onderdelen Programma, Doe mee!,
+Verhuur en Contact staan als tabbladen onder Home, samen met Hero, Kennismaken-strip en Info-vakjes.
+Alleen info-vakjes met sectie `lidworden` verschijnen bij Doe mee! op de homepage; andere secties
+blijven bewaard en beheerbaar.
+
+**Systeem → Instellingen** bevat Algemeen, Statistieken & cookies, Organisatie & contact, Footer en **Header**.
+Via Header beheer je hoofditems en handmatige submenu's: menutekst, bestemming, zichtbaarheid,
+volgorde en dropdowns. Het overzicht groepeert submenu’s onder hun hoofditem en toont de actuele
+automatische lijsten per item. Toevoegen en bewerken gebeurt in een afzonderlijk, stapsgewijs ingedeeld
+formulier. Hoofditems voeg je toe via Menu-item toevoegen; submenu-items via Submenu-item toevoegen
+bij het hoofditem. Nieuwe items komen achteraan en sorteer je met de pijlen in het overzicht.
+Een zichtbaarheidsschakelaar en afwijkende kleur maken verborgen items herkenbaar. Bestemmingen zijn bestaande pagina's, homepage-secties, het speltakkenoverzicht
+of veilige eigen URL's. Paginavolgorde en headervolgorde zijn onafhankelijk. Nieuwe pagina's verschijnen
+pas in de header nadat je ze hier expliciet toevoegt.
+
+Programma toont standaard automatisch de actieve speltakken met links naar hun programma op Home;
+Speltakken toont dezelfde actuele groepen met links naar hun eigen pagina. Naam, slug, activatie en
+volgorde blijven onder Speltakken beheerd. Handmatige dropdowns ondersteunen één submenuniveau.
+Een gekoppelde inactieve pagina wordt niet getoond; voor verwijderen van de pagina moet eerst de
+menukoppeling worden gewijzigd of verwijderd.
+
+Bestaande installaties krijgen via **Systeem → Updates** migratie `0009_header_menu.php`. Die neemt de
+zes vaste links en alle oude `pages.in_menu=1`-koppelingen over, inclusief inactieve pagina's en de
+bestaande relatieve volgorde. De oude vlaggen blijven intact. Tot de migratie is uitgevoerd, gebruikt
+de publieke header een alleen-lezen fallback. Nieuwe installaties hebben direct de zes hoofditems en
+de twee automatische dropdowns. Bestaande headeraanpassingen worden bij herhalen niet overschreven.
+Zie [INSTALL.md](INSTALL.md) voor het gebruik en [CLAUDE.md](CLAUDE.md) voor de technische indeling.

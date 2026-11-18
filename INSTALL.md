@@ -61,23 +61,30 @@ vernieuw de installatiepagina.
 Ga naar `https://jouw-domein.nl/admin/` en log in met het zojuist
 aangemaakte account. Vanuit het beheerpaneel kun je:
 
-- **Teksten & gegevens** — alle vaste teksten en gegevens (hero, contact,
-  telefoonnummer, adres, verhuurvoorwaarden, footer, social media, etc.)
+- **Systeem → Instellingen** — Algemeen, Statistieken & cookies, Organisatie & contact en Footer.
+- **Inhoud → Pagina's** — één lijst met Home, Speltakken en zelf aangemaakte pagina's.
+  Home en Speltakken hebben een vaste URL en kunnen niet worden verwijderd of verplaatst.
+  Programma, Doe mee!, Verhuur en Contact zijn tabbladen binnen Home. Zelf aangemaakte pagina's
+  behouden hun eigen URL, menu- en publicatie-instelling.
 - **Speltakken** — naam, kleur, logo, leeftijden, volgorde, toelichting,
   leiding en de opkomsten-JSON-feed-URL per speltak. Elke actieve speltak
   heeft een eigen pagina op `/speltakken/<naam>` (met leeftijd, tijd,
   leiding, een eigen tekst via de editor en het programma), en
+  `/programma` toont het volledige programma met een sectie per speltak. Via de
+  header en de speltaklinks bovenaan ga je direct naar het juiste programma. De introductie
+  en voetnoot beheer je via **Inhoud → Pagina’s → Programma**.
   `/speltakken` is het overzicht van alle speltakken. Zet een speltak op
   "inactief" om hem (tijdelijk) van de website te halen.
-- **Info-vakjes** — de kaarten bij "Doe mee!" zoals *Gratis kennismaken*,
+- **Inhoud → Pagina's → Home → Info-vakjes** — de kaarten bij "Doe mee!" zoals *Gratis kennismaken*,
   *Inschrijven & contributie*, etc. Je kunt er zoveel toevoegen, bewerken
-  of verwijderen als je wilt, en de volgorde met de pijltjes aanpassen.
+  of verwijderen als je wilt, en de volgorde met de pijltjes aanpassen. Alleen sectie
+  `lidworden` wordt op de homepage getoond; andere secties blijven beheerbaar.
 - **Documenten (PDF's)** — upload, vervang of verwijder PDF-bestanden
   (zoals het inschrijfformulier). Koppel een document aan een info-vakje
   om er automatisch een downloadknop bij te tonen.
 - **Wachtwoord wijzigen** — je eigen inlogwachtwoord aanpassen.
 - **Updates** — controleer op een nieuwe versie, lees de releasenotes en werk de website met één klik bij.
-- **Teksten & gegevens → Statistieken & cookies** — Google Analytics aanzetten
+- **Systeem → Instellingen → Statistieken & cookies** — Google Analytics aanzetten
   en de teksten van de cookiebanner aanpassen (zie hieronder).
 
 ## Google Analytics (bezoekersstatistieken)
@@ -100,7 +107,7 @@ vullen. Er is geen extra code, plug-in of FTP-werk voor nodig.
 4. Kopieer het **measurement-ID** van de stream. Dat begint met `G-`
    (bijvoorbeeld `G-AB12CD34EF`). Oude Universal Analytics-codes (`UA-…`)
    werken niet meer en worden geweigerd.
-5. Ga in het beheerpaneel naar **Teksten & gegevens → Statistieken &
+5. Ga in het beheerpaneel naar **Systeem → Instellingen → Statistieken &
    cookies**, plak het ID in **Google Analytics measurement-ID** en klik op
    **Opslaan**.
 6. Vul daar ook de **link naar je privacyverklaring** in: een volledig adres
@@ -174,7 +181,7 @@ Daarbovenop stuurt de website deze eigen gebeurtenissen:
 | `document_download` | Klik op een downloadknop bij een "Doe mee!"-vakje | `document_name`, `card_title` |
 
 Elke gebeurtenis (ook de paginaweergave) krijgt bovendien `page_type`
-(`home`, `pagina`, `speltakken`, `speltak` of `niet_gevonden`) en, bij losse
+(`home`, `programma`, `pagina`, `speltakken`, `speltak` of `niet_gevonden`) en, bij losse
 pagina's en speltakpagina's, `page_slug` mee. Er worden **geen persoonsgegevens** verstuurd: van een e-mailadres of
 telefoonnummer gaat alleen het soort contact mee, niet het adres zelf.
 
@@ -228,7 +235,7 @@ waarop mensen de website in Google vinden en of Google problemen ziet.
    beheerpaneel, bv. `https://www.scoutingvoerendaal.nl/`).
 2. Kies als verificatiemethode **HTML-tag** en kopieer de tag
    (`<meta name="google-site-verification" content="…">`).
-3. Plak die in het beheerpaneel bij **Teksten & gegevens → Algemeen →
+3. Plak die in het beheerpaneel bij **Systeem → Instellingen → Algemeen →
    Google Search Console - verificatiecode** (de hele tag of alleen de
    code) en sla op. Klik daarna in Search Console op **Verifiëren**.
 4. Dien bij **Sitemaps** de sitemap in: `sitemap.xml`.

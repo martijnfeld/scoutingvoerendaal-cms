@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . "/header_menu.php";
 /**
  * Bovenkant van elke publieke pagina (index.php, pagina.php): <head>,
  * meldingsbalk, header/nav en de openende <main>. Verwacht (optioneel)
@@ -120,17 +121,25 @@ if (!headers_sent()) {
       <?php endif; ?>
       <span><?= e(get_setting('org_naam')) ?></span>
     </a>
-    <button class="navtoggle" id="navToggle" aria-label="Menu"><i class="fa-solid fa-bars"></i></button>
-    <nav id="mainNav">
-      <ul>
-        <li><a href="<?= $homeHref ?>#top">Home</a></li>
-        <li><a href="<?= $homeHref ?>#programma">Programma</a></li>
-        <li><a href="<?= e(speltakken_url()) ?>"<?= $activeNav === 'speltakken' ? ' class="active"' : '' ?>>Speltakken</a></li>
-        <li><a href="<?= $homeHref ?>#lidworden">Lid worden</a></li>
-        <li><a href="<?= $homeHref ?>#verhuur">Verhuur</a></li>
-        <li><a href="<?= $homeHref ?>#contact">Contact</a></li>
-        <?php foreach (get_pages_in_menu() as $mp): ?>
-        <li><a href="<?= e(page_url($mp['slug'])) ?>"<?= $currentPageSlug === $mp['slug'] ? ' class="active"' : '' ?>><?= e($mp['titel']) ?></a></li>
+    <button class="navtoggle" id="navToggle" type="button" aria-label="Menu" aria-controls="mainNav" aria-expanded="false"><?= header_menu_icon('menu') ?></button>
+    <nav id="mainNav" aria-label="Hoofdnavigatie">
+      <ul class="header-menu">
+        <?php foreach (header_menu_tree($homeHref, (string) $currentPageSlug, (string) $activeNav) as $menuItem): ?>
+        <li class="header-menu-item">
+          <div class="header-menu-link<?= ($menuItem['children'] ? ' has-submenu' : '') . ($menuItem['active'] ? ' is-active' : '') ?>">
+            <a class="header-main-link<?= $menuItem['active'] ? ' active' : '' ?>" href="<?= e($menuItem['url']) ?>"<?= $menuItem['active'] ? ' aria-current="page"' : '' ?>><?= e($menuItem['label']) ?></a>
+            <?php if ($menuItem['children']): ?>
+            <button type="button" class="header-submenu-toggle" aria-expanded="false" aria-controls="header-submenu-<?= (int) $menuItem['id'] ?>" aria-label="<?= e('Submenu ' . $menuItem['label'] . ' openen of sluiten') ?>"><?= header_menu_icon('chevron-down') ?></button>
+            <?php endif; ?>
+          </div>
+          <?php if ($menuItem['children']): ?>
+          <ul class="header-submenu" id="header-submenu-<?= (int) $menuItem['id'] ?>" hidden>
+            <?php foreach ($menuItem['children'] as $submenuItem): ?>
+            <li><a href="<?= e($submenuItem['url']) ?>"><span><?= e($submenuItem['label']) ?></span><?= header_menu_icon('chevron-right') ?></a></li>
+            <?php endforeach; ?>
+          </ul>
+          <?php endif; ?>
+        </li>
         <?php endforeach; ?>
       </ul>
     </nav>

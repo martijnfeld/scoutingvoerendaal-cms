@@ -1,89 +1,88 @@
 <?php
 require_once __DIR__ . '/includes/auth.php';
 require_login();
+require_once __DIR__ . '/includes/page_definitions.php';
+require_once __DIR__ . '/includes/page_actions.php';
 
 $pageTitle = "Pagina's";
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_verify()) {
-    $action = $_POST['action'] ?? '';
-    $id = (int) ($_POST['id'] ?? 0);
-
-    if ($action === 'delete' && $id) {
-        $old = get_page($id);
-        $stmt = db()->prepare('DELETE FROM pages WHERE id = :id');
-        $stmt->execute(['id' => $id]);
-        audit_log('delete', 'pagina', $id, 'Pagina "' . ($old['titel'] ?? '') . '" verwijderd');
-        flash_set('success', 'Pagina verwijderd.');
-    } elseif ($action === 'move' && $id) {
-        $dir = $_POST['dir'] ?? '';
-        $page = get_page($id);
-        if ($page) {
-            $sql = $dir === 'up'
-                ? 'SELECT * FROM pages WHERE (volgorde < :v OR (volgorde = :v AND id < :id)) ORDER BY volgorde DESC, id DESC LIMIT 1'
-                : 'SELECT * FROM pages WHERE (volgorde > :v OR (volgorde = :v AND id > :id)) ORDER BY volgorde ASC, id ASC LIMIT 1';
-            $stmt = db()->prepare($sql);
-            $stmt->execute(['v' => $page['volgorde'], 'id' => $page['id']]);
-            $neighbor = $stmt->fetch();
-            if ($neighbor) {
-                $upd = db()->prepare('UPDATE pages SET volgorde = :v WHERE id = :id');
-                $upd->execute(['v' => $neighbor['volgorde'], 'id' => $page['id']]);
-                $upd->execute(['v' => $page['volgorde'], 'id' => $neighbor['id']]);
-                audit_log('move', 'pagina', (int) $page['id'], 'Pagina "' . $page['titel'] . '" ' . ($dir === 'up' ? 'omhoog' : 'omlaag') . ' verplaatst');
+$adminMainClass = 'header-settings-main';
+$loadRichTextEditor = false;
+$error = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!csrf_verify()) {
+        $error = 'Ongeldige aanvraag. Ververs de pagina en probeer het opnieuw.';
+    } else {
+        $key = $_POST['pagina'] ?? 'content';
+        $action = $_POST['action'] ?? '';
+        $requestedId = $_POST['id'] ?? '0';
+        if (!is_string($key) || !isset(page_editor_definitions()[$key]) || !is_string($action)
+            || !is_string($requestedId) || !ctype_digit($requestedId)) {
+            $error = 'Pagina of actie niet gevonden.';
+        } else {
+            try {
+                page_overview_mutate($key, (int) $requestedId, $action);
+                flash_set('success', $action === 'delete' ? 'Pagina verwijderd.' : 'Publicatie bijgewerkt.');
+                header('Location: paginas.php', true, 303);
+                exit;
+            } catch (RuntimeException $exception) {
+                $error = $exception->getMessage();
             }
         }
     }
-    header('Location: paginas.php');
-    exit;
 }
-
-$pages = get_pages();
-
+$pages = page_overview_entries(get_pages());
+$pageHeaderRows = header_menu_rows() ?? header_menu_legacy_rows();
 include __DIR__ . '/includes/layout_top.php';
 ?>
-<p>Losse informatieve pagina's naast de hoofdpagina (bv. voor leden). De inhoud vul je in met een uitgebreide tekstverwerker, inclusief afbeeldingen en YouTube-video's.</p>
-<div class="top-actions">
-  <a href="pagina_form.php" class="btn">+ Nieuwe pagina</a>
-</div>
-
-<div class="admin-card">
-  <table class="admin-table">
-    <tr><th>Volgorde</th><th>Titel</th><th>Slug</th><th>Menu</th><th>Actief</th><th>Acties</th></tr>
-    <?php foreach ($pages as $p): ?>
-    <tr>
-      <td>
-        <form method="post" style="display:inline;">
-          <?= csrf_field() ?>
-          <input type="hidden" name="action" value="move">
-          <input type="hidden" name="id" value="<?= $p['id'] ?>">
-          <input type="hidden" name="dir" value="up">
-          <button type="submit" class="btn btn-secondary btn-small" title="Omhoog"><i class="fa-solid fa-arrow-up"></i></button>
-        </form>
-        <form method="post" style="display:inline;">
-          <?= csrf_field() ?>
-          <input type="hidden" name="action" value="move">
-          <input type="hidden" name="id" value="<?= $p['id'] ?>">
-          <input type="hidden" name="dir" value="down">
-          <button type="submit" class="btn btn-secondary btn-small" title="Omlaag"><i class="fa-solid fa-arrow-down"></i></button>
-        </form>
-      </td>
-      <td><strong><?= e($p['titel']) ?></strong></td>
-      <td><a href="../<?= e(page_url($p['slug'])) ?>" target="_blank">/<?= e($p['slug']) ?></a></td>
-      <td><?= $p['in_menu'] ? 'Ja' : 'Nee' ?></td>
-      <td><?= $p['actief'] ? 'Ja' : 'Nee' ?></td>
-      <td class="actions">
-        <a class="btn btn-small" href="pagina_form.php?id=<?= $p['id'] ?>">Bewerken</a>
-        <form method="post" data-confirm="Deze pagina verwijderen?" style="display:inline;">
-          <?= csrf_field() ?>
-          <input type="hidden" name="action" value="delete">
-          <input type="hidden" name="id" value="<?= $p['id'] ?>">
-          <button type="submit" class="btn btn-danger btn-small">Verwijderen</button>
-        </form>
-      </td>
-    </tr>
-    <?php endforeach; ?>
-    <?php if (!$pages): ?>
-    <tr><td colspan="6" class="muted">Nog geen pagina's.</td></tr>
-    <?php endif; ?>
-  </table>
+<?php if ($error): ?><div class="admin-flash admin-flash-error"><?= e($error) ?></div><?php endif; ?>
+<div class="header-admin pages-admin">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <p class="text-body-secondary mb-0">Beheer de inhoud en publicatie van je websitepagina’s.</p>
+    <a href="pagina_form.php" class="btn d-inline-flex align-items-center gap-2"><?= header_menu_icon('plus') ?>Nieuwe pagina</a>
+  </div>
+  <div class="header-admin-list">
+    <ul class="list-group list-group-flush" aria-label="Pagina’s">
+      <?php foreach ($pages as $p):
+          $record = $p['key'] === 'content' ? ['id' => $p['id'], 'slug' => $p['slug']] : [];
+          $used = $p['can_toggle'] && page_header_used($p['key'], $record, $pageHeaderRows);
+          $blocked = $p['actief'] && $used;
+          $publicationDisabled = !$p['can_toggle'] || $blocked;
+          $publicationHint = !$p['can_toggle']
+              ? 'Home is de startpagina van je website en kan daarom niet worden uitgeschakeld.'
+              : 'Deze pagina staat nog in het websitemenu. Verwijder de koppelingen via Systeem → Instellingen → Header. Daarna kun je de pagina hier uitschakelen.';
+          $deleteDisabled = !$p['can_delete'] || $used;
+          $deleteHint = !$p['can_delete']
+              ? 'Deze pagina hoort bij het systeem en kan niet worden verwijderd.'
+              : 'Deze pagina staat nog in het websitemenu. Verwijder eerst de koppelingen via Systeem → Instellingen → Header. Daarna kun je de pagina verwijderen.';
+      ?>
+      <li class="list-group-item p-0 header-admin-group">
+        <div class="header-admin-row pages-admin-row<?= !$p['actief'] ? ' header-admin-row-inactive' : '' ?>">
+          <div class="header-admin-item-content">
+            <a class="header-admin-item-title" href="<?= e($p['edit_url']) ?>"><?= e($p['titel']) ?></a>
+            <div class="header-admin-destination">
+              <span><?= $p['can_delete'] ? 'Eigen pagina' : 'Standaardpagina' ?></span>
+              <?php if ($p['actief']): ?><a href="<?= e($p['public_url']) ?>" target="_blank" rel="noopener">/<?= e($p['slug']) ?><?= fa_inline_icon('external-link') ?><span class="visually-hidden"> (opent in nieuw tabblad)</span></a>
+              <?php else: ?><span>/<?= e($p['slug']) ?></span><?php endif; ?>
+            </div>
+          </div>
+          <div class="header-admin-item-actions">
+            <a class="btn header-admin-edit" href="<?= e($p['edit_url']) ?>" aria-label="<?= e('Bewerken: ' . $p['titel']) ?>"><?= header_menu_icon('edit') ?><span>Bewerken</span></a>
+            <form method="post" class="pages-admin-publication"<?= $publicationDisabled ? ' tabindex="0" data-bs-toggle="tooltip" data-bs-custom-class="page-action-tooltip" data-bs-title="' . e($publicationHint) . '" aria-label="' . e('Publicatie van ' . $p['titel']) . '" aria-describedby="page-status-' . e($p['key']) . '-' . (int) $p['id'] . '"' : '' ?>>
+              <?php if ($publicationDisabled): ?><span class="visually-hidden" id="page-status-<?= e($p['key']) ?>-<?= (int) $p['id'] ?>"><?= e($publicationHint) ?></span><?php endif; ?>
+              <?= csrf_field() ?><input type="hidden" name="pagina" value="<?= e($p['key']) ?>"><input type="hidden" name="id" value="<?= (int) $p['id'] ?>"><input type="hidden" name="action" value="toggle">
+              <button class="header-admin-visibility" type="submit" role="switch" aria-checked="<?= $p['actief'] ? 'true' : 'false' ?>" aria-label="<?= e('Publicatie van ' . $p['titel']) ?>"<?= $publicationDisabled ? ' disabled aria-describedby="page-status-' . e($p['key']) . '-' . (int) $p['id'] . '"' : '' ?>>
+                <span class="header-admin-switch" aria-hidden="true"></span><span><?= $p['actief'] ? 'Actief' : 'Uitgeschakeld' ?></span>
+              </button>
+            </form>
+            <form method="post" class="pages-admin-delete"<?= $deleteDisabled ? ' tabindex="0" data-bs-toggle="tooltip" data-bs-custom-class="page-action-tooltip" data-bs-title="' . e($deleteHint) . '" aria-label="' . e('Verwijderen: ' . $p['titel']) . '"' : '' ?> data-confirm="<?= e('Pagina “' . $p['titel'] . '” verwijderen?') ?>">
+              <?= csrf_field() ?><input type="hidden" name="pagina" value="<?= e($p['key']) ?>"><input type="hidden" name="id" value="<?= (int) $p['id'] ?>"><input type="hidden" name="action" value="delete">
+              <button class="header-admin-icon-button header-admin-delete" type="submit" <?= !$deleteDisabled ? 'title="Verwijderen"' : '' ?> aria-label="<?= e('Verwijderen: ' . $p['titel']) ?>"<?= $deleteDisabled ? ' disabled' : '' ?>><?= header_menu_icon('trash') ?></button>
+            </form>
+          </div>
+        </div>
+      </li>
+      <?php endforeach; ?>
+    </ul>
+  </div>
 </div>
 <?php include __DIR__ . '/includes/layout_bottom.php'; ?>
