@@ -19,7 +19,7 @@ $jsonLd = $jsonLd ?? [];
 $activeNav = $activeNav ?? null;
 // Pagina's met een URL in een "submap" (/speltakken/welpen) krijgen een
 // <base> naar de websitemap, zodat alle relatieve links (CSS/JS, logo,
-// geüploade afbeeldingen, api/opkomsten.php, ./#programma) blijven werken.
+// geüploade afbeeldingen, api/opkomsten.php, programma) blijven werken.
 // Afgeleid van het pad van het PHP-script zelf, dus ook goed in een submap
 // en onafhankelijk van site_url.
 $baseHref = !empty($useBaseHref)

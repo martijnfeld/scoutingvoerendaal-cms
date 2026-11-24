@@ -194,7 +194,7 @@ include __DIR__ . '/includes/page_editor_top.php';
     <div class="field">
       <label for="toelichting">Toelichting</label>
       <textarea class="rich-text" id="toelichting" name="toelichting" rows="4"><?= e($values['toelichting']) ?></textarea>
-      <span class="hint">Wordt (op de homepage én op de eigen pagina) getoond in plaats van het programma zolang er geen opkomsten-feed is ingesteld (bv. voor een tijdelijk inactieve speltak).</span>
+      <span class="hint">Wordt (op de programmapagina én op de eigen pagina) getoond in plaats van het programma zolang er geen opkomsten-feed is ingesteld (bv. voor een tijdelijk inactieve speltak).</span>
     </div>
 
     <div class="field">

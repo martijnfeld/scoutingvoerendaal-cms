@@ -61,3 +61,31 @@ test('programmalijst toont actieve speltakken met feeds, toelichting en lege toe
     assert_true($programme['active']);
     assert_same(array_column($speltakken, 'naam'), array_column($programme['children'], 'label'));
 });
+
+test('linkmigratie 0013 zet oude #programma-ankers om en behoudt overige inhoud', function () {
+    $setSetting = db()->prepare('UPDATE settings SET setting_value=? WHERE setting_key=?');
+    $setting = function (string $key) {
+        $stmt = db()->prepare('SELECT setting_value FROM settings WHERE setting_key=?');
+        $stmt->execute([$key]);
+        return $stmt->fetchColumn();
+    };
+    $setSetting->execute(['#programma', 'hero_btn2_link']);
+    $setSetting->execute(['#sk-welpen', 'hero_btn1_link']);
+    $setSetting->execute(['#lidworden', 'declaratie_link']);
+    $setSetting->execute(['Zie <a href="#programma">programma</a> en <a href="./#programma">hier</a> of <a href="#contact">contact</a>.', 'feature3_text']);
+    db()->exec("UPDATE info_cards SET tekst='<p><a href=\"#programma\">Programma</a></p>' WHERE id=1");
+    db()->exec("INSERT INTO pages (titel, slug, inhoud, actief) VALUES ('Info', 'info-0013', '<a href=\"#programma\">x</a>', 1)");
+    db()->exec("UPDATE header_menu_items SET link_type='url', link_value='/#programma' WHERE seed_key='contact'");
+
+    $run = function () { require TEST_ROOT . '/sql/migrations/0013_programma_links.php'; };
+    $run();
+    $run();
+
+    assert_same('programma', $setting('hero_btn2_link'));
+    assert_same('programma#sk-welpen', $setting('hero_btn1_link'));
+    assert_same('#lidworden', $setting('declaratie_link'));
+    assert_same('Zie <a href="programma">programma</a> en <a href="programma">hier</a> of <a href="#contact">contact</a>.', $setting('feature3_text'));
+    assert_same('<p><a href="programma">Programma</a></p>', db()->query('SELECT tekst FROM info_cards WHERE id=1')->fetchColumn());
+    assert_same('<a href="programma">x</a>', db()->query("SELECT inhoud FROM pages WHERE slug='info-0013'")->fetchColumn());
+    assert_same(['programma', ''], array_values(db()->query("SELECT link_type, link_value FROM header_menu_items WHERE seed_key='contact'")->fetch(PDO::FETCH_NUM)));
+});

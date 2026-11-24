@@ -127,7 +127,7 @@ clobbers site-specific secrets:
   (`speltakken` is in `PAGE_RESERVED_SLUGS`; old `speltak.php?slug=`/`speltakken.php` URLs 301). Build
   links with `speltakken_url()`/`speltak_url()`. Because their URLs sit one "directory" deep, they set
   `$useBaseHref = true` so the top layout emits `<base href>` (derived from `SCRIPT_NAME`, not
-  `site_url`) and every relative link (assets, uploads, `api/opkomsten.php`, `./#programma`) keeps
+  `site_url`) and every relative link (assets, uploads, `api/opkomsten.php`, `programma`) keeps
   working — any new nested public URL needs the same. Both render visible breadcrumbs via
   `breadcrumbs_html()` plus matching `breadcrumb_json_ld()` (the speltak page also `speltak_json_ld()`:
   an `Organization` whose `parentOrganization` points at the homepage NGO via the shared

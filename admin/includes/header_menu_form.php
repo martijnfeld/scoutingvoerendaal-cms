@@ -33,7 +33,7 @@ foreach ($headerItems as $candidate) {
       <div data-header-field="section" class="mb-3">
         <label for="menu-section" class="form-label">Homepage-sectie</label>
         <select class="form-select" id="menu-section" name="section_value">
-          <?php foreach (HEADER_SECTIONS as $key => $label): ?><option value="<?= e($key) ?>"<?= $menuValues['link_value'] === $key ? ' selected' : '' ?>><?= e($label) ?></option><?php endforeach; ?>
+          <?php foreach (HEADER_SECTIONS as $key => $label): if ($key === 'programma' && $menuValues['link_value'] !== 'programma') { continue; } /* staat niet meer op Home; gebruik linktype Programmapagina */ ?><option value="<?= e($key) ?>"<?= $menuValues['link_value'] === $key ? ' selected' : '' ?>><?= e($label) ?></option><?php endforeach; ?>
         </select>
       </div>
       <div data-header-field="programma" class="form-text mb-3">Dit item opent het programma met alle actieve speltakken.</div>

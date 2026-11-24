@@ -1,4 +1,14 @@
 (function(){
+  // Het programma stond vroeger op de homepage: oude bladwijzers en links
+  // (/#programma, /#sk-<slug>) gaan door naar de programmapagina.
+  function redirectLegacyProgrammaHash(){
+    var m = /^#(programma|sk-[a-z0-9-]+)$/.exec(window.location.hash);
+    if (!m || document.getElementById(m[1]) || !document.querySelector('section.hero#top')) return;
+    window.location.replace('programma' + (m[1] === 'programma' ? '' : '#' + m[1]));
+  }
+  redirectLegacyProgrammaHash();
+  window.addEventListener('hashchange', redirectLegacyProgrammaHash);
+
   var toggle = document.getElementById('navToggle');
   var nav = document.getElementById('mainNav');
   var submenuToggles = Array.prototype.slice.call(nav.querySelectorAll('.header-submenu-toggle'));

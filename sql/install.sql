@@ -235,7 +235,7 @@ ON DUPLICATE KEY UPDATE naam = VALUES(naam);
 
 INSERT INTO info_cards (id, sectie, titel, tekst, afbeelding, document_id, knop_tekst, anchor, volgorde) VALUES
     (1, 'lidworden', 'Gratis kennismaken',
-        '<p>Twijfel je nog? Je mag vier keer gratis en vrijblijvend meedoen voordat je je aanmeldt als lid. We hebben voor elke leeftijd een eigen groep – kijk bij <a href="#programma">Programma</a> wanneer je welkom bent.</p><p>Vul het 4x kijken formulier in, dan nemen we contact met je op om een startdatum af te spreken. Let op: tijdens deze periode sta je nog niet in de maillijst, houd dus zelf het programma in de gaten.</p>',
+        '<p>Twijfel je nog? Je mag vier keer gratis en vrijblijvend meedoen voordat je je aanmeldt als lid. We hebben voor elke leeftijd een eigen groep – kijk bij <a href="programma">Programma</a> wanneer je welkom bent.</p><p>Vul het 4x kijken formulier in, dan nemen we contact met je op om een startdatum af te spreken. Let op: tijdens deze periode sta je nog niet in de maillijst, houd dus zelf het programma in de gaten.</p>',
         NULL, 1, '4x kijken formulier (PDF)', NULL, 1),
     (2, 'lidworden', 'Inschrijven &amp; contributie',
         '<p>De contributie bedraagt &euro;9,50 per maand (automatische incasso). Lukt betalen niet? Kijk op <a href="https://www.leergeld.nl/parkstad" target="_blank" rel="noopener">leergeld.nl/parkstad</a> of <a href="https://www.samenvoorallekinderen.nl" target="_blank" rel="noopener">samenvoorallekinderen.nl</a>.</p><p>Download het inschrijfformulier, vul het in en mail het naar <a href="mailto:info@example.org">info@example.org</a>.</p>',
@@ -287,7 +287,7 @@ INSERT INTO settings (setting_key, setting_value) VALUES
     ('hero_btn1_text', 'Doe mee!'),
     ('hero_btn1_link', '#lidworden'),
     ('hero_btn2_text', 'Bekijk het programma'),
-    ('hero_btn2_link', '#programma'),
+    ('hero_btn2_link', 'programma'),
 
     ('feature1_image', ''),
     ('feature1_alt', 'Bever met microscoop'),
@@ -302,7 +302,7 @@ INSERT INTO settings (setting_key, setting_value) VALUES
     ('feature3_image', ''),
     ('feature3_alt', 'Bevers buiten'),
     ('feature3_title', 'Snel naar'),
-    ('feature3_text', 'Direct naar het programma, contactgegevens of informatie over verhuur van ons clubgebouw.<br><a href="#programma">Programma</a> &middot; <a href="#contact">Contact</a> &middot; <a href="#verhuur">Verhuur</a>'),
+    ('feature3_text', 'Direct naar het programma, contactgegevens of informatie over verhuur van ons clubgebouw.<br><a href="programma">Programma</a> &middot; <a href="#contact">Contact</a> &middot; <a href="#verhuur">Verhuur</a>'),
 
     ('programma_intro', 'Bekijk het actuele programma per speltak.'),
     ('programma_footer_note', 'Het programma is ook te zien in de Scouting-app.'),
@@ -311,7 +311,7 @@ INSERT INTO settings (setting_key, setting_value) VALUES
 
     ('lidworden_intro', 'Nieuwsgierig naar Scouting? Je bent van harte welkom.'),
     ('lidworden_tekst_1', 'Scouting staat voor uitdaging! Scouting biedt leuke en spannende activiteiten waarmee meiden en jongens worden uitgedaagd zich persoonlijk te ontwikkelen. Al vanaf 5 jaar ben je welkom bij Scouting, waar je iedere week weer uitdagende activiteiten doet. Bij Scouting Voorbeeld willen we kinderen en jongeren iedere week een uitdagend spelaanbod bieden. Lid worden? <a href="#inschrijven">Klik hier</a> voor meer informatie!'),
-    ('lidworden_tekst_2', 'Bij scouting worden de leden onderverdeeld in speltakken. Dit zijn groepen gebaseerd op de leeftijd van de kinderen. De jongste groep heet de bevers, daarna komen de welpen, vervolgens de scouts, de explorers en de roverscouts. Afhankelijk van je speltak ben je bezig met andere activiteiten. De leeftijden per speltak zie je hier onder. Bekijk ook eens het <a href="#programma">programma</a> van de verschillende speltakken.'),
+    ('lidworden_tekst_2', 'Bij scouting worden de leden onderverdeeld in speltakken. Dit zijn groepen gebaseerd op de leeftijd van de kinderen. De jongste groep heet de bevers, daarna komen de welpen, vervolgens de scouts, de explorers en de roverscouts. Afhankelijk van je speltak ben je bezig met andere activiteiten. De leeftijden per speltak zie je hier onder. Bekijk ook eens het <a href="programma">programma</a> van de verschillende speltakken.'),
 
     ('verhuur_intro', 'Ons clubgebouw in Voorbeeldstad is te huur voor scoutingverenigingen en andere jeugdgroepen.'),
     ('verhuur_photo', ''),

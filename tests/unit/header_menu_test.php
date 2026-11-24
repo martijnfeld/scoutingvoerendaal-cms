@@ -32,3 +32,7 @@ test('programmalinks verwijzen naar de pagina en behouden het speltakanker', fun
     assert_same('', $item['link_value']);
     assert_same(null, $item['page_id']);
 });
+
+test('standaardinhoud bevat geen links meer naar #programma', function () {
+    assert_false(strpos(file_get_contents(TEST_ROOT . '/sql/install.sql'), '#programma') !== false);
+});
