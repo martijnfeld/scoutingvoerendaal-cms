@@ -45,6 +45,7 @@ function fa_icon(string $name, string $class = ''): string
         'settings' => 'gear',
         'file-text' => 'file-lines',
         'sitemap' => 'diagram-project',
+        'list' => 'bars',
         'layout-cards' => 'table-cells-large',
         'files' => 'copy',
         'cloud-upload' => 'cloud-arrow-up',
@@ -53,6 +54,7 @@ function fa_icon(string $name, string $class = ''): string
         'refresh' => 'arrows-rotate',
         'history' => 'clock-rotate-left',
         'users' => 'users',
+        'id-card' => 'id-card',
         'key' => 'key',
         'user' => 'user',
         'logout' => 'right-from-bracket',
@@ -767,6 +769,18 @@ function find_upload_usage(string $filename): array
         $used[] = 'Speltak: ' . $row['naam'];
     }
 
+    $stmt = db()->prepare('SELECT naam FROM vrijwilliger_groepen WHERE logo LIKE :p1 OR toelichting LIKE :p2');
+    $stmt->execute(['p1' => $likePattern, 'p2' => $likePattern]);
+    foreach ($stmt->fetchAll() as $row) {
+        $used[] = 'Vrijwilligersgroep: ' . $row['naam'];
+    }
+
+    $stmt = db()->prepare('SELECT naam FROM vrijwilligers WHERE foto LIKE :p');
+    $stmt->execute(['p' => $likePattern]);
+    foreach ($stmt->fetchAll() as $row) {
+        $used[] = 'Vrijwilliger: ' . $row['naam'];
+    }
+
     $stmt = db()->prepare('SELECT titel FROM pages WHERE inhoud LIKE :p1 OR og_afbeelding LIKE :p2');
     $stmt->execute(['p1' => $likePattern, 'p2' => $likePattern]);
     foreach ($stmt->fetchAll() as $row) {
@@ -1135,3 +1149,5 @@ function flash_get(): ?array
     unset($_SESSION['flash']);
     return $flash;
 }
+
+require_once __DIR__ . '/vrijwilligers.php';

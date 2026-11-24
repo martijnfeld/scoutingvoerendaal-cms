@@ -1,20 +1,48 @@
 <?php
-/** Sorteert beheerinhoud met gelijke volgordenummers en logt alleen echte verplaatsingen. */
-function move_content_record(string $table, int $id, string $direction): void
+/**
+ * Sorteert beheerinhoud met gelijke volgordenummers en logt alleen echte verplaatsingen.
+ * Verplaatst binnen de "scope" van het record (bv. dezelfde sectie of groep).
+ */
+function content_order_config(): array
 {
     // Tabel- en kolomnamen komen uitsluitend uit deze interne whitelist.
-    $entities = ['info_cards' => 'info_card'];
-    if (!isset($entities[$table]) || !in_array($direction, ['up', 'down'], true)) {
+    return [
+        'info_cards' => [
+            'entity' => 'info_card', 'label' => 'Info-vakje', 'scope' => ['sectie'],
+            'name' => function (array $record): string { return (string) $record['titel']; },
+        ],
+        'vrijwilliger_rollen' => [
+            'entity' => 'vrijwilliger_rol', 'label' => 'Vrijwilliger', 'scope' => ['speltak_id', 'groep_id'],
+            'name' => function (array $record): string {
+                $stmt = db()->prepare('SELECT naam FROM vrijwilligers WHERE id = :id');
+                $stmt->execute(['id' => $record['vrijwilliger_id']]);
+                return (string) $stmt->fetchColumn();
+            },
+        ],
+    ];
+}
+
+function move_content_record(string $table, int $id, string $direction): void
+{
+    $config = content_order_config();
+    if (!isset($config[$table]) || !in_array($direction, ['up', 'down'], true)) {
         return;
     }
+    $entity = $config[$table];
     $lookup = db()->prepare('SELECT * FROM ' . $table . ' WHERE id = :id');
     $lookup->execute(['id' => $id]);
     $record = $lookup->fetch();
     if (!$record) {
         return;
     }
-    $scope = $table === 'info_cards' ? ' WHERE sectie = :sectie' : '';
-    $params = $table === 'info_cards' ? ['sectie' => $record['sectie']] : [];
+    $conditions = [];
+    $params = [];
+    foreach ($entity['scope'] as $column) {
+        // NULL-veilige vergelijking: een rol hoort bij een speltak of een groep.
+        $conditions[] = $column . ' <=> :' . $column;
+        $params[$column] = $record[$column];
+    }
+    $scope = $conditions ? ' WHERE ' . implode(' AND ', $conditions) : '';
     db()->beginTransaction();
     try {
         $stmt = db()->prepare('SELECT id FROM ' . $table . $scope . ' ORDER BY volgorde ASC, id ASC FOR UPDATE');
@@ -28,8 +56,7 @@ function move_content_record(string $table, int $id, string $direction): void
             foreach ($ids as $position => $recordId) {
                 $update->execute(['v' => $position + 1, 'id' => $recordId]);
             }
-            $label = $table === 'pages' ? 'Pagina' : 'Info-vakje';
-            audit_log('move', $entities[$table], $id, $label . ' "' . $record['titel'] . '" '
+            audit_log('move', $entity['entity'], $id, $entity['label'] . ' "' . $entity['name']($record) . '" '
                 . ($direction === 'up' ? 'omhoog' : 'omlaag') . ' verplaatst');
         }
         db()->commit();

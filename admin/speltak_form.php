@@ -17,7 +17,7 @@ $error = '';
 $values = $sp ?: [
     'naam' => '', 'kleur' => '#00A551', 'leeftijd' => '', 'dag_tijd' => '', 'leiding' => '',
     'toelichting' => '', 'feed_url' => '', 'afmeld_url' => '', 'logo' => '', 'inhoud' => '',
-    'meta_omschrijving' => '', 'actief' => 1, 'volgorde' => 0,
+    'meta_omschrijving' => '', 'actief' => 1, 'toon_leiding' => 1, 'volgorde' => 0,
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -36,6 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $values['inhoud'] = $_POST['inhoud'] ?? '';
         $values['meta_omschrijving'] = trim($_POST['meta_omschrijving'] ?? '');
         $values['actief'] = isset($_POST['actief']) ? 1 : 0;
+        $values['toon_leiding'] = isset($_POST['toon_leiding']) ? 1 : 0;
         $values['volgorde'] = (int) ($_POST['volgorde'] ?? 0);
 
         try {
@@ -69,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'UPDATE speltakken SET naam=:naam, slug=:slug, kleur=:kleur, leeftijd=:leeftijd, dag_tijd=:dag_tijd,
                      leiding=:leiding, toelichting=:toelichting, feed_url=:feed_url, afmeld_url=:afmeld_url,
                      logo=:logo, inhoud=:inhoud, meta_omschrijving=:meta_omschrijving,
-                     actief=:actief, volgorde=:volgorde WHERE id=:id'
+                     actief=:actief, toon_leiding=:toon_leiding, volgorde=:volgorde WHERE id=:id'
                 );
                 $stmt->execute([
                     'naam' => $values['naam'], 'slug' => $slug, 'kleur' => $values['kleur'],
@@ -78,7 +79,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'feed_url' => $values['feed_url'] ?: null, 'afmeld_url' => $values['afmeld_url'] ?: null,
                     'logo' => $values['logo'] ?: null, 'inhoud' => $values['inhoud'] ?: null,
                     'meta_omschrijving' => $values['meta_omschrijving'] ?: null,
-                    'actief' => $values['actief'], 'volgorde' => $values['volgorde'], 'id' => $id,
+                    'actief' => $values['actief'], 'toon_leiding' => $values['toon_leiding'],
+                    'volgorde' => $values['volgorde'], 'id' => $id,
                 ]);
                 audit_log('update', 'speltak', (int) $id, 'Speltak "' . $values['naam'] . '" bijgewerkt');
                 flash_set('success', 'Speltak bijgewerkt.');
@@ -88,9 +90,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $stmt = db()->prepare(
                     'INSERT INTO speltakken (naam, slug, kleur, leeftijd, dag_tijd, leiding, toelichting, feed_url, afmeld_url,
-                     logo, inhoud, meta_omschrijving, actief, volgorde)
+                     logo, inhoud, meta_omschrijving, actief, toon_leiding, volgorde)
                      VALUES (:naam, :slug, :kleur, :leeftijd, :dag_tijd, :leiding, :toelichting, :feed_url, :afmeld_url,
-                     :logo, :inhoud, :meta_omschrijving, :actief, :volgorde)'
+                     :logo, :inhoud, :meta_omschrijving, :actief, :toon_leiding, :volgorde)'
                 );
                 $stmt->execute([
                     'naam' => $values['naam'], 'slug' => $slug, 'kleur' => $values['kleur'],
@@ -99,7 +101,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'feed_url' => $values['feed_url'] ?: null, 'afmeld_url' => $values['afmeld_url'] ?: null,
                     'logo' => $values['logo'] ?: null, 'inhoud' => $values['inhoud'] ?: null,
                     'meta_omschrijving' => $values['meta_omschrijving'] ?: null,
-                    'actief' => $values['actief'], 'volgorde' => $values['volgorde'],
+                    'actief' => $values['actief'], 'toon_leiding' => $values['toon_leiding'],
+                    'volgorde' => $values['volgorde'],
                 ]);
                 audit_log('create', 'speltak', (int) db()->lastInsertId(), 'Speltak "' . $values['naam'] . '" toegevoegd');
                 flash_set('success', 'Speltak toegevoegd.');
@@ -182,7 +185,7 @@ include __DIR__ . '/includes/page_editor_top.php';
     <div class="field">
       <label for="inhoud">Inhoud eigen pagina</label>
       <textarea class="rich-text" id="inhoud" name="inhoud" rows="16"><?= e($values['inhoud'] ?? '') ?></textarea>
-      <span class="hint">De tekst op de eigen pagina van deze speltak, tussen de gegevens (leeftijd, tijd, leiding) en het programma. Je kunt hier ook afbeeldingen uploaden en YouTube-video's plakken (gewoon de video-URL op een eigen regel).</span>
+      <span class="hint">De tekst op de eigen pagina van deze speltak, tussen de gegevens (leeftijd, tijd, leiding) en het programma. Je kunt hier ook afbeeldingen uploaden en YouTube-video's plakken (gewoon de video-URL op een eigen regel). Met <code>[smoelenboek groep="slug"]</code> plaats je een groep vrijwilligers.</span>
     </div>
 
     <div class="field">
@@ -211,6 +214,11 @@ include __DIR__ . '/includes/page_editor_top.php';
 
     <div class="field">
       <label class="field-inline-label"><input type="checkbox" name="actief" <?= $values['actief'] ? 'checked' : '' ?>> Actief (zichtbaar op de website)</label>
+    </div>
+
+    <div class="field">
+      <label class="field-inline-label"><input type="checkbox" name="toon_leiding" <?= !empty($values['toon_leiding']) ? 'checked' : '' ?>> Toon de leiding (vrijwilligers) op de speltakpagina</label>
+      <span class="hint">De leiding wordt beheerd onder <a href="vrijwilligers.php">Vrijwilligers</a>. Uitzetten verbergt het blok &ldquo;Leiding&rdquo; op de pagina van deze speltak; je kunt de leiding dan nog wel zelf plaatsen met <code>[smoelenboek speltak="<?= e($sp['slug'] ?? 'slug') ?>"]</code> in de inhoud hierboven.</span>
     </div>
 
     <button type="submit" class="btn">Opslaan</button>

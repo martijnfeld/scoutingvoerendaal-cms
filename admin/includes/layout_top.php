@@ -10,7 +10,9 @@ $overviewNavigation = ['label' => 'Overzicht', 'href' => 'index.php', 'icon' => 
 $navigationGroups = [
     'Inhoud' => [
         ['label' => "Pagina's", 'href' => 'paginas.php', 'icon' => 'file-text', 'pages' => ['paginas.php', 'pagina_form.php']],
+        ['label' => 'Menu', 'href' => 'menu.php', 'icon' => 'list', 'pages' => ['menu.php']],
         ['label' => 'Speltakken', 'href' => 'speltakken.php', 'icon' => 'sitemap', 'pages' => ['speltakken.php', 'speltak_form.php']],
+        ['label' => 'Vrijwilligers', 'href' => 'vrijwilligers.php', 'icon' => 'id-card', 'pages' => ['vrijwilligers.php', 'vrijwilliger_form.php', 'vrijwilliger_groep_form.php']],
         ['label' => 'Documenten', 'href' => 'documents.php', 'icon' => 'files', 'pages' => ['documents.php', 'document_form.php']],
         ['label' => 'Bestanden', 'href' => 'uploads.php', 'icon' => 'cloud-upload', 'pages' => ['uploads.php']],
     ],

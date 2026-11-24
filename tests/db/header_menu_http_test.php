@@ -70,19 +70,19 @@ function header_http_login(): array
     $page = http_get('admin/login.php');
     $result = http_post('admin/login.php', ['csrf_token' => http_csrf_token($page), 'username' => 'header-test', 'password' => 'Test-header-12!']);
     header_assert_status(302, $result);
-    return http_get('admin/settings.php?tab=header');
+    return http_get('admin/menu.php');
 }
 function header_http_save(array $extra = [], ?int $parentId = null): array
 {
-    $page = http_get('admin/settings.php?tab=header');
-    return http_post('admin/settings.php?tab=header' . ($parentId !== null ? '&new=1&parent=' . $parentId : ''), array_merge(['csrf_token' => http_csrf_token($page),
+    $page = http_get('admin/menu.php');
+    return http_post('admin/menu.php' . ($parentId !== null ? '?new=1&parent=' . $parentId : ''), array_merge(['csrf_token' => http_csrf_token($page),
         'action' => 'save', 'id' => '0', 'label' => 'HTTP menu', 'link_type' => 'section', 'section_value' => 'contact',
         'dropdown_type' => 'none', 'parent_id' => '', 'volgorde' => '20', 'page_id' => '', 'actief' => '1'], $extra));
 }
 
 test('headerbeheer vereist authenticatie en weigert CSRF en gemanipuleerde aanvragen', function () {
     header_http_server();
-    $r = http_get('admin/settings.php?tab=header');
+    $r = http_get('admin/menu.php');
     header_assert_status(302, $r);
     assert_same('login.php', http_header($r, 'Location'));
     db()->prepare('INSERT INTO admin_users (username,password_hash) VALUES (?,?)')->execute(['header-test', password_hash('Test-header-12!', PASSWORD_DEFAULT)]);
@@ -116,35 +116,51 @@ test('HTTP-menuopslag gebruikt PRG, onafhankelijke labels en dynamische paginasl
     $list = http_get('admin/paginas.php');
     assert_not_contains('<th>Menu</th>', $list['body']);
     $r = http_post('admin/paginas.php', ['csrf_token' => http_csrf_token($list), 'action' => 'delete', 'id' => (string) $id]);
-    assert_contains('Instellingen → Header', $r['body']);
+    assert_contains('Inhoud → Menu', $r['body']);
     assert_true(get_page($id) !== null);
     db()->prepare('UPDATE pages SET actief=0 WHERE id=?')->execute([$id]);
     assert_not_contains('>Eigen menutekst</a>', http_get('')['body']);
     $menuId = (int) db()->query("SELECT id FROM header_menu_items WHERE label='Eigen menutekst'")->fetchColumn();
-    $r = http_post('admin/settings.php?tab=header', ['csrf_token' => http_csrf_token(http_get('admin/settings.php?tab=header')), 'action' => 'delete', 'id' => (string) $menuId]);
+    $r = http_post('admin/menu.php', ['csrf_token' => http_csrf_token(http_get('admin/menu.php')), 'action' => 'delete', 'id' => (string) $menuId]);
     header_assert_status(303, $r);
     assert_true(get_page($id) !== null, 'menu verwijderen bewaart pagina');
     $list = http_get('admin/paginas.php');
     header_assert_status(303, http_post('admin/paginas.php', ['csrf_token' => http_csrf_token($list), 'action' => 'delete', 'id' => (string) $id]));
 });
 
-test('een pagina via de editor toevoegen maakt geen headeritem en negeert de oude menuvlag', function () {
-    $before = header_menu_rows();
+test('het vinkje "Zichtbaar in het menu" maakt, verbergt en toont een headeritem; de legacyvlag blijft ongemoeid', function () {
+    $before = count(header_menu_rows());
     $editor = http_get('admin/pagina_form.php');
+    // Zonder vinkje komt er geen item.
     $r = http_post('admin/pagina_form.php', ['csrf_token' => http_csrf_token($editor),
-        'titel' => 'Via editor', 'slug' => 'via-editor', 'inhoud' => '', 'actief' => '1', 'in_menu' => '1']);
+        'titel' => 'Via editor', 'slug' => 'via-editor', 'inhoud' => '', 'actief' => '1']);
     header_assert_status(302, $r);
-    assert_same($before, header_menu_rows());
+    assert_same($before, count(header_menu_rows()));
     assert_same(0, (int) get_page_by_slug('via-editor')['in_menu']);
-    // Een historisch ingestelde vlag wordt bij bewerken evenmin aangeraakt.
-    db()->exec("UPDATE pages SET in_menu=1 WHERE slug='via-editor'");
     $id = (int) get_page_by_slug('via-editor')['id'];
-    $editor = http_get('admin/pagina_form.php?id=' . $id);
-    $r = http_post('admin/pagina_form.php?id=' . $id, ['csrf_token' => http_csrf_token($editor),
-        'titel' => 'Via editor gewijzigd', 'slug' => 'via-editor', 'inhoud' => '', 'actief' => '1']);
-    header_assert_status(302, $r);
-    assert_same(1, (int) get_page_by_slug('via-editor')['in_menu']);
-    assert_same($before, header_menu_rows());
+    // Met vinkje komt er een actief hoofditem achteraan.
+    $post = function (array $extra) use ($id) {
+        $editor = http_get('admin/pagina_form.php?id=' . $id);
+        return http_post('admin/pagina_form.php?id=' . $id, array_merge(['csrf_token' => http_csrf_token($editor),
+            'titel' => 'Via editor', 'slug' => 'via-editor', 'inhoud' => '', 'actief' => '1'], $extra));
+    };
+    header_assert_status(302, $post(['menu_zichtbaar' => '1']));
+    $items = array_values(array_filter(header_menu_rows(), function ($row) use ($id) { return (int) $row['page_id'] === $id; }));
+    assert_same(1, count($items));
+    assert_same('Via editor', $items[0]['label']);
+    assert_same(1, (int) $items[0]['actief']);
+    assert_same(null, $items[0]['parent_id']);
+    // Zonder vinkje wordt het item verborgen, niet verwijderd.
+    header_assert_status(302, $post([]));
+    $items = array_values(array_filter(header_menu_rows(), function ($row) use ($id) { return (int) $row['page_id'] === $id; }));
+    assert_same(1, count($items));
+    assert_same(0, (int) $items[0]['actief']);
+    // Opnieuw aanvinken hergebruikt hetzelfde item.
+    header_assert_status(302, $post(['menu_zichtbaar' => '1']));
+    $items = array_values(array_filter(header_menu_rows(), function ($row) use ($id) { return (int) $row['page_id'] === $id; }));
+    assert_same(1, count($items));
+    assert_same(1, (int) $items[0]['actief']);
+    assert_same(0, (int) get_page_by_slug('via-editor')['in_menu']);
 });
 
 test('gerenderde navigatie werkt op Home, losse pagina’s, speltakroutes en in subdirectory', function () {
@@ -175,13 +191,13 @@ test('gerenderde navigatie werkt op Home, losse pagina’s, speltakroutes en in 
 });
 
 test('headeroverzicht groepeert submenu’s en de editor bewaart context bij toevoegen en fouten', function () {
-    $overview = http_get('admin/settings.php?tab=header');
+    $overview = http_get('admin/menu.php');
     assert_not_contains('data-header-editor', $overview['body'], 'overzicht toont geen leeg bewerkformulier');
     assert_contains('aria-label="Hoofdmenu"', $overview['body']);
     assert_contains('Automatisch submenu', $overview['body']);
     header_assert_status(303, header_http_save(['label' => 'Meer informatie', 'dropdown_type' => 'manual']));
     $parentId = (int) db()->query("SELECT id FROM header_menu_items WHERE label='Meer informatie'")->fetchColumn();
-    $new = http_get('admin/settings.php?tab=header&new=1&parent=' . $parentId);
+    $new = http_get('admin/menu.php?new=1&parent=' . $parentId);
     header_assert_no_php_errors($new);
     assert_contains('data-header-editor', $new['body']);
     assert_contains('Dit item staat in het submenu van Meer informatie.', $new['body']);
@@ -191,7 +207,7 @@ test('headeroverzicht groepeert submenu’s en de editor bewaart context bij toe
     header_assert_status(303, header_http_save(['label' => 'Leden', 'parent_id' => (string) $parentId,
         'link_type' => 'url', 'url_value' => '/leden'], $parentId));
     $childId = (int) db()->query("SELECT id FROM header_menu_items WHERE label='Leden'")->fetchColumn();
-    $overview = http_get('admin/settings.php?tab=header');
+    $overview = http_get('admin/menu.php');
     assert_contains('href="../leden"', $overview['body'], 'voorbeeldlink vertrekt vanuit de websitemap');
     $dom = new DOMDocument();
     @$dom->loadHTML($overview['body']);
@@ -199,7 +215,7 @@ test('headeroverzicht groepeert submenu’s en de editor bewaart context bij toe
     assert_same(1, $xpath->query('//li[contains(@class,"header-admin-group")][.//div[@id="menu-item-' . $parentId . '"]]//ol//div[@id="menu-item-' . $childId . '"]')->length);
     assert_same(0, $xpath->query('//div[contains(@class,"header-admin")]/descendant::i')->length, 'menu-acties gebruiken SVG');
     assert_true($xpath->query('//div[@id="menu-item-' . $parentId . '"]//svg')->length > 0);
-    $editor = http_get('admin/settings.php?tab=header&edit=' . $childId);
+    $editor = http_get('admin/menu.php?edit=' . $childId);
     assert_contains('value="Leden"', $editor['body']);
     assert_contains('Terug naar menuoverzicht', $editor['body']);
     $before = header_menu_rows();
@@ -209,10 +225,10 @@ test('headeroverzicht groepeert submenu’s en de editor bewaart context bij toe
     assert_contains('value="Naam behouden"', $invalid['body']);
     assert_contains('Dit item staat in het submenu van Meer informatie.', $invalid['body']);
     assert_same($before, header_menu_rows());
-    $invalidParent = http_get('admin/settings.php?tab=header&new=1&parent=999999');
+    $invalidParent = http_get('admin/menu.php?new=1&parent=999999');
     assert_contains('Dit handmatige submenu bestaat niet meer', $invalidParent['body']);
     assert_not_contains('data-header-editor', $invalidParent['body']);
-    $unknownItem = http_get('admin/settings.php?tab=header&edit=999999');
+    $unknownItem = http_get('admin/menu.php?edit=999999');
     assert_contains('Dit menu-item bestaat niet meer', $unknownItem['body']);
 });
 
@@ -234,10 +250,10 @@ test('de editor beheert geen volgorde of parent en de zichtbaarheidsschakelaar b
     $denied = header_http_save(['label' => 'Mag niet ontstaan'], 999999);
     assert_contains('Dit handmatige submenu bestaat niet meer', $denied['body']);
     assert_same($before, header_menu_rows());
-    $overview = http_get('admin/settings.php?tab=header');
-    header_assert_status(303, http_post('admin/settings.php?tab=header', ['csrf_token' => http_csrf_token($overview),
+    $overview = http_get('admin/menu.php');
+    header_assert_status(303, http_post('admin/menu.php', ['csrf_token' => http_csrf_token($overview),
         'action' => 'toggle', 'id' => (string) $root['id']]));
-    $hidden = http_get('admin/settings.php?tab=header');
+    $hidden = http_get('admin/menu.php');
     $dom = new DOMDocument();
     @$dom->loadHTML($hidden['body']);
     $xpath = new DOMXPath($dom);
@@ -247,7 +263,7 @@ test('de editor beheert geen volgorde of parent en de zichtbaarheidsschakelaar b
     assert_contains('Verborgen', $row->textContent);
     assert_same($rootOrder, (int) db()->query('SELECT volgorde FROM header_menu_items WHERE id=' . (int) $root['id'])->fetchColumn());
     assert_not_contains('>Altijd hoofditem</a>', http_get('')['body']);
-    header_assert_status(303, http_post('admin/settings.php?tab=header', ['csrf_token' => http_csrf_token($hidden),
+    header_assert_status(303, http_post('admin/menu.php', ['csrf_token' => http_csrf_token($hidden),
         'action' => 'toggle', 'id' => (string) $root['id']]));
     assert_contains('>Altijd hoofditem</a>', http_get('')['body']);
 });
@@ -335,5 +351,5 @@ test('HTTP-fallback vóór migratie veroorzaakt geen fout en wijzigt geen gegeve
     header_assert_no_php_errors($r);
     assert_contains('href="http-legacy">Legacy menu</a>', $r['body']);
     assert_same(null, header_menu_rows());
-    assert_contains('Systeem → Updates', http_get('admin/settings.php?tab=header')['body']);
+    assert_contains('Systeem → Updates', http_get('admin/menu.php')['body']);
 });

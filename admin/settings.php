@@ -12,18 +12,18 @@ if ($legacyUrl !== null) {
     header('Location: ' . $legacyUrl, true, 303);
     exit;
 }
+if ($requestedTab === 'header') {
+    // Het menubeheer woont sinds kort onder Inhoud → Menu; oude bladwijzers blijven werken.
+    $query = array_filter(array_intersect_key($_GET, ['new' => 1, 'edit' => 1, 'parent' => 1]), 'is_string');
+    header('Location: menu.php' . ($query ? '?' . http_build_query($query) : ''), true, 303);
+    exit;
+}
 $schema = system_settings_schema();
-$schema['header'] = ['label' => 'Header'];
 $activeTab = is_string($requestedTab) && isset($schema[$requestedTab]) ? $requestedTab : 'algemeen';
 $group = $schema[$activeTab];
-if ($activeTab === 'header') {
-    require __DIR__ . '/includes/header_menu_controller.php';
-} else {
-    $error = $_SERVER['REQUEST_METHOD'] === 'POST' && (!is_string($requestedTab) || !isset($schema[$requestedTab]))
-        ? 'Ongeldig tabblad. Ververs de pagina en probeer het opnieuw.'
-        : save_settings_group($group, $activeTab, 'settings.php?tab=' . urlencode($activeTab));
-}
-$adminMainClass = $activeTab === 'header' ? 'header-settings-main' : '';
+$error = $_SERVER['REQUEST_METHOD'] === 'POST' && (!is_string($requestedTab) || !isset($schema[$requestedTab]))
+    ? 'Ongeldig tabblad. Ververs de pagina en probeer het opnieuw.'
+    : save_settings_group($group, $activeTab, 'settings.php?tab=' . urlencode($activeTab));
 $existingImages = get_uploaded_files(['jpg', 'jpeg', 'png', 'gif', 'webp']);
 include __DIR__ . '/includes/layout_top.php';
 ?>
@@ -33,5 +33,5 @@ include __DIR__ . '/includes/layout_top.php';
   <?php endforeach; ?>
 </nav>
 <?php if ($error): ?><div class="admin-flash admin-flash-error"><?= e($error) ?></div><?php endif; ?>
-<?php include __DIR__ . ($activeTab === 'header' ? '/includes/header_menu_view.php' : '/includes/settings_form.php'); ?>
+<?php include __DIR__ . '/includes/settings_form.php'; ?>
 <?php include __DIR__ . '/includes/layout_bottom.php'; ?>

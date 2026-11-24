@@ -44,6 +44,50 @@ function page_lock_header(): ?array
     }
 }
 
+/** Headeritems die rechtstreeks naar deze pagina (via ID) verwijzen. */
+function page_menu_items(int $pageId, ?array $rows): array
+{
+    return array_values(array_filter($rows ?? [], function ($row) use ($pageId) {
+        return $row['link_type'] === 'page' && (int) $row['page_id'] === $pageId;
+    }));
+}
+
+/** Zichtbaar in het menu = minstens één actief headeritem naar deze pagina. */
+function page_menu_visible(int $pageId): bool
+{
+    foreach (page_menu_items($pageId, header_menu_rows()) as $row) {
+        if ($row['actief']) { return true; }
+    }
+    return false;
+}
+
+/** Zet de menuzichtbaarheid; draait binnen de transactie met vergrendelde $rows. Nieuw item komt achteraan in het hoofdmenu. */
+function page_menu_set_visible(int $pageId, string $title, bool $visible, ?array $rows): void
+{
+    if ($rows === null) { return; }
+    $items = page_menu_items($pageId, $rows);
+    if ($items) {
+        db()->prepare('UPDATE header_menu_items SET actief = ? WHERE page_id = ? AND link_type = ?')
+            ->execute([$visible ? 1 : 0, $pageId, 'page']);
+        $changed = false;
+        foreach ($items as $row) { if ((bool) $row['actief'] !== $visible) { $changed = true; } }
+        if ($changed) {
+            audit_log('update', 'header_menu', (int) $items[0]['id'],
+                'Headermenu: ' . $items[0]['label'] . ($visible ? ' zichtbaar gemaakt' : ' verborgen'));
+        }
+    } elseif ($visible) {
+        $position = 1;
+        foreach ($rows as $row) {
+            if ($row['parent_id'] === null) { $position = max($position, min(2147483647, (int) $row['volgorde'] + 1)); }
+        }
+        db()->prepare(
+            'INSERT INTO header_menu_items (label, link_type, page_id, link_value, dropdown_type, parent_id, volgorde, actief)
+             VALUES (?, ?, ?, ?, ?, NULL, ?, 1)'
+        )->execute([mb_substr($title, 0, 150), 'page', $pageId, '', 'none', $position]);
+        audit_log('create', 'header_menu', (int) db()->lastInsertId(), 'Headermenu: ' . $title);
+    }
+}
+
 function page_overview_mutate(string $key, int $id, string $action): void
 {
     db()->beginTransaction();
@@ -65,14 +109,14 @@ function page_overview_mutate(string $key, int $id, string $action): void
         }
         if ($action === 'delete' && $definition['can_delete']) {
             if (page_header_used($key, $page, $headerRows)) {
-                throw new RuntimeException('Deze pagina wordt gebruikt in de header. Verwijder eerst de navigatiekoppelingen via Systeem → Instellingen → Header.');
+                throw new RuntimeException('Deze pagina wordt gebruikt in de header. Verwijder eerst de navigatiekoppelingen via Inhoud → Menu.');
             }
             db()->prepare('DELETE FROM pages WHERE id = ?')->execute([$id]);
             audit_log('delete', 'pagina', $id, 'Pagina "' . $definition['titel'] . '" verwijderd');
         } elseif ($action === 'toggle' && $definition['can_toggle']) {
             $active = !$definition['actief'];
             if (!$active && page_header_used($key, $page, $headerRows)) {
-                throw new RuntimeException('Deze pagina wordt gebruikt in de header. Verwijder eerst de navigatiekoppelingen via Systeem → Instellingen → Header.');
+                throw new RuntimeException('Deze pagina wordt gebruikt in de header. Verwijder eerst de navigatiekoppelingen via Inhoud → Menu.');
             }
             if ($key === 'speltakken') {
                 set_setting('speltakken_page_active', $active ? '1' : '0');

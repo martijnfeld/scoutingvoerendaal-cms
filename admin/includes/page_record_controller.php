@@ -4,6 +4,9 @@ $values = $page ?: [
     'titel' => '', 'slug' => '', 'inhoud' => '', 'meta_omschrijving' => '',
     'og_afbeelding' => '', 'actief' => 1,
 ];
+// Menu-instelling bestaat alleen als het headerbeheer beschikbaar is (tabel aanwezig).
+$menuAvailable = header_menu_rows() !== null;
+$values['menu_zichtbaar'] = $page && $menuAvailable ? (int) page_menu_visible($id) : 0;
 
 if ($canSave) {
     $values['titel'] = trim($_POST['titel'] ?? '');
@@ -12,11 +15,12 @@ if ($canSave) {
     $values['meta_omschrijving'] = trim($_POST['meta_omschrijving'] ?? '');
     $values['og_afbeelding'] = trim($_POST['og_afbeelding'] ?? '');
     $values['actief'] = isset($_POST['actief']) ? 1 : 0;
+    $values['menu_zichtbaar'] = isset($_POST['menu_zichtbaar']) ? 1 : 0;
 
     if ($values['titel'] === '') {
         $error = 'Titel is verplicht.';
     } elseif ($page && !$values['actief'] && page_header_used('content', $page)) {
-        $error = 'Deze pagina wordt gebruikt in de header. Verwijder eerst de navigatiekoppelingen via Systeem → Instellingen → Header.';
+        $error = 'Deze pagina wordt gebruikt in de header. Verwijder eerst de navigatiekoppelingen via Inhoud → Menu.';
     } elseif (strlen($values['og_afbeelding']) > 255) {
         $error = 'Het pad van de deelafbeelding is te lang (maximaal 255 tekens).';
     } else {
@@ -52,11 +56,14 @@ if ($canSave) {
                 $currentPage = $current->fetch();
                 if (!$currentPage) { throw new RuntimeException('Pagina niet gevonden.'); }
                 if (!$values['actief'] && page_header_used('content', $currentPage, $headerRows)) {
-                    throw new RuntimeException('Deze pagina wordt gebruikt in de header. Verwijder eerst de navigatiekoppelingen via Systeem → Instellingen → Header.');
+                    throw new RuntimeException('Deze pagina wordt gebruikt in de header. Verwijder eerst de navigatiekoppelingen via Inhoud → Menu.');
                 }
             }
             $stmt->execute($params);
             $id = $page ? $id : (int) db()->lastInsertId();
+            if ($menuAvailable && $headerRows !== null) {
+                page_menu_set_visible($id, $values['titel'], $values['menu_zichtbaar'] === 1, $headerRows);
+            }
             audit_log($page ? 'update' : 'create', 'pagina', $id,
                 'Pagina "' . $values['titel'] . '" ' . ($page ? 'bijgewerkt' : 'toegevoegd'));
             db()->commit();

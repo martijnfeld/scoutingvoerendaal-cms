@@ -9,7 +9,7 @@ geen Composer of npm. Het draait op vrijwel elke gewone shared hosting.
 **Publieke website**
 - Een one-pager met hero, programma per speltak, lid worden, verhuur en contact.
 - Losse informatiepagina's (bv. ledeninformatie) op nette adressen zoals `/ledeninfo`, eventueel in
-  het centrale headermenu via Instellingen → Header.
+  het centrale headermenu via Inhoud → Menu.
 - Een eigen pagina per speltak (`/speltakken/welpen`) met logo, leeftijd, opkomsttijd, eigen tekst en
   het programma, plus een overzichtspagina (`/speltakken`), met kruimelpad en structured data.
 - Programma per speltak automatisch uit Scoutdash (opkomsten-feed): de server haalt de feeds op,

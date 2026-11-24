@@ -276,3 +276,10 @@ table.check-table td:nth-child(2){width:30%; font-weight:600;}
   .pages-admin-row{grid-template-columns:minmax(0,1fr);}
   .pages-admin .header-admin-item-actions{grid-column:1;}
 }
+
+/* Vrijwilligers */
+.vrijwilliger-thumb{width:36px; height:36px; border-radius:50%; object-fit:cover; vertical-align:middle; margin-right:6px; background:#eee;}
+.vrijwilliger-thumb-leeg{display:inline-flex; align-items:center; justify-content:center; color:#9aa0a6;}
+.role-row{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:8px;}
+.role-row select{flex:1 1 200px;}
+.role-row input[type="text"]{flex:2 1 240px;}

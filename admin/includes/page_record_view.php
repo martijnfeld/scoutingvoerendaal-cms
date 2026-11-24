@@ -19,7 +19,7 @@
     <div class="field">
       <label for="inhoud">Inhoud</label>
       <textarea class="rich-text" id="inhoud" name="inhoud" rows="16"><?= e($values['inhoud']) ?></textarea>
-      <span class="hint">Je kunt hier ook afbeeldingen uploaden en YouTube-video's plakken (gewoon de video-URL op een eigen regel).</span>
+      <span class="hint">Je kunt hier ook afbeeldingen uploaden en YouTube-video's plakken (gewoon de video-URL op een eigen regel).<br>Vrijwilligers tonen? Typ <code>[</code> voor suggesties, of <code>[smoelenboek]</code> (alle groepen), <code>[smoelenboek groep="slug"]</code> (een eigen groep) of <code>[smoelenboek speltak="slug"]</code> / <code>[smoelenboek speltak="alle"]</code>. Beheer de groepen en slugs onder <a href="vrijwilligers.php?tab=groepen">Vrijwilligers</a>.</span>
     </div>
 
     <div class="field">
@@ -47,8 +47,15 @@
       <?php $publicationBlocked = $page && $page['actief'] && page_header_used('content', $page); ?>
       <?php if ($publicationBlocked): ?><input type="hidden" name="actief" value="1"><?php endif; ?>
       <label class="field-inline-label"><input type="checkbox" name="actief" <?= $values['actief'] ? 'checked' : '' ?><?= $publicationBlocked ? ' disabled' : '' ?>> Actief (bereikbaar op de website)</label>
-      <?php if ($publicationBlocked): ?><span class="hint">Verwijder eerst de navigatiekoppelingen via <a href="settings.php?tab=header">Instellingen → Header</a> om deze pagina uit te schakelen.</span><?php endif; ?>
+      <?php if ($publicationBlocked): ?><span class="hint">Verwijder eerst de navigatiekoppelingen via <a href="menu.php">Inhoud → Menu</a> om deze pagina uit te schakelen.</span><?php endif; ?>
     </div>
+
+    <?php if ($menuAvailable): ?>
+    <div class="field">
+      <label class="field-inline-label"><input type="checkbox" name="menu_zichtbaar" <?= $values['menu_zichtbaar'] ? 'checked' : '' ?>> Zichtbaar in het menu</label>
+      <span class="hint">Nieuwe pagina's komen achteraan in het hoofdmenu. Volgorde, submenu's en menutekst pas je aan via <a href="menu.php">Inhoud → Menu</a>.</span>
+    </div>
+    <?php endif; ?>
 
     <button type="submit" class="btn">Opslaan</button>
     <a href="paginas.php" class="btn btn-secondary">Annuleren</a>

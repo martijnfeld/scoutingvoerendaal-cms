@@ -98,7 +98,8 @@ test('install.php is dicht zodra er een beheerder is', function () {
 test('alle beheerschermen laden zonder PHP-fouten', function () {
     admin_login();
     $pages = ['index.php', 'speltakken.php', 'speltak_form.php', 'pagina_form.php?pagina=home&tab=info_cards', 'pagina_form.php?pagina=home&tab=info_cards&actie=nieuw',
-              'documents.php', 'document_form.php', 'paginas.php', 'pagina_form.php', 'settings.php', 'settings.php?tab=header',
+              'vrijwilligers.php', 'vrijwilligers.php?tab=personen', 'vrijwilligers.php?tab=groepen', 'vrijwilliger_form.php', 'vrijwilliger_groep_form.php',
+              'documents.php', 'document_form.php', 'paginas.php', 'pagina_form.php', 'settings.php', 'menu.php',
               'uploads.php', 'accounts.php', 'backups.php', 'updates.php', 'controle.php', 'change_password.php', 'logs.php'];
     foreach ($pages as $page) {
         $r = http_get('admin/' . $page);
@@ -111,6 +112,10 @@ test('alle beheerschermen laden zonder PHP-fouten', function () {
             assert_page_editor_shell($r, null);
         } elseif ($page === 'speltak_form.php') {
             assert_page_editor_shell($r, null, 'speltakken.php');
+        } elseif ($page === 'vrijwilliger_form.php') {
+            assert_page_editor_shell($r, null, 'vrijwilligers.php?tab=personen');
+        } elseif ($page === 'vrijwilliger_groep_form.php') {
+            assert_page_editor_shell($r, null, 'vrijwilligers.php?tab=groepen');
         }
     }
 });
@@ -327,7 +332,7 @@ test('één pagina-editor, vijf systeemtabbladen en oude bookmarks', function ()
     }
     $r = http_get('admin/settings.php');
     preg_match_all('/href="settings.php\?tab=([^"]+)"/', $r['body'], $matches);
-    assert_same(['algemeen', 'analytics', 'organisatie', 'footer', 'header'], $matches[1]);
+    assert_same(['algemeen', 'analytics', 'organisatie', 'footer'], $matches[1]);
     foreach (['hero', 'kennismaken', 'programma', 'lidworden', 'verhuur', 'contact'] as $tab) {
         $r = http_get('admin/settings.php?tab=' . $tab);
         assert_status(303, $r, 'paginabeheer');
@@ -479,3 +484,91 @@ test('uitloggen via POST beëindigt de sessie', function () {
     assert_status(302, $r, 'na uitloggen');
     assert_contains('login.php', http_header($r, 'Location'));
 });
+
+test('vrijwilligers: groep, persoon en speltak-leiding (met versluierd e-mailadres en toon_leiding)', function () {
+    admin_login();
+    $suffix = bin2hex(random_bytes(3));
+    $spName = 'CI-leidingspeltak ' . $suffix;
+    $spSlug = slugify($spName);
+    $groupName = 'CI-groep ' . $suffix;
+    $personName = 'CI-vrijwilliger ' . $suffix;
+    $email = 'ci-' . $suffix . '@example.org';
+
+    /** Zoekt het id van de verwijderknop bij een naam in een beheerlijst en verwijdert het record. */
+    $deleteByName = function (string $path, string $name, string $action) {
+        $r = http_get('admin/' . $path);
+        $pos = strpos($r['body'], '<strong>' . $name . '</strong>');
+        if ($pos === false || !preg_match('/name="action" value="' . $action . '">.*?name="id" value="(\d+)"/s', $r['body'], $m, 0, $pos)) {
+            fail('Niet gevonden om op te ruimen: ' . $name);
+        }
+        $post = ['csrf_token' => http_csrf_token($r), 'action' => $action, 'id' => $m[1]];
+        if (strpos($path, 'vrijwilligers.php') === 0) {
+            $post['tab'] = strpos($path, 'groepen') !== false ? 'groepen' : 'personen';
+        }
+        assert_status(302, http_post(explode('?', $path)[0] === 'vrijwilligers.php' ? 'admin/vrijwilligers.php' : 'admin/' . $path, $post), 'verwijderen ' . $name);
+    };
+
+    $r = http_get('admin/speltak_form.php');
+    assert_status(302, http_post('admin/speltak_form.php', [
+        'csrf_token' => http_csrf_token($r), 'naam' => $spName, 'kleur' => '#123456', 'actief' => '1',
+        'toon_leiding' => '1', 'volgorde' => '0', 'inhoud' => '', 'toelichting' => '<p>Geen programma</p>',
+    ]), 'speltak opslaan');
+    $created = [];
+    try {
+        $r = http_get('admin/vrijwilliger_groep_form.php');
+        assert_status(302, http_post('admin/vrijwilliger_groep_form.php', ['csrf_token' => http_csrf_token($r), 'naam' => $groupName, 'actief' => '1']), 'groep opslaan');
+        $created[] = 'groep';
+        $groups = http_get('admin/vrijwilligers.php?tab=groepen');
+        assert_contains($groupName, $groups['body']);
+        assert_contains('<code>' . slugify($groupName) . '</code>', $groups['body'], 'slug getoond');
+
+        $spId = (int) db()->query("SELECT id FROM speltakken WHERE slug = " . db()->quote($spSlug))->fetchColumn();
+        $r = http_get('admin/vrijwilliger_form.php');
+        assert_contains('name="upload_foto"', $r['body']);
+        assert_contains('data-role-template', $r['body']);
+        $r = http_post('admin/vrijwilliger_form.php', [
+            'csrf_token' => http_csrf_token($r), 'naam' => $personName, 'email' => $email, 'actief' => '1',
+            'rol_id' => ['0', '0'], 'rol_target' => ['s:' . $spId, ''], 'rol_functie' => ['Leiding <b>', ''],
+        ]);
+        assert_status(302, $r, 'vrijwilliger opslaan');
+        $created[] = 'persoon';
+
+        $r = http_post('admin/vrijwilliger_form.php', ['csrf_token' => http_csrf_token(http_get('admin/vrijwilliger_form.php')), 'naam' => 'Fout', 'email' => 'geen-adres']);
+        assert_contains('e-mailadres is ongeldig', $r['body'], 'ongeldig e-mailadres geweigerd');
+
+        $perGroup = http_get('admin/vrijwilligers.php');
+        assert_no_php_errors($perGroup, 'vrijwilligers per groep');
+        assert_contains($personName, $perGroup['body']);
+
+        $r = http_get('speltakken/' . $spSlug);
+        assert_status(200, $r, 'speltakpagina');
+        assert_no_php_errors($r, 'speltakpagina');
+        assert_contains($personName, $r['body'], 'leiding getoond');
+        assert_contains('Leiding &lt;b&gt;', $r['body'], 'functie ge-escapet');
+        assert_not_contains($email, $r['body'], 'e-mailadres niet als tekst in de HTML');
+        assert_not_contains('mailto:', explode('<main', $r['body'], 2)[1] ?? $r['body'], 'geen mailto in de inhoud');
+        assert_contains('data-m="' . smoelenboek_email_attr_for_test($email) . '"', $r['body'], 'versluierd adres');
+
+        // toon_leiding uit: het blok verdwijnt.
+        $edit = http_get('admin/speltak_form.php?id=' . $spId);
+        assert_status(302, http_post('admin/speltak_form.php', [
+            'csrf_token' => http_csrf_token($edit), 'id' => $spId, 'naam' => $spName, 'kleur' => '#123456', 'actief' => '1',
+            'volgorde' => '0', 'inhoud' => '', 'toelichting' => '<p>Geen programma</p>',
+        ]), 'speltak zonder toon_leiding opslaan');
+        assert_not_contains($personName, http_get('speltakken/' . $spSlug)['body'], 'leiding verborgen');
+    } finally {
+        if (in_array('persoon', $created, true)) {
+            $deleteByName('vrijwilligers.php?tab=personen', $personName, 'delete_persoon');
+        }
+        if (in_array('groep', $created, true)) {
+            $deleteByName('vrijwilligers.php?tab=groepen', $groupName, 'delete_groep');
+        }
+        $deleteByName('speltakken.php', $spName, 'delete');
+    }
+});
+
+/** Zelfde codering als smoelenboek_email_attr(), zonder de applicatiecode in het testproces te laden. */
+function smoelenboek_email_attr_for_test(string $email): string
+{
+    return base64_encode(strrev($email));
+}

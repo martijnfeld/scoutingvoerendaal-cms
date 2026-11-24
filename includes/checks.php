@@ -40,6 +40,7 @@ const CHECK_PHP_EOL = [
 /** Tabellen die sql/install.sql (plus migraties) aanmaakt. */
 const CHECK_EXPECTED_TABLES = [
     'settings', 'speltakken', 'documents', 'info_cards', 'pages',
+    'vrijwilligers', 'vrijwilliger_groepen', 'vrijwilliger_rollen',
     'header_menu_items', 'admin_users', 'admin_logins', 'audit_log', 'login_attempts', 'schema_migrations',
 ];
 

@@ -1,5 +1,5 @@
 <?php
-/** Alleen ingeladen door settings.php na require_login(). */
+/** Alleen ingeladen door menu.php na require_login(). */
 require_once __DIR__ . '/../../includes/header_menu.php';
 require_once __DIR__ . '/header_menu_presentation.php';
 $error = '';
@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $messages = ['save' => 'Menu-item opgeslagen.', 'delete' => 'Menu-item verwijderd. De gekoppelde pagina is behouden.',
                 'up' => 'Menu-item omhoog verplaatst.', 'down' => 'Menu-item omlaag verplaatst.', 'toggle' => 'Zichtbaarheid bijgewerkt.'];
             flash_set('success', $messages[$action]);
-            header('Location: settings.php?tab=header', true, 303);
+            header('Location: menu.php', true, 303);
             exit;
         } catch (RuntimeException $exception) {
             $error = $exception instanceof PDOException ? 'De wijziging kon niet worden opgeslagen. Ververs de pagina en probeer het opnieuw.' : $exception->getMessage();

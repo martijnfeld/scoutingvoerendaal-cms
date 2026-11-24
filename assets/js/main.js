@@ -197,4 +197,13 @@
       revealEls.forEach(function(el){ revealObserver.observe(el); });
     }
   }
+  // Smoelenboek: e-mailadressen staan omgekeerd en base64-gecodeerd in de HTML
+  // (tegen spamrobots) en worden hier pas teruggezet.
+  Array.prototype.forEach.call(document.querySelectorAll('a.smoel-mail[data-m]'), function(link){
+    try {
+      var address = atob(link.getAttribute('data-m')).split('').reverse().join('');
+      link.href = 'mailto:' + address;
+      link.textContent = address;
+    } catch (e) {}
+  });
 })();

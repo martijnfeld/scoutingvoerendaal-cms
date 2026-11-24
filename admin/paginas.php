@@ -49,11 +49,11 @@ include __DIR__ . '/includes/layout_top.php';
           $publicationDisabled = !$p['can_toggle'] || $blocked;
           $publicationHint = !$p['can_toggle']
               ? 'Home is de startpagina van je website en kan daarom niet worden uitgeschakeld.'
-              : 'Deze pagina staat nog in het websitemenu. Verwijder de koppelingen via Systeem → Instellingen → Header. Daarna kun je de pagina hier uitschakelen.';
+              : 'Deze pagina staat nog in het websitemenu. Verwijder de koppelingen via Inhoud → Menu. Daarna kun je de pagina hier uitschakelen.';
           $deleteDisabled = !$p['can_delete'] || $used;
           $deleteHint = !$p['can_delete']
               ? 'Deze pagina hoort bij het systeem en kan niet worden verwijderd.'
-              : 'Deze pagina staat nog in het websitemenu. Verwijder eerst de koppelingen via Systeem → Instellingen → Header. Daarna kun je de pagina verwijderen.';
+              : 'Deze pagina staat nog in het websitemenu. Verwijder eerst de koppelingen via Inhoud → Menu. Daarna kun je de pagina verwijderen.';
       ?>
       <li class="list-group-item p-0 header-admin-group">
         <div class="header-admin-row pages-admin-row<?= !$p['actief'] ? ' header-admin-row-inactive' : '' ?>">

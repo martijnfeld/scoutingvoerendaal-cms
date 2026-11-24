@@ -55,6 +55,7 @@ header{
   max-width:1100px; margin:0 auto; padding:10px 20px;
 }
 .brand{display:flex; align-items:center; gap:12px;}
+.brand:hover{text-decoration:none;}
 .brand img{height:52px; width:auto;}
 .brand span{font-weight:700; font-size:1.25rem; color:var(--green);}
 header nav > .header-menu{
@@ -489,3 +490,23 @@ header nav a{transition:background-color .2s ease, color .2s ease;}
 footer {
   margin-top: 0;
 }
+
+/* Smoelenboek (vrijwilligers) */
+.smoelenboek-groep{margin:0 0 32px;}
+.pagina-content .smoelenboek-titel{display:flex; align-items:center; gap:12px; margin:32px 0 16px; font-size:1.4rem; padding-left:12px; border-left:5px solid var(--speltak-kleur, var(--green));}
+.smoelenboek{list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:20px;}
+.smoel{
+  display:flex; flex-direction:column; align-items:center; text-align:center; gap:4px;
+  background:#fff; border:1px solid #e2e2e2; border-top:4px solid var(--speltak-kleur, var(--green)); border-radius:10px;
+  padding:22px 16px; box-shadow:0 1px 4px rgba(0,0,0,0.05);
+  transition:transform .25s ease, box-shadow .25s ease;
+}
+.smoel:hover{transform:translateY(-4px); box-shadow:0 10px 24px rgba(0,0,0,0.12);}
+@media (prefers-reduced-motion: reduce){ .smoel{transition:none;} .smoel:hover{transform:none;} }
+.smoel-foto{width:120px; height:120px; border-radius:50%; object-fit:cover; background:var(--light); border:3px solid var(--speltak-kleur, var(--green)); margin-bottom:6px;}
+.smoel-foto-leeg{display:flex; align-items:center; justify-content:center; font-size:2.6rem; color:#9aa0a6;}
+.smoel-naam{font-weight:700; color:var(--dark);}
+.smoel-functie{font-size:0.9rem; color:#666;}
+.smoel-mail{font-size:0.85rem; word-break:break-all;}
+.smoelenboek-logo{width:40px; height:40px; object-fit:contain; flex:none;}
+.smoelenboek-toelichting{margin:0 0 18px;}

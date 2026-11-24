@@ -6,7 +6,7 @@
 <div class="header-admin">
   <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
     <div><h2 class="mb-2">Headernavigatie</h2><p class="text-body-secondary mb-0">Dit is de volgorde in het websitemenu. Submenu’s staan onder hun hoofditem.</p></div>
-    <a class="btn d-inline-flex align-items-center gap-2" href="settings.php?tab=header&amp;new=1"><?= header_menu_icon('plus') ?>Menu-item toevoegen</a>
+    <a class="btn d-inline-flex align-items-center gap-2" href="menu.php?new=1"><?= header_menu_icon('plus') ?>Menu-item toevoegen</a>
   </div>
   <div class="header-admin-list">
     <ol class="list-group list-group-flush" aria-label="Hoofdmenu">
@@ -21,7 +21,7 @@
             <?php foreach ($group['children'] as $item): ?><li><?php include __DIR__ . '/header_menu_row.php'; ?></li><?php endforeach; ?>
           </ol>
           <?php else: ?><p class="text-body-secondary mb-2">Dit submenu is nog leeg.</p><?php endif; ?>
-          <a class="header-admin-add-child" href="settings.php?tab=header&amp;new=1&amp;parent=<?= (int) $group['id'] ?>"><?= header_menu_icon('plus') ?>Submenu-item toevoegen</a>
+          <a class="header-admin-add-child" href="menu.php?new=1&amp;parent=<?= (int) $group['id'] ?>"><?= header_menu_icon('plus') ?>Submenu-item toevoegen</a>
         </div>
         <?php elseif (in_array($group['dropdown_type'], ['programme', 'speltakken'], true)): ?>
         <details class="header-admin-generated">

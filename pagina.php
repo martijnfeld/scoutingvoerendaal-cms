@@ -30,7 +30,7 @@ include __DIR__ . '/includes/site_layout_top.php';
 <section class="pagina-content">
   <div class="container pagina-container">
     <h1><?= e($page['titel']) ?></h1>
-    <div class="pagina-body"><?= add_lazy_loading($page['inhoud']) /* HTML toegestaan, beheerd via CMS (CKEditor) */ ?></div>
+    <div class="pagina-body"><?= add_lazy_loading(render_shortcodes($page['inhoud'])) /* HTML toegestaan, beheerd via CMS (CKEditor) */ ?></div>
   </div>
 </section>
 <?php include __DIR__ . '/includes/site_layout_bottom.php'; ?>

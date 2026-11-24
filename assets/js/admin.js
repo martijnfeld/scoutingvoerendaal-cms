@@ -157,6 +157,62 @@
     'PasteFromOfficeEnhanced', 'CaseChange'
   ];
 
+  /**
+   * Autocomplete voor shortcodes: typ "[" en kies een code. De suggesties komen
+   * van de server (#shortcode-suggestions). De Mention-plugin zou een
+   * <span data-mention> maken; shortcodeInsertAsText() vervangt dat door gewone tekst.
+   */
+  function shortcodeItems() {
+    var el = document.getElementById('shortcode-suggestions');
+    try {
+      return el ? JSON.parse(el.getAttribute('data-items') || '[]') : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function shortcodeMentionConfig() {
+    var items = shortcodeItems().map(function (item) {
+      return { id: item.code, text: item.code, label: item.label };
+    });
+    return {
+      feeds: [{
+        marker: '[',
+        minimumCharacters: 0,
+        feed: function (query) {
+          var q = query.toLowerCase();
+          return items.filter(function (item) {
+            return !q || item.id.toLowerCase().indexOf(q) !== -1 || item.label.toLowerCase().indexOf(q) !== -1;
+          });
+        },
+        itemRenderer: function (item) {
+          var row = document.createElement('span');
+          var code = document.createElement('strong');
+          code.textContent = item.id;
+          var label = document.createElement('small');
+          label.textContent = ' ' + item.label;
+          row.appendChild(code);
+          row.appendChild(label);
+          return row;
+        }
+      }]
+    };
+  }
+
+  function shortcodeInsertAsText(editor) {
+    var command = editor.commands.get('mention');
+    if (!command) return;
+    command.on('execute', function (event, args) {
+      var options = args[0];
+      var code = options && options.mention && (options.mention.id || options.mention);
+      if (typeof code !== 'string') return;
+      event.stop();
+      editor.model.change(function (writer) {
+        editor.model.insertContent(writer.createText(code), options.range || editor.model.document.selection);
+      });
+    }, { priority: 'high' });
+  }
+
   function richTextEditorConfig() {
     return {
       language: {
@@ -170,6 +226,7 @@
         ]
       },
       removePlugins: EDITOR_REMOVE_PLUGINS,
+      mention: shortcodeMentionConfig(),
       toolbar: {
         items: [
           'undo', 'redo', '|',
@@ -305,6 +362,7 @@
       CKEDITOR.ClassicEditor
         .create(el, richTextEditorConfig())
         .then(function (editor) {
+          shortcodeInsertAsText(editor);
           editor.plugins.get('FileRepository').createUploadAdapter = function (loader) {
             return new CkeditorUploadAdapter(loader, el);
           };
@@ -425,4 +483,27 @@
   if (dropdown && dropdown.tagName === 'SELECT') dropdown.addEventListener('change', updateDropdown);
   updateFields();
   updateDropdown();
+})();
+
+// Vrijwilliger bewerken: rollen toevoegen en verwijderen. Een lege rij wordt
+// door de server genegeerd, dus de laatste rij leegmaken is genoeg.
+(function () {
+  var editor = document.querySelector('[data-roles-editor]');
+  if (!editor) return;
+  var list = editor.querySelector('[data-roles-list]');
+  var template = editor.querySelector('[data-role-template]');
+  editor.querySelector('[data-add-role]').addEventListener('click', function () {
+    list.appendChild(template.content.cloneNode(true));
+  });
+  editor.addEventListener('click', function (event) {
+    var button = event.target.closest('[data-remove-role]');
+    if (!button) return;
+    var row = button.closest('[data-role-row]');
+    if (list.querySelectorAll('[data-role-row]').length > 1) {
+      row.remove();
+    } else {
+      row.querySelector('select').value = '';
+      row.querySelector('input[type="text"]').value = '';
+    }
+  });
 })();

@@ -77,7 +77,11 @@ include __DIR__ . '/includes/site_layout_top.php';
     <?php endif; ?>
 
     <?php if (trim((string) $sp['inhoud']) !== ''): ?>
-    <div class="pagina-body"><?= add_lazy_loading($sp['inhoud']) /* HTML toegestaan, beheerd via CMS (CKEditor) */ ?></div>
+    <div class="pagina-body"><?= add_lazy_loading(render_shortcodes($sp['inhoud'])) /* HTML toegestaan, beheerd via CMS (CKEditor) */ ?></div>
+    <?php endif; ?>
+
+    <?php if (!empty($sp['toon_leiding'])): ?>
+    <?= smoelenboek_html([['titel' => 'Leiding', 'kleur' => $sp['kleur'], 'leden' => get_groep_leden(['speltak' => (int) $sp['id']])]]) ?>
     <?php endif; ?>
 
     <h2 class="speltak-programma-titel">Programma</h2>
@@ -89,7 +93,7 @@ include __DIR__ . '/includes/site_layout_top.php';
         <p class="prog-loading">Programma wordt geladen&hellip;</p>
       </div>
     <?php elseif (!empty($sp['toelichting'])): ?>
-      <div class="pagina-body"><?= add_lazy_loading($sp['toelichting']) /* HTML toegestaan */ ?></div>
+      <div class="pagina-body"><?= add_lazy_loading(render_shortcodes($sp['toelichting'])) /* HTML toegestaan */ ?></div>
     <?php else: ?>
       <p class="prog-empty">Er is op dit moment geen programma beschikbaar.</p>
     <?php endif; ?>

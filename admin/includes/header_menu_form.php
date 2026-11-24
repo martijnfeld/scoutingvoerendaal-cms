@@ -5,7 +5,7 @@ foreach ($headerItems as $candidate) {
 }
 ?>
 <div class="header-admin header-admin-editor">
-  <a class="header-admin-back d-inline-flex align-items-center gap-2 mb-4" href="settings.php?tab=header"><?= fa_inline_icon('arrow-left') ?>Terug naar menuoverzicht</a>
+  <a class="header-admin-back d-inline-flex align-items-center gap-2 mb-4" href="menu.php"><?= fa_inline_icon('arrow-left') ?>Terug naar menuoverzicht</a>
   <h2 class="mb-2"><?= $isMenuChild ? ($menuId ? 'Submenu-item bewerken' : 'Submenu-item toevoegen') : ($menuId ? 'Menu-item bewerken' : 'Menu-item toevoegen') ?></h2>
   <p class="text-body-secondary mb-4"><?= $isMenuChild ? 'Dit item staat in het submenu van ' . e($menuParentLabel) . '.' : 'Dit item staat in het hoofdmenu.' ?> De volgorde pas je aan met de pijlen in het overzicht.</p>
   <form method="post" data-header-editor>
@@ -80,7 +80,7 @@ foreach ($headerItems as $candidate) {
     <?php endif; ?>
     <div class="d-flex flex-wrap align-items-center gap-2">
       <button type="submit" class="btn d-inline-flex align-items-center gap-2"><?= header_menu_icon('check') ?>Menu-item opslaan</button>
-      <a href="settings.php?tab=header" class="btn header-admin-cancel">Annuleren</a>
+      <a href="menu.php" class="btn header-admin-cancel">Annuleren</a>
     </div>
   </form>
 </div>
