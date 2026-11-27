@@ -203,7 +203,9 @@
     try {
       var address = atob(link.getAttribute('data-m')).split('').reverse().join('');
       link.href = 'mailto:' + address;
-      link.textContent = address;
+      // De link toont alleen een envelop-icoon (adressen zijn te lang
+      // voor het kaartje); het adres zelf verschijnt als tooltip.
+      link.title = address;
     } catch (e) {}
   });
 })();

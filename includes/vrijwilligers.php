@@ -288,7 +288,8 @@ function smoelenboek_html(array $sections, string $headingTag = 'h2'): string
             }
             if (!empty($lid['email'])) {
                 $html .= '<a class="smoel-mail" href="#" rel="nofollow" data-m="' . e(smoelenboek_email_attr($lid['email']))
-                    . '">E-mail tonen</a><noscript><span class="smoel-mail">(JavaScript nodig voor het e-mailadres)</span></noscript>';
+                    . '"><i class="fa-solid fa-envelope" aria-hidden="true"></i>'
+                    . '<span class="visually-hidden">Stuur e-mail naar ' . e($lid['naam']) . '</span></a><noscript><span class="smoel-mail">(JavaScript nodig voor het e-mailadres)</span></noscript>';
             }
             $html .= '</li>';
         }
