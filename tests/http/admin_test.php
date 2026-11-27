@@ -473,18 +473,6 @@ test('Home info-vakjes: toevoegen, bewerken, sectie behouden, sorteren en verwij
     assert_not_contains($title, http_get($url)['body']);
 });
 
-test('uitloggen via POST beëindigt de sessie', function () {
-    admin_login();
-    $r = http_get('admin/index.php');
-    $r = http_post('admin/logout.php', ['csrf_token' => http_csrf_token($r)]);
-    assert_status(302, $r, 'uitloggen');
-    assert_same('login.php', http_header($r, 'Location'));
-
-    $r = http_get('admin/index.php');
-    assert_status(302, $r, 'na uitloggen');
-    assert_contains('login.php', http_header($r, 'Location'));
-});
-
 test('vrijwilligers: groep, persoon en speltak-leiding (met versluierd e-mailadres en toon_leiding)', function () {
     admin_login();
     $suffix = bin2hex(random_bytes(3));
@@ -522,7 +510,13 @@ test('vrijwilligers: groep, persoon en speltak-leiding (met versluierd e-mailadr
         assert_contains($groupName, $groups['body']);
         assert_contains('<code>' . slugify($groupName) . '</code>', $groups['body'], 'slug getoond');
 
-        $spId = (int) db()->query("SELECT id FROM speltakken WHERE slug = " . db()->quote($spSlug))->fetchColumn();
+        // Het id uit de beheerlijst halen: db() in dit proces wijst naar de testdatabase, niet naar die van de site.
+        $list = http_get('admin/speltakken.php');
+        $pos = strpos($list['body'], '<strong>' . $spName . '</strong>');
+        if ($pos === false || !preg_match('/speltak_form\.php\?id=(\d+)/', $list['body'], $m, 0, $pos)) {
+            fail('Speltak niet gevonden in de beheerlijst: ' . $spName);
+        }
+        $spId = (int) $m[1];
         $r = http_get('admin/vrijwilliger_form.php');
         assert_contains('name="upload_foto"', $r['body']);
         assert_contains('data-role-template', $r['body']);
@@ -569,6 +563,19 @@ test('vrijwilligers: groep, persoon en speltak-leiding (met versluierd e-mailadr
         }
         $deleteByName('speltakken.php', $spName, 'delete');
     }
+});
+
+// Als laatste: uitloggen beëindigt de sessie waar de andere tests op leunen.
+test('uitloggen via POST beëindigt de sessie', function () {
+    admin_login();
+    $r = http_get('admin/index.php');
+    $r = http_post('admin/logout.php', ['csrf_token' => http_csrf_token($r)]);
+    assert_status(302, $r, 'uitloggen');
+    assert_same('login.php', http_header($r, 'Location'));
+
+    $r = http_get('admin/index.php');
+    assert_status(302, $r, 'na uitloggen');
+    assert_contains('login.php', http_header($r, 'Location'));
 });
 
 /** Zelfde codering als smoelenboek_email_attr(), zonder de applicatiecode in het testproces te laden. */
