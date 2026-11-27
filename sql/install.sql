@@ -28,7 +28,6 @@ CREATE TABLE IF NOT EXISTS speltakken (
     kleur        VARCHAR(20)  NOT NULL DEFAULT '#00A551',
     leeftijd     VARCHAR(100) NULL,
     dag_tijd     VARCHAR(190) NULL,
-    leiding      VARCHAR(255) NULL,
     toelichting  TEXT NULL,
     feed_url     VARCHAR(500) NULL,
     afmeld_url   VARCHAR(500) NULL,
@@ -39,6 +38,7 @@ CREATE TABLE IF NOT EXISTS speltakken (
     volgorde     INT NOT NULL DEFAULT 0,
     bijgewerkt   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     toon_leiding TINYINT(1) NOT NULL DEFAULT 1,
+    leiding_titel VARCHAR(100) NOT NULL DEFAULT 'Leiding',
     PRIMARY KEY (id),
     UNIQUE KEY uniq_slug (slug)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -256,23 +256,23 @@ INSERT INTO documents (id, naam, bestand) VALUES
     (3, 'Uitschrijfformulier', 'uitschrijfformulier.pdf')
 ON DUPLICATE KEY UPDATE naam = VALUES(naam);
 
-INSERT INTO speltakken (id, naam, slug, kleur, leeftijd, dag_tijd, leiding, toelichting, feed_url, afmeld_url, actief, volgorde) VALUES
-    (1, 'Bevers', 'bevers', '#E1071A', '5–7 jaar', NULL, NULL,
+INSERT INTO speltakken (id, naam, slug, kleur, leeftijd, dag_tijd, toelichting, feed_url, afmeld_url, actief, volgorde) VALUES
+    (1, 'Bevers', 'bevers', '#E1071A', '5–7 jaar', NULL,
         'Op dit moment hebben wij geen actieve beverspeltak. Zodra dit verandert, maken we dit bekend via onze social media. Lijkt het je leuk om leiding te worden bij de bevers (of een andere speltak)? Mail naar <a href="mailto:info@example.org">info@example.org</a>.',
         NULL, NULL, 1, 1),
-    (2, 'Welpen', 'welpen', '#019340', '7–11 jaar', 'Zaterdag 10:00 – 12:00 uur', 'leiding: Anna, Bram en Chris',
+    (2, 'Welpen', 'welpen', '#019340', '7–11 jaar', 'Zaterdag 10:00 – 12:00 uur',
         '<p>Voorbeeldtekst. Vul in het beheerpaneel een Scoutdash-feed-URL in om hier automatisch het programma te tonen.</p>',
         NULL, NULL, 1, 2),
-    (3, 'Scouts', 'scouts', '#f29102', '11–15 jaar', 'Vrijdag 19:30 – 21:30 uur', 'leiding: Dana en Eva',
+    (3, 'Scouts', 'scouts', '#f29102', '11–15 jaar', 'Vrijdag 19:30 – 21:30 uur',
         '<p>Voorbeeldtekst. Vul in het beheerpaneel een Scoutdash-feed-URL in om hier automatisch het programma te tonen.</p>',
         NULL, NULL, 1, 3),
-    (4, 'Explorers', 'explorers', '#9e365b', '15–18 jaar', 'Zaterdag 20:00 – 22:00 uur', 'leiding: Finn en Gijs',
+    (4, 'Explorers', 'explorers', '#9e365b', '15–18 jaar', 'Zaterdag 20:00 – 22:00 uur',
         '<p>Voorbeeldtekst. Vul in het beheerpaneel een Scoutdash-feed-URL in om hier automatisch het programma te tonen.</p>',
         NULL, NULL, 1, 4),
-    (5, 'Roverscouts', 'roverscouts', '#0066B2', '18–21 jaar', 'Zaterdag 18:00 – 20:00 uur', 'adviseur: Hanna',
+    (5, 'Roverscouts', 'roverscouts', '#0066B2', '18–21 jaar', 'Zaterdag 18:00 – 20:00 uur',
         '<p>Voorbeeldtekst. Vul in het beheerpaneel een Scoutdash-feed-URL in om hier automatisch het programma te tonen.</p>',
         NULL, NULL, 1, 5),
-    (6, 'Stam', 'stam', '#6c757d', '18+ (vrijwilligers/leden)', 'Voor vrijwilligers en leden boven de 21 jaar · ongeveer iedere 2 maanden', NULL,
+    (6, 'Stam', 'stam', '#6c757d', '18+ (vrijwilligers/leden)', 'Voor vrijwilligers en leden boven de 21 jaar · ongeveer iedere 2 maanden',
         '<p>Voorbeeldtekst. Vul in het beheerpaneel een Scoutdash-feed-URL in om hier automatisch het programma te tonen.</p>',
         NULL, NULL, 1, 6)
 ON DUPLICATE KEY UPDATE naam = VALUES(naam);

@@ -15,7 +15,7 @@ $pageTitle = $sp ? 'Speltak bewerken' : 'Nieuwe speltak';
 $error = '';
 
 $values = $sp ?: [
-    'naam' => '', 'kleur' => '#00A551', 'leeftijd' => '', 'dag_tijd' => '', 'leiding' => '',
+    'naam' => '', 'kleur' => '#00A551', 'leeftijd' => '', 'dag_tijd' => '', 'leiding_titel' => 'Leiding',
     'toelichting' => '', 'feed_url' => '', 'afmeld_url' => '', 'logo' => '', 'inhoud' => '',
     'meta_omschrijving' => '', 'actief' => 1, 'toon_leiding' => 1, 'volgorde' => 0,
 ];
@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $values['kleur'] = trim($_POST['kleur'] ?? '#00A551');
         $values['leeftijd'] = trim($_POST['leeftijd'] ?? '');
         $values['dag_tijd'] = trim($_POST['dag_tijd'] ?? '');
-        $values['leiding'] = trim($_POST['leiding'] ?? '');
+        $values['leiding_titel'] = trim($_POST['leiding_titel'] ?? '');
         $values['toelichting'] = trim($_POST['toelichting'] ?? '');
         $values['feed_url'] = trim($_POST['feed_url'] ?? '');
         $values['afmeld_url'] = trim($_POST['afmeld_url'] ?? '');
@@ -59,6 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'De opkomsten-feed-URL moet een volledige URL zijn die begint met https:// (bv. https://scoutdash.nl/feeds/json.php?k=...), of leeg blijven.';
         } elseif ($values['afmeld_url'] !== '' && !url_has_allowed_scheme($values['afmeld_url'], ['http', 'https'])) {
             $error = 'De afmeldlink moet een volledige URL zijn die begint met https:// of http://, of leeg blijven.';
+        } elseif (mb_strlen($values['leiding_titel']) > 100) {
+            $error = 'De titel van de leiding is te lang (maximaal 100 tekens).';
         } elseif (strlen($values['logo']) > 255) {
             $error = 'Het pad van het logo is te lang (maximaal 255 tekens).';
         } elseif (strlen($values['meta_omschrijving']) > 255) {
@@ -68,14 +70,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($sp) {
                 $stmt = db()->prepare(
                     'UPDATE speltakken SET naam=:naam, slug=:slug, kleur=:kleur, leeftijd=:leeftijd, dag_tijd=:dag_tijd,
-                     leiding=:leiding, toelichting=:toelichting, feed_url=:feed_url, afmeld_url=:afmeld_url,
+                     leiding_titel=:leiding_titel, toelichting=:toelichting, feed_url=:feed_url, afmeld_url=:afmeld_url,
                      logo=:logo, inhoud=:inhoud, meta_omschrijving=:meta_omschrijving,
                      actief=:actief, toon_leiding=:toon_leiding, volgorde=:volgorde WHERE id=:id'
                 );
                 $stmt->execute([
                     'naam' => $values['naam'], 'slug' => $slug, 'kleur' => $values['kleur'],
                     'leeftijd' => $values['leeftijd'] ?: null, 'dag_tijd' => $values['dag_tijd'] ?: null,
-                    'leiding' => $values['leiding'] ?: null, 'toelichting' => $values['toelichting'] ?: null,
+                    'leiding_titel' => $values['leiding_titel'] ?: 'Leiding', 'toelichting' => $values['toelichting'] ?: null,
                     'feed_url' => $values['feed_url'] ?: null, 'afmeld_url' => $values['afmeld_url'] ?: null,
                     'logo' => $values['logo'] ?: null, 'inhoud' => $values['inhoud'] ?: null,
                     'meta_omschrijving' => $values['meta_omschrijving'] ?: null,
@@ -89,15 +91,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $values['volgorde'] = (int) db()->query('SELECT COALESCE(MAX(volgorde),0) FROM speltakken')->fetchColumn() + 1;
                 }
                 $stmt = db()->prepare(
-                    'INSERT INTO speltakken (naam, slug, kleur, leeftijd, dag_tijd, leiding, toelichting, feed_url, afmeld_url,
+                    'INSERT INTO speltakken (naam, slug, kleur, leeftijd, dag_tijd, leiding_titel, toelichting, feed_url, afmeld_url,
                      logo, inhoud, meta_omschrijving, actief, toon_leiding, volgorde)
-                     VALUES (:naam, :slug, :kleur, :leeftijd, :dag_tijd, :leiding, :toelichting, :feed_url, :afmeld_url,
+                     VALUES (:naam, :slug, :kleur, :leeftijd, :dag_tijd, :leiding_titel, :toelichting, :feed_url, :afmeld_url,
                      :logo, :inhoud, :meta_omschrijving, :actief, :toon_leiding, :volgorde)'
                 );
                 $stmt->execute([
                     'naam' => $values['naam'], 'slug' => $slug, 'kleur' => $values['kleur'],
                     'leeftijd' => $values['leeftijd'] ?: null, 'dag_tijd' => $values['dag_tijd'] ?: null,
-                    'leiding' => $values['leiding'] ?: null, 'toelichting' => $values['toelichting'] ?: null,
+                    'leiding_titel' => $values['leiding_titel'] ?: 'Leiding', 'toelichting' => $values['toelichting'] ?: null,
                     'feed_url' => $values['feed_url'] ?: null, 'afmeld_url' => $values['afmeld_url'] ?: null,
                     'logo' => $values['logo'] ?: null, 'inhoud' => $values['inhoud'] ?: null,
                     'meta_omschrijving' => $values['meta_omschrijving'] ?: null,
@@ -177,8 +179,9 @@ include __DIR__ . '/includes/page_editor_top.php';
         <input type="text" id="dag_tijd" name="dag_tijd" value="<?= e($values['dag_tijd']) ?>" placeholder="bv. Zaterdag 10:00 – 12:00 uur">
       </div>
       <div class="field">
-        <label for="leiding">Leiding</label>
-        <input type="text" id="leiding" name="leiding" value="<?= e($values['leiding']) ?>" placeholder="bv. leiding: Anna, Bram of adviseur: Hanna">
+        <label for="leiding_titel">Titel van de leiding</label>
+        <input type="text" id="leiding_titel" name="leiding_titel" value="<?= e($values['leiding_titel']) ?>" maxlength="100" placeholder="Leiding">
+        <span class="hint">Bv. &ldquo;Leiding&rdquo; of &ldquo;Begeleiders&rdquo;. De namen komen automatisch uit <a href="vrijwilligers.php">Vrijwilligers</a>.</span>
       </div>
     </div>
 

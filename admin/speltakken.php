@@ -89,7 +89,7 @@ include __DIR__ . '/includes/layout_top.php';
         <span class="color-swatch" style="background:<?= e($sp['kleur']) ?>"></span><strong><?= e($sp['naam']) ?></strong>
       </td>
       <td><?= e($sp['leeftijd'] ?: '-') ?></td>
-      <td><?= e(trim(implode(' · ', array_filter([$sp['dag_tijd'], $sp['leiding']])))) ?: '<span class="muted">-</span>' ?></td>
+      <td><?= e(trim(implode(' · ', array_filter([$sp['dag_tijd'], speltak_leiding_namen((int) $sp['id'])])))) ?: '<span class="muted">-</span>' ?></td>
       <td><?= $sp['feed_url'] ? '<span title="' . e($sp['feed_url']) . '"><i class="fa-solid fa-check"></i> ingesteld</span>' : '<span class="muted">geen</span>' ?></td>
       <td>
         <form method="post" style="display:inline;">

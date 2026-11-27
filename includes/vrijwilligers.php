@@ -169,6 +169,30 @@ function get_groep_leden(array $target, bool $only_active = true): array
     return $stmt->fetchAll();
 }
 
+/** Titel van het leidingblok van een speltak ("Leiding" als er niets is ingesteld). */
+function speltak_leiding_titel(array $speltak): string
+{
+    $titel = trim((string) ($speltak['leiding_titel'] ?? ''));
+    return $titel !== '' ? $titel : 'Leiding';
+}
+
+/** Namen van de actieve vrijwilligers van een speltak, bv. "Jan, Klaas en Piet" ('' als er geen zijn). */
+function speltak_leiding_namen(int $speltakId): string
+{
+    $namen = [];
+    foreach (get_groep_leden(['speltak' => $speltakId]) as $lid) {
+        $naam = trim((string) $lid['naam']);
+        if ($naam !== '' && !in_array($naam, $namen, true)) {
+            $namen[] = $naam;
+        }
+    }
+    if (count($namen) > 1) {
+        $laatste = array_pop($namen);
+        return implode(', ', $namen) . ' en ' . $laatste;
+    }
+    return $namen[0] ?? '';
+}
+
 /**
  * Slaat de rollen van één persoon op (in één transactie). $rows: lijst van
  * ['id' => bestaande rol-id of 0, 'target' => 's:<speltak-id>'|'g:<groep-id>', 'functie' => '…'].

@@ -490,6 +490,9 @@ Tabellen (migratie 0014 + `sql/install.sql`): `vrijwilligers` (naam, foto, optio
 Verwijderen van een speltak neemt zijn rollen mee (CASCADE); een groep met rollen is niet te verwijderen
 (RESTRICT, ook in `admin/vrijwilligers.php` met een Nederlandse melding). `speltakken.toon_leiding`
 (standaard 1) schakelt het automatische blok "Leiding" op `speltak.php` aan/uit.
+`speltakken.leiding_titel` (standaard "Leiding", migratie 0016) is de instelbare titel van dat blok én van
+de regel in de feitenlijst (`Titel: Jan, Klaas en Piet`, via `speltak_leiding_namen()`/`speltak_leiding_titel()`).
+Het oude tekstveld `speltakken.leiding` is verwijderd (migratie 0016 dropt de kolom).
 
 `includes/vrijwilligers.php` (geladen door `functions.php`) bevat data-access (`get_groep_leden()`,
 `save_vrijwilliger_rollen()` — transactioneel, behoudt de volgorde van ongewijzigde rollen), de weergave

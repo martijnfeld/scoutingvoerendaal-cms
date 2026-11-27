@@ -9,7 +9,11 @@
 
     <?php foreach ($speltakken as $sp):
         $heading = $sp['naam'] . ($sp['leeftijd'] ? ' (' . $sp['leeftijd'] . ')' : '');
-        $meta = trim(implode(' · ', array_filter([$sp['dag_tijd'], $sp['leiding']])));
+        $leidingNamen = speltak_leiding_namen((int) $sp['id']);
+        $meta = trim(implode(' · ', array_filter([
+            $sp['dag_tijd'],
+            $leidingNamen !== '' ? speltak_leiding_titel($sp) . ': ' . $leidingNamen : '',
+        ])));
     ?>
     <section class="speltak-block py-0" id="sk-<?= e($sp['slug']) ?>">
       <div class="speltak-head"><span class="speltak-dot" style="background:<?= e($sp['kleur']) ?>"></span><h2><a href="<?= e(speltak_url($sp['slug'])) ?>"><?= e($heading) ?></a></h2></div>

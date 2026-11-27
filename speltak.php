@@ -53,7 +53,8 @@ include __DIR__ . '/includes/site_layout_top.php';
       <h1><?= e($sp['naam']) ?></h1>
     </div>
 
-    <?php if (!empty($sp['leeftijd']) || !empty($sp['dag_tijd']) || !empty($sp['leiding'])): ?>
+    <?php $leidingTitel = speltak_leiding_titel($sp); $leidingNamen = speltak_leiding_namen((int) $sp['id']); ?>
+    <?php if (!empty($sp['leeftijd']) || !empty($sp['dag_tijd']) || $leidingNamen !== ''): ?>
     <dl class="speltak-feiten" style="--speltak-kleur:<?= e($sp['kleur']) ?>">
       <?php if (!empty($sp['leeftijd'])): ?>
       <div>
@@ -67,10 +68,10 @@ include __DIR__ . '/includes/site_layout_top.php';
         <dd><?= e($sp['dag_tijd']) ?></dd>
       </div>
       <?php endif; ?>
-      <?php if (!empty($sp['leiding'])): ?>
+      <?php if ($leidingNamen !== ''): ?>
       <div>
-        <dt><i class="fa-solid fa-users" aria-hidden="true"></i> Leiding</dt>
-        <dd><?= e($sp['leiding']) ?></dd>
+        <dt><i class="fa-solid fa-users" aria-hidden="true"></i> <?= e($leidingTitel) ?></dt>
+        <dd><?= e($leidingNamen) ?></dd>
       </div>
       <?php endif; ?>
     </dl>
@@ -81,7 +82,7 @@ include __DIR__ . '/includes/site_layout_top.php';
     <?php endif; ?>
 
     <?php if (!empty($sp['toon_leiding'])): ?>
-    <?= smoelenboek_html([['titel' => 'Leiding', 'kleur' => $sp['kleur'], 'leden' => get_groep_leden(['speltak' => (int) $sp['id']])]]) ?>
+    <?= smoelenboek_html([['titel' => $leidingTitel,'kleur' => $sp['kleur'], 'leden' => get_groep_leden(['speltak' => (int) $sp['id']])]]) ?>
     <?php endif; ?>
 
     <h2 class="speltak-programma-titel">Programma</h2>

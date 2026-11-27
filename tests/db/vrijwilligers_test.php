@@ -27,6 +27,22 @@ test('toon_leiding staat standaard aan en de tabellen bestaan', function () {
     }
 });
 
+test('leiding_titel heeft een standaard en speltak_leiding_namen() maakt een nette lijst', function () {
+    $speltak = get_speltak(1);
+    assert_same('Leiding', $speltak['leiding_titel']);
+    assert_same('Leiding', speltak_leiding_titel(['leiding_titel' => '  ']));
+    assert_same('Begeleiders', speltak_leiding_titel(['leiding_titel' => 'Begeleiders']));
+
+    $id = (int) $speltak['id'];
+    assert_same('', speltak_leiding_namen($id));
+    foreach (['Jan', 'Klaas', 'Piet'] as $naam) {
+        save_vrijwilliger_rollen(test_vrijwilliger($naam), [['id' => 0, 'target' => 's:' . $id, 'functie' => 'Leiding']]);
+    }
+    assert_same('Jan, Klaas en Piet', speltak_leiding_namen($id));
+    db()->exec('DELETE FROM vrijwilligers');
+    assert_same('', speltak_leiding_namen($id));
+});
+
 test('save_vrijwilliger_rollen(): nieuwe rollen komen achteraan, bestaande houden hun volgorde', function () {
     $bestuur = test_groep('Bestuur');
     $welpen = (int) get_speltak(1)['id'];

@@ -233,7 +233,7 @@ test('speltak met logo en inhoud aanmaken, eigen pagina bekijken en verwijderen'
     assert_contains('name="upload_logo"', $r['body']);
     $r = http_post('admin/speltak_form.php', [
         'csrf_token' => http_csrf_token($r), 'naam' => $name, 'kleur' => '#123456',
-        'leeftijd' => '9–12 jaar', 'dag_tijd' => 'Woensdag 18:30 – 20:00 uur', 'leiding' => 'leiding: Test',
+        'leeftijd' => '9–12 jaar', 'dag_tijd' => 'Woensdag 18:30 – 20:00 uur', 'leiding_titel' => 'Leiding',
         'logo' => 'assets/uploads/ci-logo.png', 'inhoud' => '<p>Over de <strong>CI-speltak</strong></p>',
         'meta_omschrijving' => 'CI-omschrijving van de speltak', 'toelichting' => '<p>Nog geen programma</p>',
         'feed_url' => '', 'afmeld_url' => '', 'actief' => '1', 'volgorde' => '0',
@@ -553,9 +553,13 @@ test('vrijwilligers: groep, persoon en speltak-leiding (met versluierd e-mailadr
         $edit = http_get('admin/speltak_form.php?id=' . $spId);
         assert_status(302, http_post('admin/speltak_form.php', [
             'csrf_token' => http_csrf_token($edit), 'id' => $spId, 'naam' => $spName, 'kleur' => '#123456', 'actief' => '1',
-            'volgorde' => '0', 'inhoud' => '', 'toelichting' => '<p>Geen programma</p>',
+            'volgorde' => '0', 'inhoud' => '', 'toelichting' => '<p>Geen programma</p>', 'leiding_titel' => 'Begeleiders',
         ]), 'speltak zonder toon_leiding opslaan');
-        assert_not_contains($personName, http_get('speltakken/' . $spSlug)['body'], 'leiding verborgen');
+        $zonder = http_get('speltakken/' . $spSlug)['body'];
+        assert_not_contains('class="smoelenboek"', $zonder, 'smoelenboek-blok verborgen');
+        // De namen blijven in de feitenlijst staan, onder de ingestelde titel.
+        assert_contains('Begeleiders</dt>', $zonder, 'ingestelde leiding-titel');
+        assert_contains('<dd>' . $personName . '</dd>', $zonder, 'namen uit vrijwilligers in de feitenlijst');
     } finally {
         if (in_array('persoon', $created, true)) {
             $deleteByName('vrijwilligers.php?tab=personen', $personName, 'delete_persoon');
