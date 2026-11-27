@@ -55,7 +55,7 @@ test('ontbrekende tabel geeft uitsluitend lezende legacy-fallback', function () 
 test('dataoverdracht rolt bij een fout volledig terug en kan opnieuw starten', function () {
     // Eerst alleen DDL: dit simuleert een afgebroken upload na tabelaanmaak.
     $migration = file_get_contents(TEST_ROOT . '/sql/migrations/0009_header_menu.php');
-    preg_match("/db\(\)->exec\(<<<'SQL'\n(.*?)\nSQL/s", $migration, $match);
+    preg_match("/db\(\)->exec\(<<<'SQL'\r?\n(.*?)\r?\nSQL/s", $migration, $match);
     db()->exec($match[1]);
     db()->exec("DELETE FROM settings WHERE setting_key='header_menu_initialized'");
     db()->exec("CREATE TRIGGER header_test_fail BEFORE INSERT ON header_menu_items FOR EACH ROW
